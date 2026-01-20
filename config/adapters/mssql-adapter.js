@@ -520,3 +520,5 @@ class MSSQLAdapter {
 }
 
 module.exports = MSSQLAdapter;
+
+

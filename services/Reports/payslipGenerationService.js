@@ -609,3 +609,5 @@ class PayslipGenerationService {
 }
 
 module.exports = new PayslipGenerationService();
+
+

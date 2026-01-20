@@ -122,3 +122,5 @@
   // Periodic check every 30 seconds to ensure sync
   setInterval(loadPayrollStatus, 30000);
 })();
+
+

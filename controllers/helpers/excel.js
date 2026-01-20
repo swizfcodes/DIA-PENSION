@@ -5,8 +5,8 @@ const ExcelJS = require('exceljs');
 // ============================================
 const EXCEL_CONFIG = {
   company: {
-    name: 'Nigerian Navy (Naval Headquarters)',
-    address: 'CENTRAL PAY OFFICE, 23 POINT ROAD APAPA'
+    name: 'DEFENCE INTELLIGENCE AGENCY',
+    address: 'ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY'
   },
   colors: {
     primary: '1e40af',        // Blue for headers
@@ -605,3 +605,5 @@ module.exports = {
   exportEmployeeChangeHistory,
   exportSimpleReport
 };
+
+

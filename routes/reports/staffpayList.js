@@ -14,3 +14,5 @@ router.post('/export/pdf', verifyToken, reportsController.generatePaymentStaffLi
 router.post('/export/excel', verifyToken, reportsController.generatePaymentStaffListExcel.bind(reportsController));
 
 module.exports = router;
+
+

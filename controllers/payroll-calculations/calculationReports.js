@@ -7,8 +7,8 @@ const PDFDocument = require('pdfkit');
 // ============================================
 const CONFIG = {
   company: {
-    name: 'Nigerian Navy (Naval Headquarters)',
-    address: 'CENTRAL PAY OFFICE, 23 POINT ROAD APAPA',
+    name: 'DEFENCE INTELLIGENCE AGENCY',
+    address: 'ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY',
     //phone: '+234 XXX XXX XXXX',
     //email: 'hr@company.com'
   },
@@ -1238,3 +1238,5 @@ function getColumnsForReport(reportType) {
 
 
 module.exports = exports;
+
+

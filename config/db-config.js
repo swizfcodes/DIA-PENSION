@@ -205,3 +205,5 @@ function getConfigSync() {
 }
 
 module.exports = { getConfig, getConfigSync, detectAvailableDatabase };
+
+

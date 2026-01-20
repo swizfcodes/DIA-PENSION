@@ -18,3 +18,5 @@ router.post('/export/excel', verifyToken, historicalReportMiddleware, reportsCon
 router.get('/filter-options', verifyToken, historicalReportMiddleware, reportsController.getFilterOptions.bind(reportsController));
 
 module.exports = router;
+
+

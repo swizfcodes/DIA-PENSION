@@ -47,3 +47,5 @@ async function attachPayrollClass(req, res, next) {
 }
 
 module.exports = {attachPayrollClass};
+
+

@@ -364,3 +364,5 @@ class SalarySummaryController {
 }
 
 module.exports = new SalarySummaryController();
+
+

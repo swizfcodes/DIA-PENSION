@@ -28,8 +28,8 @@ class CompanySettingsHelper {
         
         this.cachedSettings = {
           logoDataUrl: settings.logo ? `data:image/png;base64,${settings.logo}` : '',
-          companyName: settings.company_name || 'Nigerian Navy (Naval Headquarters)',
-          companyAddress: settings.address || 'CENTRAL PAY OFFICE, 23 POINT ROAD APAPA'
+          companyName: settings.company_name || 'DEFENCE INTELLIGENCE AGENCY',
+          companyAddress: settings.address || 'ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY'
         };
       } else {
         // Fallback to defaults
@@ -70,8 +70,8 @@ async getSettingsFromFile(logoPath = './public/photos/logo.png') {
       
       this.cachedSettings = {
         logoDataUrl: `data:${mimeType};base64,${logoBase64}`,
-        companyName: 'Nigerian Navy (Naval Headquarters)',
-        companyAddress: 'CENTRAL PAY OFFICE, 23 POINT ROAD APAPA'
+        companyName: 'DEFENCE INTELLIGENCE AGENCY',
+        companyAddress: 'ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY'
       };
       
       console.log('✅ Settings created successfully');
@@ -103,11 +103,13 @@ async getSettingsFromFile(logoPath = './public/photos/logo.png') {
   _getDefaults() {
     return {
       logoDataUrl: '',
-      companyName: 'Nigerian Navy (Naval Headquarters)',
-      companyAddress: 'CENTRAL PAY OFFICE, 23 POINT ROAD APAPA'
+      companyName: 'DEFENCE INTELLIGENCE AGENCY',
+      companyAddress: 'ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY'
     };
   }
 }
 
 // Export singleton instance
 module.exports = new CompanySettingsHelper();
+
+

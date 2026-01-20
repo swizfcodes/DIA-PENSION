@@ -119,3 +119,5 @@ router.delete('/delete/:notificationId', verifyToken, (req, res) => {
 });
 
 module.exports = router;
+
+

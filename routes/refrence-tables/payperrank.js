@@ -126,3 +126,5 @@ router.delete("/:one_type", verifyToken, async (req, res) => {
 
 module.exports = router;
 
+
+

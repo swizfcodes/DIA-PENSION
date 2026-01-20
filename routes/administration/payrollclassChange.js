@@ -1623,3 +1623,5 @@ router.get('/payroll-class/preview/:Empl_ID', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
+
+

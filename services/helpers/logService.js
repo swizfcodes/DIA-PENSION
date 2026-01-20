@@ -16,3 +16,5 @@ exports.updateLog = async (logId, status, message) => {
 };
 
 //module.exports = { startLog, updateLog };
+
+

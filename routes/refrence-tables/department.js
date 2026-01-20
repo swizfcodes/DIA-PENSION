@@ -144,3 +144,5 @@ router.delete("/:factcode/:deptcode", verifyToken, async (req, res) => {
 
 module.exports = router;
 
+
+

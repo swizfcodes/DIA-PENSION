@@ -778,3 +778,4 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('beforeunload', () => {
   window.notificationSystem?.destroy();
 });
+

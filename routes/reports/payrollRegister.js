@@ -15,3 +15,5 @@ router.post('/export/pdf', verifyToken, historicalReportMiddleware, reportsContr
 router.post('/export/excel', verifyToken, historicalReportMiddleware, reportsController.generatePayrollRegisterExcel.bind(reportsController));
 
 module.exports = router;
+
+

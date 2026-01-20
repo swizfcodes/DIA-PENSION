@@ -864,3 +864,5 @@ document.addEventListener('DOMContentLoaded', () => {
   window.quickAccessManager = new QuickAccessManager();
   console.log('✅ Quick Access Manager initialized');
 });
+
+

@@ -307,3 +307,5 @@ router.post('/salary-scales/batch-upload', verifyToken, upload.single('file'), B
 router.get('/salary-scales/sample-template', verifyToken, BatchUploadController.downloadSample);
 
 module.exports = router;
+
+

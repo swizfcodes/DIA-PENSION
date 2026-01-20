@@ -18,3 +18,5 @@ router.post('/export/excel', verifyToken, historicalReportMiddleware, salarySumm
 router.get('/filter-options', verifyToken, salarySummaryController.getFilterOptions.bind(salarySummaryController));
 
 module.exports = router;
+
+

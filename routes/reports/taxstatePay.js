@@ -18,3 +18,5 @@ router.post('/export/excel', verifyToken, taxReportController.generateTaxReportE
 router.get('/filter-options', verifyToken, taxReportController.getTaxFilterOptions.bind(taxReportController));
 
 module.exports = router;
+
+

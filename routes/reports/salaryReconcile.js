@@ -22,3 +22,5 @@ router.get('/payment-type-analysis', reconciliationController.getPaymentTypeAnal
 router.get('/export', reconciliationController.exportReconciliationPDF.bind(reconciliationController));
 
 module.exports = router;
+
+

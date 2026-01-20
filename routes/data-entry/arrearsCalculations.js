@@ -4,3 +4,5 @@ const pool = require('../../config/db'); // mysql2 pool
 const verifyToken = require('../../middware/authentication');
 
 module.exports = router;
+
+

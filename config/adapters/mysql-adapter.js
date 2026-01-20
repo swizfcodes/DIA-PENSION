@@ -135,3 +135,5 @@ class MySQLAdapter {
 }
 
 module.exports = MySQLAdapter;
+
+

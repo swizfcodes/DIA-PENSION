@@ -456,3 +456,5 @@ if (document.readyState === 'loading') {
 
 // Expose to global scope so you can call it from login page
 window.openForgotPassword = () => ForgotPasswordManager.open();
+
+

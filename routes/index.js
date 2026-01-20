@@ -223,3 +223,5 @@ module.exports = (app) => {
     app.use("/puppeteer", paydedReportRoutes);
     app.use("/logs", logServiceRoutes);
 };
+
+

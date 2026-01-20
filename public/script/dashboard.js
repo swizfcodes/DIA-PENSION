@@ -1447,3 +1447,5 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener(event, resetInactivityTimer, true);
   });
 });
+
+

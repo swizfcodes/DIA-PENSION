@@ -93,3 +93,5 @@ router.delete('/:his_empno/:his_type', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
+
+

@@ -15,3 +15,5 @@ router.post('/export/pdf', verifyToken, reportsController.generateLoanAnalysisPD
 router.post('/export/excel', verifyToken, reportsController.generateLoanAnalysisExcel.bind(reportsController));
 
 module.exports = router;
+
+

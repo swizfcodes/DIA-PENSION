@@ -112,3 +112,5 @@ class SalarySummaryService {
 }
 
 module.exports = new SalarySummaryService();
+
+

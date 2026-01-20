@@ -146,3 +146,5 @@ router.put('/update-regno', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
+
+

@@ -178,3 +178,5 @@ router.post('/reset-to-primary', verifyToken, (req, res) => {
 });
 
 module.exports = router;
+
+

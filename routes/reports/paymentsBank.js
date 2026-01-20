@@ -71,3 +71,5 @@ router.get('/payroll-classes', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
+
+

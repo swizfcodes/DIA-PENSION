@@ -115,3 +115,5 @@ exports.runUpdates = async (year, month, indicator, user, userId) => {
     console.log('Database connection released');
   }
 };
+
+
