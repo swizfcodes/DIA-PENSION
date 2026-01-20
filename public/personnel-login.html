@@ -26,23 +26,23 @@ html{
 }
 </style>
 
-<body class="bg-gradient-to-br from-black to-blue-100 min-h-screen flex items-center justify-center">
-  <div class="bg-gray-200 shadow-2xl rounded-xl p-10 w-full max-w-md border-4 border-blue-300">
+<body class="bg-gradient-to-br from-black to-green-100 min-h-screen flex items-center justify-center">
+  <div class="bg-gray-200 shadow-2xl rounded-xl p-10 w-full max-w-md border-4 border-green-300">
     <!-- Logo & Company Name -->
     <div class="flex flex-col items-center mb-6">
       <img src="photos/logo.png" alt="Nigerian Navy Emblem" class="w-20 h-24 mb-3" />
     </div>
 
     <!-- Login Form -->
-    <h2 class="text-2xl font-bold mb-6 text-center text-blue-700">User Login</h2>
+    <h2 class="text-2xl font-bold mb-6 text-center text-green-700">User Login</h2>
     <form id="login-form" class="space-y-5">
       <div>
-        <label class="block mb-1 font-semibold text-blue-800">User_Id</label>
-        <input type="text" name="user_id" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+        <label class="block mb-1 font-semibold text-green-800">User_Id</label>
+        <input type="text" name="user_id" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" required>
       </div>
       <div id="formPasswordGroup" class="relative">
-        <label class="block mb-1 font-semibold text-blue-800">Password</label>
-        <input type="password" id="loginPassword" name="password" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+        <label class="block mb-1 font-semibold text-green-800">Password</label>
+        <input type="password" id="loginPassword" name="password" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" required>
 
         <!-- Eye Toggle Button -->
         <span id="togglePassword" style="position: absolute; top: 36px; right: 10px; cursor: pointer;">
@@ -61,19 +61,19 @@ html{
         </span>
       </div>
       <div>
-        <label class="block mb-1 font-semibold text-blue-800"> Class</label>
-        <select id="payroll-class" name="payroll_class" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <label class="block mb-1 font-semibold text-green-800"> Class</label>
+        <select id="payroll-class" name="payroll_class" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400">
           <option disabled selected>Select Payroll Class</option>
           
         </select>
       </div>
       <div class="text-right">
         <a href="#" onclick="window.openForgotPassword(); return false;" 
-          class="text-sm text-blue-600 hover:underline">
+          class="text-sm text-green-600 hover:underline">
           Forgot Password?
         </a>
       </div>
-      <button type="submit" class="w-full bg-blue-500 text-black-900 font-bold py-2 rounded-md hover:bg-blue-600">Login</button>
+      <button type="submit" class="w-full bg-green-500 text-black-900 font-bold py-2 rounded-md hover:bg-green-600">Login</button>
     </form>
   </div>
 
@@ -81,7 +81,7 @@ html{
 <div id="loginSuccessPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="bg-white rounded-lg shadow-xl p-6 w-80 text-center">
     <!-- Spinner -->
-    <div id="loginSpinner" class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+    <div id="loginSpinner" class="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mx-auto mb-4"></div>
     <!-- Message -->
     <p id="loginMessage" class="text-lg font-semibold text-gray-700">Logging you in...</p>
   </div>
@@ -106,20 +106,20 @@ html{
         <div>
           <label class="block text-sm font-medium text-navy mb-2">User ID *</label>
           <input type="text" id="verify-user-id" name="user_id" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800">
         </div>
 
         <div>
           <label class="block text-sm font-medium text-navy mb-2">Full Name *</label>
           <input type="text" id="verify-full-name" name="full_name" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800">
           <small class="text-xs text-gray-600">Enter your full name exactly as registered</small>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-navy mb-2">Payroll Class *</label>
           <select id="verify-payroll-class" name="primary_class" required
-               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800">
             <option value="">Select ...</option>
             </select>
         </div>
@@ -127,14 +127,14 @@ html{
         <div>
           <label class="block text-sm font-medium text-navy mb-2">Email Address (Optional)</label>
           <input type="email" id="verify-email" name="email" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800">
         </div>
 
         <div class="flex justify-end gap-3 pt-4">
           <button type="button" id="cancel-verify-btn" class="px-4 py-2 bg-gray-300 text-navy rounded-lg hover:bg-gray-400 transition duration-150">
             Cancel
           </button>
-          <button type="submit" id="verify-btn" class="px-4 py-2 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition duration-150 shadow-md">
+          <button type="submit" id="verify-btn" class="px-4 py-2 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition duration-150 shadow-md">
             Verify Identity
           </button>
         </div>
@@ -143,7 +143,7 @@ html{
 
     <div id="reset-step" class="reset-step hidden">
       <div class="flex justify-between items-start mb-4">
-        <h3 class="text-2xl font-bold text-blue-700">✅ Identity Verified</h3>
+        <h3 class="text-2xl font-bold text-green-700">✅ Identity Verified</h3>
         <button id="close-reset-modal" class="text-navy hover:text-red-600 text-2xl font-light">&times;</button>
       </div>
 
@@ -160,7 +160,7 @@ html{
         <div class="relative">
           <label class="block text-sm font-medium text-navy mb-2">New Password *</label>
           <input type="password" id="new-password" name="new_password" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 text-gray-800">
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 pr-10 text-gray-800">
           
           <span class="toggle-password-reset" data-target="new-password" style="position: absolute; top: 36px; right: 10px; cursor: pointer;">
             <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500">
@@ -178,7 +178,7 @@ html{
         <div class="relative">
           <label class="block text-sm font-medium text-navy mb-2">Confirm New Password *</label>
           <input type="password" id="confirm-new-password" name="confirm_password" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 text-gray-800">
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 pr-10 text-gray-800">
           
           <span class="toggle-password-reset" data-target="confirm-new-password" style="position: absolute; top: 36px; right: 10px; cursor: pointer;">
             <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500">
@@ -197,7 +197,7 @@ html{
           <button type="button" id="back-to-verify-btn" class="px-4 py-2 bg-gray-300 text-navy rounded-lg hover:bg-gray-400 transition duration-150">
             Back
           </button>
-          <button type="submit" id="reset-btn" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md">
+          <button type="submit" id="reset-btn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150 shadow-md">
             Reset Password
           </button>
         </div>
@@ -212,13 +212,13 @@ html{
   <div class="absolute inset-0 bg-black bg-opacity-50"></div>
   <div class="relative bg-white rounded-lg shadow-lg w-11/12 max-w-sm p-6 z-10 text-center">
     <div class="mb-4">
-      <svg class="w-16 h-16 text-blue-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-16 h-16 text-green-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
       </svg>
     </div>
     <h3 class="text-xl font-semibold text-gray-900 mb-2">Password Reset Successful!</h3>
     <p class="text-gray-600 mb-6">You can now login with your new password.</p>
-    <button id="close-success-modal" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+    <button id="close-success-modal" class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700">
       Go to Login
     </button>
   </div>
@@ -237,7 +237,7 @@ html{
     </div>
     <div class="flex justify-end gap-3 mt-6">
       <button id="alert-cancel-btn" class="hidden px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
-      <button id="alert-ok-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
+      <button id="alert-ok-btn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">OK</button>
     </div>
   </div>
 </div>
@@ -245,6 +245,3 @@ html{
 </body>
 <script src="script/personnel-login.js"></script>
 </html>
-
-
-
