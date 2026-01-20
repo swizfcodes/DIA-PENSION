@@ -25,7 +25,7 @@
     "tailwind-scrollbar-hide": "^4.0.0",
     "xlsx": "^0.18.5"
   },
-  "name": "navy-payroll",
+  "name": "dia-payroll",
   "version": "1.0.0",
   "main": "db-config.js",
   "scripts": {
@@ -35,15 +35,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hicadsystems/NAVY-PAYROLL.git"
+    "url": "git+https://github.com/swizfcodes/DIA-PENSION.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/hicadsystems/NAVY-PAYROLL/issues"
+    "url": "https://github.com/swizfcodes/DIA-PENSION/issues"
   },
-  "homepage": "https://github.com/hicadsystems/NAVY-PAYROLL#readme",
+  "homepage": "https://github.com/swizfcodes/DIA-PENSION#readme",
   "description": "",
   "devDependencies": {
     "autoprefixer": "^10.4.23",

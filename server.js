@@ -15,7 +15,7 @@ const fs = require('fs');
 const https = require('https');
 //const jsreport = require('jsreport-core')();
 //const multer = require("multer");
-const PORT = process.env.PORT || 5500;
+const PORT = process.env.PORT || 7700;
 
 
 
@@ -47,8 +47,8 @@ app.use(morgan('dev'));
 // CORS appears before session middleware if cookies are used cross-origin
 const corsOptions = {
   origin: [
-    'http://localhost:5500',
-    'http://127.0.0.1:5500',
+    'http://localhost:7700',
+    'http://127.0.0.1:7700',
     'https://hicad.ng',// production
   ].filter(Boolean),
   methods: ['GET','POST','PUT','DELETE'],

@@ -479,7 +479,7 @@ class UserNotificationSystem {
     const html = displayNotifs.map((notif, index) => {
       const icon = this.getIcon(notif.type);
       const timeAgo = this.getTimeAgo(notif.timestamp);
-      const countBadge = notif.count > 1 ? `<span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-500 rounded-full">${notif.count}x</span>` : '';
+      const countBadge = notif.count > 1 ? `<span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-green-500 rounded-full">${notif.count}x</span>` : '';
       
       return `
         <li class="flex items-center gap-3 notification-item cursor-pointer" 
@@ -498,7 +498,7 @@ class UserNotificationSystem {
     const viewAllButton = unreadCount > 2 ? `
       <div class="text-center mt-4">
         <button onclick="event.stopPropagation(); window.navigation.navigateToSection('notifications', 'All Notifications')" 
-        class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
+        class="text-xs text-green-600 hover:text-green-800 font-semibold">
           View all (${unreadCount}) notifications →
         </button>
       </div>
@@ -506,7 +506,7 @@ class UserNotificationSystem {
 
     container.innerHTML = `
       <div class="cursor-pointer" onclick="window.navigation.navigateToSection('notifications', 'All Notifications')">
-        <h4 class="text-xl font-bold text-navy mb-4 text-center hover:text-blue-600 transition-colors">
+        <h4 class="text-xl font-bold text-navy mb-4 text-center hover:text-green-600 transition-colors">
           Notifications
           ${unreadCount > 0 ? `<span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">${unreadCount}</span>` : ''}
         </h4>
@@ -580,7 +580,7 @@ class UserNotificationSystem {
     const allNotifsHtml = this.notifications.map((notif) => {
       const icon = this.getIcon(notif.type);
       const timeAgo = this.getTimeAgo(notif.timestamp);
-      const countBadge = notif.count > 1 ? `<span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-500 rounded-full">${notif.count}x</span>` : '';
+      const countBadge = notif.count > 1 ? `<span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-green-500 rounded-full">${notif.count}x</span>` : '';
       
       return `
         <div class="bg-dark-secondary rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-all">
@@ -589,7 +589,7 @@ class UserNotificationSystem {
             <div class="flex-1">
               <div class="text-white font-medium">${notif.message}${countBadge}</div>
               <div class="text-xs text-gray-400 mt-2">${timeAgo}</div>
-              ${notif.method ? `<span class="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-blue-900 text-blue-300 rounded">${notif.method}</span>` : ''}
+              ${notif.method ? `<span class="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-900 text-green-300 rounded">${notif.method}</span>` : ''}
             </div>
             <button data-notification-id="${notif.id}" class="delete-notification text-gray-400 hover:text-red-500 transition-colors">
               <i class="fas fa-times text-lg"></i>

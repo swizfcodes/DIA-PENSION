@@ -8,12 +8,12 @@ const SECRET = process.env.JWT_SECRET;
 
 // Reverse mapping for display
 const DISPLAY_MAPPING = {
-  [process.env.DB_OFFICERS]: 'OFFICER',
-  [process.env.DB_WOFFICERS]: 'W/OFFICER', 
-  [process.env.DB_RATINGS]: 'RATE A',
-  [process.env.DB_RATINGS_A]: 'RATE B',
-  [process.env.DB_RATINGS_B]: 'RATE C',
-  [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+  [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
+  [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
+  [process.env.DB_RATINGS]: 'PENSION STAFFS',
+  [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+  [process.env.DB_RATINGS_B]: 'RUNNING COST',
+  // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
 };
 
 // Get all available database classes (for populating the table)

@@ -4,7 +4,7 @@ tailwind.config = {
       //darkMode: 'class',
       maxWidth: { 'layout': '1440px' },
       colors: {
-      'navy': '#1e40af',
+      'navy': '#15803d',
       'warning': '#f6b409',
       'success': '#047014'
       },

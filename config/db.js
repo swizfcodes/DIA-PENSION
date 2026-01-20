@@ -393,7 +393,7 @@ pool.transaction = pool.smartTransaction;
     
     // Get config with auto-detection
     dbConfig = await getConfig();
-    MASTER_DB = dbConfig.databases.officers;
+    MASTER_DB = dbConfig.databases.Military || dbConfig.databases.officers; // Adjust as needed
     
     console.log(`🔧 Database Type: ${dbConfig.type.toUpperCase()}`);
     

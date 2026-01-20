@@ -164,12 +164,12 @@ async function buildConfig() {
     
     // Payroll class to database mapping (YOUR FORMAT!)
     databases: {
-      officers: process.env.DB_OFFICERS,
-      wofficers: process.env.DB_WOFFICERS, 
-      ratings: process.env.DB_RATINGS,
-      ratingsA: process.env.DB_RATINGS_A,
-      ratingsB: process.env.DB_RATINGS_B,
-      juniorTrainee: process.env.DB_JUNIOR_TRAINEE,
+      Military: process.env.DB_OFFICERS,
+      Civilian: process.env.DB_WOFFICERS, 
+      Pension: process.env.DB_RATINGS,
+      NYSC: process.env.DB_RATINGS_A,
+      "Running Cost": process.env.DB_RATINGS_B,
+      //juniorTrainee: process.env.DB_JUNIOR_TRAINEE,
     }
   };
 }
