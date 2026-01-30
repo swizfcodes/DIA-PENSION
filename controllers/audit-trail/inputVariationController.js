@@ -1,118 +1,16 @@
 const payPeriodReportService = require('../../services/audit-trail/inputVariationServices');
+const BaseReportController = require('../Reports/reportsFallbackController');
 const companySettings = require('../helpers/companySettings');
 const { GenericExcelExporter } = require('../helpers/excel');
 //const ExcelJS = require('exceljs');
-const jsreport = require('jsreport-core')();
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
 
-class PayPeriodReportController {
+class PayPeriodReportController extends BaseReportController {
 
   constructor() {
-    this.jsreportReady = false;
-    this.initJSReport();
-  }
-
-  async initJSReport() {
-    try {
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized for Pay Period Reports');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method for common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
-      
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      }
-
-      function formatTime(date) {
-        return new Date(date).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function formatDateTime(datetime) {
-        if (!datetime) return '';
-        const d = new Date(datetime);
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        }) + ' ' + d.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function formatPeriod(period) {
-        if (!period || period.length !== 6) return period;
-        const year = period.substring(0, 4);
-        const month = period.substring(4, 6);
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const monthName = months[parseInt(month) - 1] || month;
-        return monthName + ' ' + year;
-      }
-      
-      function subtract(a, b) {
-        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
-      }
-      
-      function eq(a, b) {
-        return a === b;
-      }
-      
-      function gt(a, b) {
-          return parseFloat(a) > parseFloat(b);
-      }
-      
-      function sum(array, property) {
-        if (!array || !Array.isArray(array)) return 0;
-        return array.reduce((sum, item) => sum + (parseFloat(item[property]) || 0), 0);
-      }
-      
-      function groupBy(array, property) {
-        if (!array || !Array.isArray(array)) return [];
-        
-        const groups = {};
-        array.forEach(item => {
-          const key = item[property] || 'Unknown';
-          if (!groups[key]) {
-            groups[key] = [];
-          }
-          groups[key].push(item);
-        });
-        
-        return Object.keys(groups).sort().map(key => ({
-          key: key,
-          values: groups[key]
-        }));
-      }
-    `;
+    super(); // Initialize base class
   }
 
   // ==========================================================================
@@ -207,7 +105,7 @@ class PayPeriodReportController {
       const totalAmountToDate = data.reduce((sum, item) => sum + parseFloat(item.amount_to_date || 0), 0);
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA - INPUT VARIATION REPORT',
+        title: 'DIA PAYROLL - INPUT VARIATION REPORT',
         subtitle: filterDescription,
         columns: columns,
         data: dataWithSN,
@@ -262,13 +160,6 @@ class PayPeriodReportController {
   // PDF GENERATION
   // ==========================================================================
   async generatePayPeriodReportPDF(data, req, res, filters, statistics) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       if (!data || data.length === 0) {
         throw new Error('No data available for the selected filters');
@@ -291,24 +182,9 @@ class PayPeriodReportController {
       if (filters.createdBy) filterDescription += ` | Operator: ${filters.createdBy}`;
       if (filters.payType) filterDescription += ` | Pay Type: ${filters.payType}`;
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true,
-            marginTop: '5mm',
-            marginBottom: '5mm',
-            marginLeft: '5mm',
-            marginRight: '5mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: data,
           statistics: statistics,
           reportDate: new Date(),
@@ -317,14 +193,22 @@ class PayPeriodReportController {
           fromPeriod: payPeriodReportService.formatPeriod(filters.fromPeriod),
           toPeriod: payPeriodReportService.formatPeriod(filters.toPeriod),
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
+        }        
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 
         `attachment; filename=pay_period_report_${filters.fromPeriod || 'all'}_${filters.toPeriod || 'all'}.pdf`
       );
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Pay Period Report PDF generation error:', error);
@@ -334,6 +218,7 @@ class PayPeriodReportController {
       });
     }
   }
+
 
   // ==========================================================================
   // GET FILTER OPTIONS

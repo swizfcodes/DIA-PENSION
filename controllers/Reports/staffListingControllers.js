@@ -1,12 +1,12 @@
 const BaseReportController = require('../Reports/reportsFallbackController');
-const personnelReportService = require('../../services/Reports/personnelReportServices');
+const staffListingservice = require('../../services/Reports/staffListingservices');
 const companySettings = require('../helpers/companySettings');
 const { GenericExcelExporter } = require('../helpers/excel');
 const fs = require('fs');
 const path = require('path');
 const pool = require('../../config/db');
 
-class PersonnelReportController extends BaseReportController {
+class staffListingReportController extends BaseReportController {
 
   constructor() {
     super(); // Initialize base class
@@ -39,8 +39,8 @@ class PersonnelReportController extends BaseReportController {
       
       console.log('Personnel Report Filters (Current Employees):', filters);
       
-      const data = await personnelReportService.getPersonnelReport(filters, currentDb);
-      const statistics = await personnelReportService.getPersonnelStatistics(filters, currentDb);
+      const data = await staffListingservice.getPersonnelReport(filters, currentDb);
+      const statistics = await staffListingservice.getPersonnelStatistics(filters, currentDb);
       
       console.log('Personnel Report Data rows:', data.length);
       console.log('Personnel Report Statistics:', statistics);
@@ -179,7 +179,7 @@ class PersonnelReportController extends BaseReportController {
 
       console.log('📄 Generating PDF with', data.length, 'records');
 
-      const templatePath = path.join(__dirname, '../../templates/personnel-report.html');
+      const templatePath = path.join(__dirname, '../../templates/personnel-report-current.html');
       
       if (!fs.existsSync(templatePath)) {
         throw new Error('PDF template file not found');
@@ -243,8 +243,8 @@ class PersonnelReportController extends BaseReportController {
     }
   }
 
-
-  // GET FILTER OPTIONS
+  // ==========================================================================
+  // GET FILTER OPTIONS (CURRENT EMPLOYEES)
   // ==========================================================================
   async getPersonnelFilterOptions(req, res) {
     try {
@@ -253,19 +253,19 @@ class PersonnelReportController extends BaseReportController {
       console.log('🔍 Current database for filter options:', currentDb);
       
       const [titles, pfas, locations, gradeTypes, gradeLevels, bankBranches, states, rentSubsidy, taxedStatus, emolumentForms] = await Promise.all([
-        personnelReportService.getAvailableTitles(currentDb),
-        personnelReportService.getAvailablePFAs(currentDb),
-        personnelReportService.getAvailableLocations(currentDb),
-        personnelReportService.getAvailableGradeTypes(currentDb),
-        personnelReportService.getAvailableGradeLevels(currentDb),
-        personnelReportService.getAvailableBankBranches(currentDb),
-        personnelReportService.getAvailableStates(currentDb),
-        personnelReportService.getAvailableRentSubsidy(currentDb),
-        personnelReportService.getAvailableTaxedStatus(currentDb),
-        personnelReportService.getAvailableEmolumentForms(currentDb)
+        staffListingservice.getAvailableTitles(currentDb),
+        staffListingservice.getAvailablePFAs(currentDb),
+        staffListingservice.getAvailableLocations(currentDb),
+        staffListingservice.getAvailableGradeTypes(currentDb),
+        staffListingservice.getAvailableGradeLevels(currentDb),
+        staffListingservice.getAvailableBankBranches(currentDb),
+        staffListingservice.getAvailableStates(currentDb),
+        staffListingservice.getAvailableRentSubsidy(currentDb),
+        staffListingservice.getAvailableTaxedStatus(currentDb),
+        staffListingservice.getAvailableEmolumentForms(currentDb)
       ]);
 
-      console.log('✅ Filter options loaded:', {
+      console.log('✅ Filter options loaded (Current Employees):', {
         titles: titles.length,
         pfas: pfas.length,
         locations: locations.length,
@@ -307,11 +307,7 @@ class PersonnelReportController extends BaseReportController {
           states,
           rentSubsidy,
           taxedStatus,
-          emolumentForms,
-          oldEmployeesOptions: [
-            { code: 'yes', description: 'Separated/Left Employees' },
-            { code: 'no', description: 'Active Employees Only' }
-          ]
+          emolumentForms
         },
         warnings: warnings.length > 0 ? `No data available for: ${warnings.join(', ')}` : null
       });
@@ -346,6 +342,4 @@ class PersonnelReportController extends BaseReportController {
   }
 }
 
-module.exports = new PersonnelReportController();
-
-
+module.exports = new staffListingReportController();

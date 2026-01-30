@@ -1,107 +1,18 @@
+const BaseReportController = require('../Reports/reportsFallbackController');
 const controlSheetService = require('../../services/Reports/controlSheetService');
 const companySettings = require('../helpers/companySettings');
 const { GenericExcelExporter } = require('../helpers/excel');
 //const ExcelJS = require('exceljs');
-const jsreport = require('jsreport-core')();
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
 
-class ControlSheetController {
+class ControlSheetController extends BaseReportController {
 
   constructor() {
-    this.jsreportReady = false;
-    this.initJSReport();
+    super(); // Initialize base class
   }
 
-  async initJSReport() {
-    try {
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized for Control Sheet Reports');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method for common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
-      
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      }
-
-      function formatTime(date) {
-        return new Date(date).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function subtract(a, b) {
-        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
-      }
-      
-      function eq(a, b) {
-        return a === b;
-      }
-      
-      function gt(a, b) {
-          return parseFloat(a) > parseFloat(b);
-      }
-      
-      function sum(array, property) {
-        if (!array || !Array.isArray(array)) return 0;
-        return array.reduce((sum, item) => sum + (parseFloat(item[property]) || 0), 0);
-      }
-      
-      function groupBy(array, property) {
-        if (!array || !Array.isArray(array)) return [];
-        
-        const groups = {};
-        array.forEach(item => {
-          const key = item[property] || 'Unknown';
-          if (!groups[key]) {
-            groups[key] = [];
-          }
-          groups[key].push(item);
-        });
-        
-        return Object.keys(groups).sort().map(key => ({
-          key: key,
-          values: groups[key]
-        }));
-      }
-      
-      function sumByType(earnings, type) {
-        let total = 0;
-        if (Array.isArray(earnings)) {
-          earnings.forEach(item => {
-            if (item.type === type) {
-              total += parseFloat(item.amount) || 0;
-            }
-          });
-        }
-        return total;
-      }
-    `;
-  }
 
   // ==========================================================================
   // CONTROL SHEET REPORT - MAIN ENDPOINT
@@ -174,7 +85,7 @@ class ControlSheetController {
       }
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA - PAYROLL CONTROL SHEET',
+        title: 'DIA PAYROLL - PAYROLL CONTROL SHEET',
         subtitle: subtitle,
         columns: columns,
         className: className,
@@ -220,12 +131,6 @@ class ControlSheetController {
   // PDF GENERATION
   // ==========================================================================
   async generateControlSheetPDF(result, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
 
     try {
       if (!result.details || result.details.length === 0) {
@@ -243,24 +148,9 @@ class ControlSheetController {
       const templatePath = path.join(__dirname, '../../templates/control-sheet.html');
       const templateContent = fs.readFileSync(templatePath, 'utf8');
 
-      const result_data = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: false,
-            marginTop: '5mm',
-            marginBottom: '5mm',
-            marginLeft: '5mm',
-            marginRight: '5mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: data,
           totals: result.totals,
           reportDate: new Date(),
@@ -270,14 +160,22 @@ class ControlSheetController {
           className: this.getDatabaseNameFromRequest(req),
           ...image,
           recordcount: data.length > 0 ? data[0].recordcount : 0
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
+       }
+     );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 
         `attachment; filename=control_sheet_${data[0]?.month || 'report'}_${data[0]?.year || 'report'}.pdf`
       );
-      res.send(result_data.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Control Sheet PDF generation error:', error);
@@ -323,5 +221,3 @@ class ControlSheetController {
 }
 
 module.exports = new ControlSheetController();
-
-

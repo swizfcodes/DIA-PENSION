@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A5;
+            margin: 10mm;
+            margin-top: 0.2mm;
+            margin-bottom: 0.2mm;
+            background-color: #f8fbff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .center-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        html, body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 7pt;
+            color: #1a1a1a;
+            line-height: 1.2;
+            background-color: transparent;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        /* Faint logo overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('{{{logoDataUrl}}}');
+            background-size: auto 100%;
+            background-repeat: no-repeat;
+            background-position: center center;
+            opacity: 0.02;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .container {
+            width: 100%;
+            margin: 0;
+            padding: 10px;
+            height: 100%;
+        }
+        
+        /* Header Styles */
+        .header-wrapper {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #1a1a1a;
+            padding-bottom: 5px;
+        }
+
+        .className {
+            flex-shrink: 0;
+            margin-right: 20px;
+            align-self: center;
+            font-size: 9pt;
+        }
+
+        .header {
+            flex-grow: 1;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+            letter-spacing: 1.5px;
+            color: #1e40af;
+            font-family: 'Libre Baskerville', Georgia, serif;
+        }
+        
+        .header h2 {
+            font-size: 10pt;
+            font-weight: normal;
+            margin-top: 2px;
+            color: #4a4a4a;
+            font-family: 'Libre Baskerville', Georgia, serif;
+        }
+        
+        /* Pay Period Section */
+        .pay-period {
+            margin: 3px 0;
+            padding: 1px 6px;
+            font-size: 7pt;
+            display: flex;
+            justify-content: space-between;
+            background-color: #fafafa;
+            width: 70%;
+        }
+        
+        .pay-period p {
+            margin: 0;
+            color: #4a4a4a;
+        }
+        
+        .pay-period strong {
+            color: #1a1a1a;
+        }
+        
+        /* Section Headers - Blue */
+        .section-header {
+            font-size: 8pt;
+            font-weight: bold;
+            margin-top: 3px;
+            margin-bottom: 4px;
+            padding: 2px 5px;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 70%;
+            align-self: flex-start;
+            margin-left: calc((100% - 70%) / 2);
+        }
+        
+        /* Source Headers (IPPIS TOTAL / NAVY TOTAL) */
+        .source-header {
+            font-size: 8.5pt;
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 2px;
+            padding: 3px 6px;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            width: 70%;
+            text-align: center;
+            border-bottom: 1.5px solid #1e40af;
+        }
+        
+        /* Employee Info */
+        .employee-info {
+            margin-bottom: 6px;
+            padding: 2px 6px;
+            background-color: #fafafa;
+            border: 1px solid #d0d0d0;
+            width: 70%;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 2px;
+            padding: 2px 0;
+            font-size: 7pt;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            min-width: 85px;
+            flex-shrink: 0;
+            color: #1a1a1a;
+        }
+        
+        .info-value {
+            flex-grow: 1;
+            color: #4a4a4a;
+        }
+        
+        /* Table Styles */
+        .items-table {
+            width: 70%;
+            border-collapse: collapse;
+            margin-bottom: 2px;
+        }
+        
+        .items-table thead {
+            border-bottom: 1px solid #1a1a1a;
+        }
+        
+        .items-table th {
+            font-size: 7pt;
+            font-weight: 600;
+            padding: 1px 4px;
+            text-align: left;
+            color: #1a1a1a;
+        }
+        
+        .items-table th.amount-col {
+            text-align: right;
+            width: 80px;
+        }
+        
+        .items-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .items-table tbody td {
+            padding: 1px 4px;
+            font-size: 7pt;
+            vertical-align: top;
+            color: #4a4a4a;
+        }
+        
+        .items-table tbody td.amount {
+            text-align: right;
+            white-space: nowrap;
+            font-family: 'Courier New', monospace;
+            color: #1a1a1a;
+            font-weight: 700;
+            font-size: 7.5pt;
+            padding-right: 8px;
+        }
+        
+        /* Total Rows */
+        .total-row {
+            background-color: #f5f5f5;
+            border-top: 1px solid #d0d0d0;
+            border-bottom: 1px solid #d0d0d0;
+            padding: 2px 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8pt;
+            font-weight: 600;
+            width: 70%;
+        }
+        
+        .total-row .label {
+            text-transform: uppercase;
+            color: #1a1a1a;
+        }
+        
+        .total-row .amount {
+            text-align: right;
+            min-width: 90px;
+            font-family: 'Courier New', monospace;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+        
+        /* Source Total (IPPIS TOTAL / NAVY TOTAL) */
+        .source-total {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: 2px solid #1a1a1a;
+            padding: 4px 6px;
+            margin: 3px 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8.5pt;
+            font-weight: bold;
+            width: 70%;
+        }
+        
+        .source-total .label {
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        
+        .source-total .amount {
+            text-align: right;
+            min-width: 90px;
+            font-family: 'Courier New', monospace;
+            font-weight: 800;
+        }
+        
+        /* Net Pay - Grand Total */
+        .net-pay {
+            background-color: #f0f0f0;
+            color: #1a1a1a;
+            border: 2px solid #1a1a1a;
+            padding: 5px 6px;
+            margin: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            font-weight: bold;
+            width: 70%;
+        }
+        
+        .net-pay .label {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .net-pay .amount {
+            text-align: right;
+            min-width: 80px;
+            font-family: 'Courier New', monospace;
+            font-weight: 800;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 3px;
+            padding-top: 1px;
+            border-top: 2px solid #d0d0d0;
+            text-align: center;
+            font-size: 6pt;
+            color: #6a6a6a;
+        }
+        
+        .footer p {
+            margin: 1px 0;
+        }
+        
+        .footer p:first-child {
+            font-weight: 600;
+            color: #4a4a4a;
+        }
+        
+        /* Loan Balance Display */
+        .loan-balance {
+            font-size: 6.5pt;
+            color: #d32f2f;
+            font-weight: 600;
+        }
+        
+        /* Page Break */
+        .page-break {
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            body::before {
+                position: fixed;
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <!-- Header -->
+        <div class="header-wrapper">
+            <div class="className">
+                {{className}}
+            </div>
+            <div class="header">
+                <h1>Nigerian Navy (Naval Headquarters)</h1>
+                <h2>CENTRAL PAY OFFICE, 23 POINT ROAD APAPA</h2>
+            </div>
+        </div>
+        
+        {{#each employees}}
+        <div class="center-wrapper">
+            <!-- Pay Period -->
+            <div class="pay-period">
+                <p><strong>Pay Period:</strong> {{payroll_month}} {{payroll_year}}</p>
+                <p><strong>Produced On:</strong> {{formatDate payDate}}</p>
+            </div>
+            
+            <!-- Employee Information -->
+            <div class="section-header">Personnel Information</div>
+            <div class="employee-info">
+                <div class="info-row">
+                    <span class="info-label">Name:</span>
+                    <span class="info-value">{{title}}. {{surname}} {{othername}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Service No:</span>
+                    <span class="info-value">{{employee_id}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Grade:</span>
+                    <span class="info-value">{{gradelevel}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Department:</span>
+                    <span class="info-value">{{department}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Branch:</span>
+                    <span class="info-value">{{factory}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Bank Account:</span>
+                    <span class="info-value">{{bank_account_number}} {{#if bank_name}}({{bank_name}}){{/if}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">RSA(Pension):</span>
+                    <span class="info-value">{{nsitfcode}}</span>
+                </div>
+            </div>
+            
+            <!-- ========================================= -->
+            <!-- IPPIS SECTION -->
+            <!-- ========================================= -->
+            {{#if ippis}}
+            <div class="source-header">IPPIS</div>
+            
+            <!-- IPPIS Taxable Payments -->
+            {{#if ippis.taxable}}
+            <div class="section-header">Taxable Payment</div>
+            <table class="items-table">
+                <tbody>
+                    {{#each ippis.taxable}}
+                    <tr>
+                        <td>{{description}}</td>
+                        <td class="amount">₦{{formatCurrency amount}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{/if}}
+            
+            <!-- IPPIS Non-Taxable Payments -->
+            {{#if ippis.nontaxable}}
+            <div class="section-header">Non-Taxable Payment</div>
+            <table class="items-table">
+                <tbody>
+                    {{#each ippis.nontaxable}}
+                    <tr>
+                        <td>{{description}}</td>
+                        <td class="amount">₦{{formatCurrency amount}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{/if}}
+            
+            <!-- IPPIS Deductions -->
+            {{#if ippis.deductions}}
+            <div class="section-header">Deductions</div>
+            <table class="items-table">
+                <tbody>
+                    {{#each ippis.deductions}}
+                    <tr>
+                        <td>
+                            {{description}}
+                            {{#if loan_balance}}
+                            <span class="loan-balance">(Bal: ₦{{formatCurrency loan_balance}})</span>
+                            {{/if}}
+                        </td>
+                        <td class="amount">(₦{{formatCurrency amount}})</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{/if}}
+            
+            <!-- IPPIS TOTAL -->
+            <div class="total-row">
+                <span class="label">IPPIS TOTAL</span>
+                <span class="amount">₦{{formatCurrency ippis.net}}</span>
+            </div>
+            {{/if}}
+            
+            <!-- ========================================= -->
+            <!-- NAVY SECTION -->
+            <!-- ========================================= -->
+            {{#if navy}}
+            <div class="source-header">NAVY</div>
+            
+            <!-- NAVY Taxable Payments -->
+            {{#if navy.taxable}}
+            <div class="section-header">Taxable Payment</div>
+            <table class="items-table">
+                <tbody>
+                    {{#each navy.taxable}}
+                    <tr>
+                        <td>{{description}}</td>
+                        <td class="amount">₦{{formatCurrency amount}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{/if}}
+            
+            <!-- NAVY Non-Taxable Payments -->
+            {{#if navy.nontaxable}}
+            <div class="section-header">Non-Taxable Payment</div>
+            <table class="items-table">
+                <tbody>
+                    {{#each navy.nontaxable}}
+                    <tr>
+                        <td>{{description}}</td>
+                        <td class="amount">₦{{formatCurrency amount}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{/if}}
+            
+            <!-- NAVY Deductions -->
+            {{#if navy.deductions}}
+            <div class="section-header">Deductions</div>
+            <table class="items-table">
+                <tbody>
+                    {{#each navy.deductions}}
+                    <tr>
+                        <td>
+                            {{description}}
+                            {{#if loan_balance}}
+                            <span class="loan-balance">(Bal: ₦{{formatCurrency loan_balance}})</span>
+                            {{/if}}
+                        </td>
+                        <td class="amount">(₦{{formatCurrency amount}})</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{/if}}
+            
+            <!-- NAVY TOTAL -->
+            <div class="total-row">
+                <span class="label">NAVY TOTAL</span>
+                <span class="amount">₦{{formatCurrency navy.net}}</span>
+            </div>
+            {{/if}}
+            
+            <!-- ========================================= -->
+            <!-- GRAND TOTAL - NET PAYMENT THIS MONTH -->
+            <!-- ========================================= -->
+            <div class="net-pay">
+                <span class="label">NET PAYMENT THIS MONTH</span>
+                <span class="amount">₦{{formatCurrency net_pay}}</span>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>All rights reserved &#xA9; Hicad Systems Limited.</p>
+        </div>
+    </div>
+    
+    {{#unless @last}}
+    <div class="page-break"></div>
+    {{/unless}}
+    {{/each}}
+</body>
+</html>

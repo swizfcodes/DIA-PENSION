@@ -1,0 +1,470 @@
+<!-- Print Out-Of-Range Payments by Bank Section -->
+<section class="items border rounded-lg m-6 max-w-lg mr-auto p-6 mx-auto">
+  <h2 class="text-xl text-center border-b font-bold text-blue-600 mb-4">Print Out-Of-Range payments Reports</h2>
+
+  <form id="printInRangeForm" class="space-y-4">
+    <!-- Radio selection -->
+    <div>
+      <label class="block font-medium mb-2">Select Bank</label>
+      <div class="flex space-x-4">
+        <label class="flex items-center text-sm space-x-2">
+          <input type="radio" id="allBanksInRange" name="bankChoiceInRange" value="all" checked>
+          <span>All Banks</span>
+        </label>
+        <label class="flex items-center text-sm space-x-2">
+          <input type="radio" id="specificBankInRange" name="bankChoiceInRange" value="specific">
+          <span>Specific Bank</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Bank Input -->
+    <div id="bankSelectInRangeContainer" class="hidden">
+      <label for="bankNameInRange" class="block text-sm font-medium mb-1">Bank Name</label>
+      <select id="bankNameInRange" name="bankNameInRange"
+        class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <option value="">Select Bank</option>
+        <!-- Options will be loaded from API -->
+      </select>
+    </div>
+
+    <!-- Processing Month and Year on Same Line -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="processingMonthInRange" class="block text-sm font-medium mb-1">Processing Month</label>
+        <select id="processingMonthInRange" name="processingMonthInRange"
+          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="">Select Month</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="processingYearInRange" class="block text-sm font-medium mb-1">Processing Year</label>
+        <input type="number" id="processingYearInRange" name="processingYearInRange"
+          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g., 2025" min="2020" max="2099">
+      </div>
+    </div>
+
+    <!-- Min and Max Amount on Same Line -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="minAmount" class="block text-sm font-medium mb-1">Min Amount <span class="text-red-500">*</span></label>
+        <input type="number" id="minAmount" name="minAmount" step="0.01"
+          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g., -1000">
+      </div>
+
+      <div>
+        <label for="maxAmount" class="block text-sm font-medium mb-1">Max Amount <span class="text-red-500">*</span></label>
+        <input type="number" id="maxAmount" name="maxAmount" step="0.01"
+          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g., 1000">
+      </div>
+    </div>
+
+    <!-- Output Format -->
+    <div class="flex flex-wrap items-center gap-2">
+      <label class="block font-medium">Output Format</label>
+      <div class="flex space-x-4">
+        <label class="flex text-sm items-center space-x-2">
+          <input type="radio" name="bankFormatInRange" value="pdf" checked>
+          <span>PDF</span>
+        </label>
+        <label class="flex text-sm items-center space-x-2">
+          <input type="radio" class="" name="bankFormatInRange" value="excel">
+          <span class="">Excel</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center gap-2 mb-4">
+      <!-- Summary Report -->
+      <div class="flex items-center space-x-2">
+        <input type="checkbox" id="summaryReportInRange" name="summaryReportInRange" class="h-4 w-4">
+        <label for="summaryReportInRange" class="text-sm">Summary Report</label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex space-x-2 pt-2">
+        <button type="reset" id="clearPrintInRangeBtn"
+          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+          Clear
+        </button>
+        <button type="button" id="printInRangeBtn"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Generate
+        </button>
+      </div>
+    </div>
+
+    <!-- All Classes Option (only show in master/officers DB) -->
+    <div id="allClassesInRangeSection" class="border-t pt-4" style="display: none;">
+      <div class="flex items-center space-x-2 mb-3">
+        <input type="checkbox" id="allClassesInRangeCheck" name="allClassesInRangeCheck" class="h-4 w-4">
+        <label for="allClassesInRangeCheck" class="text-sm font-medium">Generate for All Classes</label>
+      </div>
+
+      <!-- Specific Class Selection (hidden by default) -->
+      <div id="specificClassInRangeContainer" class="hidden">
+        <label for="specificClassInRangeSelect" class="block text-sm font-medium mb-1">Or Select Specific Class</label>
+        <select id="specificClassInRangeSelect" name="specificClassInRangeSelect"
+          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="">Continue with All Classes</option>
+          <!-- Options will be loaded from API -->
+        </select>
+      </div>
+    </div>
+  </form>
+</section>
+
+<!-- Loading Indicator -->
+<div id="bankInRangeLoadingIndicator" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-80 p-6 text-center">
+    <div class="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+    <span>Generating in-range report...</span>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="printInRangeConfirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-96 p-6">
+    <h3 class="text-lg font-semibold mb-4">Confirm Generation</h3>
+    <p class="mb-6 text-gray-700">Do you want to continue with in-range report generation?</p>
+
+    <div class="flex justify-end space-x-2">
+      <button id="printInRangeCancelBtn"
+        class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+        Cancel
+      </button>
+      <button id="printInRangeContinueBtn"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Continue
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div id="printInRangeSuccessModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-96 p-6 text-center">
+    <h3 class="text-lg font-semibold text-green-600 mb-4">Success</h3>
+    <p class="mb-6 text-gray-700" id="bankInRangeSuccessMessage">In-range report generated successfully!</p>
+    <button id="printInRangeSuccessOkBtn"
+      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+      OK
+    </button>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div id="printInRangeErrorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-96 p-6 text-center">
+    <h3 class="text-lg font-semibold text-red-600 mb-4">Error</h3>
+    <p class="mb-6 text-gray-700" id="bankInRangeErrorMessage">Please complete all required fields.</p>
+    <button id="printInRangeErrorOkBtn"
+      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+      OK
+    </button>
+  </div>
+</div>
+
+<script>
+  const API_BASE_IN_RANGE = '/rangepayments';
+  
+  const allBanksInRange = document.getElementById("allBanksInRange");
+  const specificBankInRange = document.getElementById("specificBankInRange");
+  const bankNameInRange = document.getElementById("bankNameInRange");
+  const bankSelectInRangeContainer = document.getElementById("bankSelectInRangeContainer");
+  const processingMonthInRange = document.getElementById("processingMonthInRange");
+  const processingYearInRange = document.getElementById("processingYearInRange");
+  const minAmount = document.getElementById("minAmount");
+  const maxAmount = document.getElementById("maxAmount");
+  const printInRangeBtn = document.getElementById("printInRangeBtn");
+  const clearPrintInRangeBtn = document.getElementById("clearPrintInRangeBtn");
+  const bankInRangeLoadingIndicator = document.getElementById("bankInRangeLoadingIndicator");
+
+  const allClassesInRangeCheck = document.getElementById("allClassesInRangeCheck");
+  const specificClassInRangeContainer = document.getElementById("specificClassInRangeContainer");
+  const specificClassInRangeSelect = document.getElementById("specificClassInRangeSelect");
+
+  const printInRangeConfirmModal = document.getElementById("printInRangeConfirmModal");
+  const printInRangeCancelBtn = document.getElementById("printInRangeCancelBtn");
+  const printInRangeContinueBtn = document.getElementById("printInRangeContinueBtn");
+
+  const printInRangeSuccessModal = document.getElementById("printInRangeSuccessModal");
+  const printInRangeSuccessOkBtn = document.getElementById("printInRangeSuccessOkBtn");
+  const bankInRangeSuccessMessage = document.getElementById("bankInRangeSuccessMessage");
+
+  const printInRangeErrorModal = document.getElementById("printInRangeErrorModal");
+  const printInRangeErrorOkBtn = document.getElementById("printInRangeErrorOkBtn");
+  const bankInRangeErrorMessage = document.getElementById("bankInRangeErrorMessage");
+
+  // Load banks on page load
+  async function loadBanksInRange() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_IN_RANGE}/filter-options`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }); 
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data.bank) {
+          bankNameInRange.innerHTML = '<option value="">Select Bank</option>';
+          result.data.bank.forEach(bank => {
+            const option = document.createElement('option');
+            option.value = bank.Bankcode;
+            option.textContent = bank.Bankcode + ' - ' + (bank.branchname || bank.bankbranch);
+            bankNameInRange.appendChild(option);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading banks:', error);
+    }
+  }
+
+  // Load available payroll classes
+  async function loadPayrollClassesInRange() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_IN_RANGE}/payroll-classes`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const allClassesInRangeSection = document.getElementById('allClassesInRangeSection');
+          if (result.data.isMasterDb) {
+            allClassesInRangeSection.style.display = 'block';
+            
+            specificClassInRangeSelect.innerHTML = '<option value="">Continue with All Classes</option>';
+            result.data.classes.forEach(cls => {
+              if (!cls.isCurrent) {
+                const option = document.createElement('option');
+                option.value = cls.name;
+                option.textContent = cls.displayName;
+                specificClassInRangeSelect.appendChild(option);
+              }
+            });
+          } else {
+            allClassesInRangeSection.style.display = 'none';
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading payroll classes:', error);
+    }
+  }
+
+  // Load current period and set default values
+  async function loadCurrentPeriodInRange() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_IN_RANGE}/filter-options`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const period = result.data.currentPeriod;
+          processingYearInRange.value = period.year;
+          processingMonthInRange.value = period.month;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading current period:', error);
+    }
+  }
+
+  function toggleBankInputInRange() {
+    bankSelectInRangeContainer.classList.toggle('hidden', allBanksInRange.checked);
+  }
+
+  function toggleSpecificClassSelectInRange() {
+    specificClassInRangeContainer.classList.toggle('hidden', !allClassesInRangeCheck.checked);
+  }
+
+  allBanksInRange.addEventListener("change", toggleBankInputInRange);
+  specificBankInRange.addEventListener("change", toggleBankInputInRange);
+  allClassesInRangeCheck.addEventListener("change", toggleSpecificClassSelectInRange);
+    
+  printInRangeBtn.addEventListener("click", () => {
+    // Validation
+    if (!processingMonthInRange.value) {
+      bankInRangeErrorMessage.textContent = 'Please select a processing month.';
+      printInRangeErrorModal.classList.remove("hidden");
+      return;
+    }
+
+    if (!processingYearInRange.value) {
+      bankInRangeErrorMessage.textContent = 'Please enter a processing year.';
+      printInRangeErrorModal.classList.remove("hidden");
+      return;
+    }
+
+    // CRITICAL: Validate min and max amount
+    if (!minAmount.value || minAmount.value.trim() === '') {
+      bankInRangeErrorMessage.textContent = 'Please enter a minimum amount.';
+      printInRangeErrorModal.classList.remove("hidden");
+      return;
+    }
+
+    if (!maxAmount.value || maxAmount.value.trim() === '') {
+      bankInRangeErrorMessage.textContent = 'Please enter a maximum amount.';
+      printInRangeErrorModal.classList.remove("hidden");
+      return;
+    }
+
+    const minAmt = parseFloat(minAmount.value);
+    const maxAmt = parseFloat(maxAmount.value);
+
+    if (isNaN(minAmt) || isNaN(maxAmt)) {
+      bankInRangeErrorMessage.textContent = 'Min and max amounts must be valid numbers.';
+      printInRangeErrorModal.classList.remove("hidden");
+      return;
+    }
+
+    if (minAmt > maxAmt) {
+      bankInRangeErrorMessage.textContent = 'Minimum amount cannot be greater than maximum amount.';
+      printInRangeErrorModal.classList.remove("hidden");
+      return;
+    }
+
+    if (specificBankInRange.checked && !bankNameInRange.value) {
+      bankInRangeErrorMessage.textContent = 'Please select a bank.';
+      printInRangeErrorModal.classList.remove("hidden");
+      return;
+    }
+
+    printInRangeConfirmModal.classList.remove("hidden");
+  });
+
+  printInRangeCancelBtn.addEventListener("click", () => {
+    printInRangeConfirmModal.classList.add("hidden");
+  });
+
+  printInRangeContinueBtn.addEventListener("click", async () => {
+    printInRangeConfirmModal.classList.add("hidden");
+    bankInRangeLoadingIndicator.classList.remove("hidden");
+    printInRangeBtn.disabled = true;
+
+    const format = document.querySelector('input[name="bankFormatInRange"]:checked').value;
+    const month = processingMonthInRange.value;
+    const year = processingYearInRange.value;
+    const summary = document.getElementById("summaryReportInRange").checked;
+    const minAmt = parseFloat(minAmount.value);
+    const maxAmt = parseFloat(maxAmount.value);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Build query parameters
+      const params = new URLSearchParams({
+        format: format,
+        month: month,
+        year: year,
+        summaryOnly: summary ? 'true' : 'false',
+        minAmount: minAmt.toString(),
+        maxAmount: maxAmt.toString()
+      });
+
+      if (specificBankInRange.checked && bankNameInRange.value) {
+        params.append('bankName', bankNameInRange.value);
+      }
+
+      // Add all classes parameters
+      if (allClassesInRangeCheck.checked) {
+        params.append('allClasses', 'true');
+        if (specificClassInRangeSelect.value) {
+          params.append('specificClass', specificClassInRangeSelect.value);
+        }
+      }
+
+      // Call the in-range endpoint
+      const response = await fetch(`${API_BASE_IN_RANGE}/generate?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate in-range report');
+      }
+
+      // Download file and open in new tab for PDFs
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Open PDF in new tab
+      if (format === 'pdf') {
+        window.open(url, '_blank');
+      }
+      
+      // Also trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `payments_by_bank_in_range_${minAmt}_to_${maxAmt}_${month}_${year}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      
+      // Clean up blob URL after a delay
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+
+      bankInRangeLoadingIndicator.classList.add("hidden");
+      printInRangeBtn.disabled = false;
+      bankInRangeSuccessMessage.textContent = `In-range report generated successfully! Your ${format.toUpperCase()} is ${format === 'pdf' ? 'opening in a new tab and' : ''} downloading.`;
+      printInRangeSuccessModal.classList.remove("hidden");
+
+    } catch (error) {
+      bankInRangeLoadingIndicator.classList.add("hidden");
+      printInRangeBtn.disabled = false;
+      bankInRangeErrorMessage.textContent = error.message || 'Failed to generate in-range report. Please try again.';
+      printInRangeErrorModal.classList.remove("hidden");
+      console.error('Error:', error);
+    }
+  });
+
+  printInRangeSuccessOkBtn.addEventListener("click", () => {
+    printInRangeSuccessModal.classList.add("hidden");
+  });
+
+  printInRangeErrorOkBtn.addEventListener("click", () => {
+    printInRangeErrorModal.classList.add("hidden");
+  });
+
+  clearPrintInRangeBtn.addEventListener("click", () => {
+    allBanksInRange.checked = true;
+    toggleBankInputInRange();
+    processingYearInRange.value = new Date().getFullYear();
+    minAmount.value = '';
+    maxAmount.value = '';
+    allClassesInRangeCheck.checked = false;
+    toggleSpecificClassSelectInRange();
+  });
+
+  // Initialize
+  toggleBankInputInRange();
+  toggleSpecificClassSelectInRange();
+  loadBanksInRange();
+  loadPayrollClassesInRange();
+  loadCurrentPeriodInRange();
+</script>

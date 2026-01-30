@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: A4; margin: 5mm; background-color: #f8fbff; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('{{{logoDataUrl}}}');
+            background-size: auto 100%;
+            background-repeat: no-repeat;
+            background-position: center center;
+            opacity: 0.02;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header-wrapper {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #1a1a1a;
+            padding-bottom: 5px;
+        }
+
+        .className {
+            flex-shrink: 0;
+            margin-right: 20px;
+            align-self: center;
+            font-size: 9pt;
+        }
+
+        .header {
+            flex-grow: 1;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+            letter-spacing: 1.5px;
+            color: #1e40af;
+            font-family: 'Libre Baskerville', Georgia, serif;
+        }
+        
+        .header h2 {
+            font-size: 10pt;
+            font-weight: normal;
+            margin-top: 2px;
+            color: #4a4a4a;
+            font-family: 'Libre Baskerville', Georgia, serif;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 9pt;
+        }
+
+        /* Amount Range Banner - NEW */
+        .amount-range-banner {
+            background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+            border: 2px solid #0066cc;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            text-align: center;
+            font-size: 10pt;
+            font-weight: bold;
+            color: #003d7a;
+            box-shadow: 0 2px 4px rgba(0, 102, 204, 0.1);
+        }
+        
+        .amount-range-banner .range-label {
+            font-size: 8pt;
+            font-weight: normal;
+            color: #0066cc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .amount-range-banner .range-values {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #003d7a;
+            margin-top: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 8.5pt;
+        }
+        
+        .warning-box strong {
+            color: #856404;
+        }
+        
+        .warning-box ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+
+        .class-section {
+            page-break-before: always;
+        }
+        
+        .class-section:first-child {
+            page-break-before: avoid;
+        }
+        
+        /* Summary Table */
+        table.summary { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        table.summary th { padding: 8px; text-align: left; font-size: 9pt; color: #1e40af; border-bottom: solid 1px #1e40af; }
+        table.summary td { padding: 6px; border-bottom: 1px solid #e0e0e0; }
+        
+        /* Detailed View */
+        .bank-group { 
+            margin-bottom: 25px; 
+        }
+        
+        .bank-group.page-break {
+            page-break-before: always;
+        }
+        
+        .bank-header { 
+            padding: 10px;
+            color: #1e40af;
+            font-weight: bold; 
+            font-size: 11pt;
+            text-align: center;
+            border-bottom: .5px solid #e0e0e0;
+            page-break-after: avoid;
+        }
+        
+        table.details { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        table.details th { 
+            padding: 7px; 
+            color: #1e40af;
+            text-align: left; 
+            font-size: 8.5pt;
+            font-weight: 600;
+            border-bottom: solid 1px #1e40af;
+        }
+        table.details td { 
+            padding: 5px 6px; 
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 8.5pt;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .footer {
+            padding-top: 5px;
+            border-top: 0.5px solid #1a1a1a;
+            text-align: center;
+            font-size: 8pt;
+            color: #64748b;
+        }
+        
+        .amount { font-family: 'Courier New', monospace; font-weight: 600; }
+        .account-no { font-family: 'Courier New', monospace; font-weight: 600; }
+
+        @media print {
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            body::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: url('{{{logoDataUrl}}}');
+                background-size: auto 100%;
+                background-repeat: no-repeat;
+                background-position: center center;
+                opacity: 0.02;
+                z-index: -1;
+                pointer-events: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    {{#unless isMultiClass}}
+    <div class="header-wrapper">
+        <div class="className">
+            {{className}}
+        </div>
+        <div class="header">
+            <h1>Nigerian Navy (Naval Headquarters)</h1>
+            <h2>CENTRAL PAY OFFICE, 23 POINT ROAD APAPA</h2>
+        </div>
+    </div>
+
+    <div class="header-info">
+        <div class="left">
+            SALARY CREDIT VOUCHER LISTING (IN-RANGE)
+        </div>
+        <div class="center">
+            <span>PRODUCED ON</span>
+            <strong>{{formatDate reportDate}}</strong>
+            <span>AT</span>
+            <strong>{{formatTime reportDate}}</strong>
+        </div>
+        <div class="period-info">
+            FOR PERIOD: {{formatMonth month}} {{year}}
+        </div>
+    </div>
+
+    <!-- Amount Range Banner - NEW -->
+    <div class="amount-range-banner">
+        <div class="range-label">Amount Range Filter</div>
+        <div class="range-values">
+            ₦{{formatCurrency amountRange.min}} to ₦{{formatCurrency amountRange.max}}
+        </div>
+    </div>
+    {{/unless}}
+
+    <!-- Multi-Class Report -->
+    {{#if isMultiClass}}
+        {{#each classes}}
+        <div class="class-section">
+            <div class="header-wrapper">
+                <div class="className">
+                    {{this.payrollClass}}
+                </div>
+                <div class="header">
+                    <h1>Nigerian Navy (Naval Headquarters)</h1>
+                    <h2>CENTRAL PAY OFFICE, 23 POINT ROAD APAPA</h2>
+                </div>
+            </div>
+
+            <div class="header-info">
+                <div class="left">
+                    SALARY CREDIT VOUCHER LISTING (IN-RANGE)
+                </div>
+                <div class="center">
+                    <span>PRODUCED ON</span>
+                    <strong>{{formatDate ../reportDate}}</strong>
+                    <span>AT</span>
+                    <strong>{{formatTime ../reportDate}}</strong>
+                </div>
+                <div class="period-info">
+                    FOR PERIOD: {{formatMonth ../month}} {{../year}}
+                </div>
+            </div>
+
+            <!-- Amount Range Banner for Multi-Class - NEW -->
+            <div class="amount-range-banner">
+                <div class="range-label">Amount Range Filter</div>
+                <div class="range-values">
+                    ₦{{formatCurrency ../amountRange.min}} to ₦{{formatCurrency ../amountRange.max}}
+                </div>
+            </div>
+
+            {{#if ../isSummary}}
+            <!-- Summary View for this Class -->
+            {{#if this.data.length}}
+            <table class="summary">
+                <thead>
+                    <tr>
+                        <th>Bank Name</th>
+                        <th>Bank Branch</th>
+                        <th style="text-align: center;">Total Records</th>
+                        <th class="amount">Total Net Payment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each this.data}}
+                    <tr>
+                        <td>{{Bankcode}}</td>
+                        <td>{{bank_branch_name}}</td>
+                        <td style="text-align: center;">{{employee_count}}</td>
+                        <td class="amount">₦{{formatCurrency total_net}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="no-data">No data available for this class in the specified range</div>
+            {{/if}}
+
+            {{else}}
+            <!-- Detailed View for this Class -->
+            {{#if this.bankGroups.length}}
+                {{#each this.bankGroups}}
+                <div class="bank-group{{#unless @first}} page-break{{/unless}}">
+                    <div class="bank-header">
+                        {{bankName}} ({{branch}}) - {{employeeCount}} Personnel(s) | Total: ₦{{formatCurrency totalAmount}}
+                    </div>
+                    <table class="details">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Svc. No.</th>
+                                <th style="width: 35%;">Full Name</th>
+                                <th style="width: 15%;">Rank</th>
+                                <th class="amount" style="width: 20%;">Net Payment</th>
+                                <th style="width: 20%;">Account Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each employees}}
+                            <tr>
+                                <td class="emp-id">{{empl_id}}</td>
+                                <td>{{fullname}}</td>
+                                <td>{{rank}}</td>
+                                <td class="amount">₦{{formatCurrency total_net}}</td>
+                                <td class="account-no">{{BankACNumber}}</td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+                {{/each}}
+            {{else}}
+            <div class="no-data">No data available for this class in the specified range</div>
+            {{/if}}
+            {{/if}}
+        </div>
+        {{/each}}
+
+    {{else}}
+    <!-- Single Class Report (Original) -->
+    {{#if isSummary}}
+    <!-- Summary View -->
+    <table class="summary">
+        <thead>
+            <tr>
+                <th>Bank Name</th>
+                <th>Bank Branch</th>
+                <th style="text-align: center;">Total Records</th>
+                <th class="amount">Total Net Payment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each data}}
+            <tr>
+                <td>{{Bankcode}}</td>
+                <td>{{bank_branch_name}}</td>
+                <td style="text-align: center;">{{employee_count}}</td>
+                <td class="amount">₦{{formatCurrency total_net}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    {{else}}
+    <!-- Detailed View - Grouped by Bank -->
+    {{#each bankGroups}}
+    <div class="bank-group{{#unless @first}} page-break{{/unless}}">
+        <div class="bank-header">
+            {{bankName}} ({{branch}}) - {{employeeCount}} Personnel(s) | Total: ₦{{formatCurrency totalAmount}}
+        </div>
+        <table class="details">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Svc. No.</th>
+                    <th style="width: 35%;">Full Name</th>
+                    <th style="width: 15%;">Rank</th>
+                    <th class="amount" style="width: 20%;">Net Payment</th>
+                    <th style="width: 20%;">Account Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each employees}}
+                <tr>
+                    <td class="emp-id">{{empl_id}}</td>
+                    <td>{{fullname}}</td>
+                    <td>{{rank}}</td>
+                    <td class="amount">₦{{formatCurrency total_net}}</td>
+                    <td class="account-no">{{BankACNumber}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{/each}}
+    {{/if}}
+    {{/if}}
+
+    <div class="footer">
+        <p>All rights reserved &#xA9; Hicad Systems Limited.</p>
+    </div>
+</body>
+</html>

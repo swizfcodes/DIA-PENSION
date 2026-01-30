@@ -1,118 +1,16 @@
 const employeeChangeHistoryService = require('../../services/audit-trail/changesPersonnelDetailsServices');
+const BaseReportController = require('../Reports/reportsFallbackController');
 const ExcelJS = require('exceljs');
 const companySettings = require('../helpers/companySettings');
-const jsreport = require('jsreport-core')();
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
 const pool = require('../../config/db');
 
-class EmployeeChangeHistoryController {
+class EmployeeChangeHistoryController extends BaseReportController {
 
   constructor() {
-    this.jsreportReady = false;
-    this.initJSReport();
-  }
-
-  async initJSReport() {
-    try {
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized for Employee Change History Reports');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method for common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
-      
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      }
-
-      function formatTime(date) {
-        return new Date(date).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function formatDateTime(datetime) {
-        if (!datetime) return '';
-        const d = new Date(datetime);
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        }) + ' ' + d.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function formatPeriod(period) {
-        if (!period || period.length !== 6) return period;
-        const year = period.substring(0, 4);
-        const month = period.substring(4, 6);
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const monthName = months[parseInt(month) - 1] || month;
-        return monthName + ' ' + year;
-      }
-      
-      function subtract(a, b) {
-        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
-      }
-      
-      function eq(a, b) {
-        return a === b;
-      }
-      
-      function gt(a, b) {
-          return parseFloat(a) > parseFloat(b);
-      }
-      
-      function sum(array, property) {
-        if (!array || !Array.isArray(array)) return 0;
-        return array.reduce((sum, item) => sum + (parseFloat(item[property]) || 0), 0);
-      }
-      
-      function groupBy(array, property) {
-        if (!array || !Array.isArray(array)) return [];
-        
-        const groups = {};
-        array.forEach(item => {
-          const key = item[property] || 'Unknown';
-          if (!groups[key]) {
-            groups[key] = [];
-          }
-          groups[key].push(item);
-        });
-        
-        return Object.keys(groups).sort().map(key => ({
-          key: key,
-          values: groups[key]
-        }));
-      }
-    `;
+    super(); // Initialize base class
   }
   
   // ==========================================================================
@@ -338,14 +236,6 @@ class EmployeeChangeHistoryController {
   // PDF GENERATION
   // ==========================================================================
   async generateChangeHistoryPDF(data, req, res, filters, statistics) {
-    if (!this.jsreportReady) {
-      console.error('❌ JSReport not ready');
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       if (!data || data.length === 0) {
         console.error('❌ No data available for PDF generation');
@@ -369,32 +259,25 @@ class EmployeeChangeHistoryController {
       //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');  
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: false,
-            marginTop: '10mm',
-            marginBottom: '10mm',
-            marginLeft: '10mm',
-            marginRight: '10mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: data,
           statistics: statistics,
           reportDate: new Date(),
           filters: filterDescription,
           className: this.getDatabaseNameFromRequest(req),
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
+        }        
+      );
 
       console.log('✅ PDF generated successfully');
 
@@ -402,7 +285,7 @@ class EmployeeChangeHistoryController {
       res.setHeader('Content-Disposition', 
         `attachment; filename=employee_changes_${filters.fromYear}${filters.fromMonth}_${filters.toYear}${filters.toMonth}.pdf`
       );
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('❌ ERROR generating Change History PDF:');

@@ -4,20 +4,19 @@ const verifyToken = require('../../middware/authentication');
 const historicalReportMiddleware = require('../../middware/historicalReportsmiddleware');
 const pool = require('../../config/db')
 
-const reportsController = require('../../controllers/Reports/reportsControllers');
+const rangePaymentController = require('../../controllers/audit-trail/rangePaymentController');
 
 // PAYMENTS-BANK REPORT - DATA GENERATION (Returns JSON data)
-router.get('/generate', verifyToken, historicalReportMiddleware, reportsController.generatePaymentsByBank.bind(reportsController));
+router.get('/generate', verifyToken, historicalReportMiddleware, rangePaymentController.generatePaymentsByBankInRange.bind(rangePaymentController));
 
 // PAYMENTS-BANK - PDF EXPORT (Receives data in body, returns PDF file)
-router.post('/export/pdf', verifyToken, historicalReportMiddleware, reportsController.generatePaymentsByBankPDF.bind(reportsController));
+router.post('/export/pdf', verifyToken, historicalReportMiddleware, rangePaymentController.generatePaymentsByBankInRangePDF.bind(rangePaymentController));
 
 // PAYMENTS-BANK - EXCEL EXPORT (Receives data in body, returns Excel file)
-router.post('/export/excel', verifyToken, historicalReportMiddleware, reportsController.generatePaymentsByBankExcel.bind(reportsController));
+router.post('/export/excel', verifyToken, historicalReportMiddleware, rangePaymentController.generatePaymentsByBankInRangeExcel.bind(rangePaymentController));
 
 // PAYMENTS-BANK - FETCH FILTER OPTIONS
-router.get('/filter-options', verifyToken, reportsController.getFilterOptions.bind(reportsController));
-
+router.get('/filter-options', verifyToken, rangePaymentController.getFilterOptions.bind(rangePaymentController));
 
 router.get('/payroll-classes', verifyToken, async (req, res) => {
   try {
@@ -27,12 +26,12 @@ router.get('/payroll-classes', verifyToken, async (req, res) => {
     
     // Database to display name mapping
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+      [process.env.DB_OFFICERS]: 'OFFICERS',
+      [process.env.DB_WOFFICERS]: 'W_OFFICERS', 
+      [process.env.DB_RATINGS]: 'RATE A',
+      [process.env.DB_RATINGS_A]: 'RATE B',
+      [process.env.DB_RATINGS_B]: 'RATE C',
+      [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
     
     // Get all available databases
@@ -71,5 +70,3 @@ router.get('/payroll-classes', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
-
-

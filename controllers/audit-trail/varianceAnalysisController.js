@@ -1,128 +1,17 @@
 const varianceAnalysisService = require('../../services/audit-trail/varianceAnalysisService');
+const BaseReportController = require('../Reports/reportsFallbackController');
 const { GenericExcelExporter } = require('../helpers/excel');
 const companySettings = require('../helpers/companySettings');
 const ExcelJS = require('exceljs');
-const jsreport = require('jsreport-core')();
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
 
-class VarianceAnalysisController {
+class VarianceAnalysisController extends BaseReportController {
 
   constructor() {
-    this.jsreportReady = false;
-    this.initJSReport();
+    super(); // Initialize base class
   }
-
-  async initJSReport() {
-    try {
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized for Variance Analysis Reports');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method for common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
-      
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      }
-
-      function formatTime(date) {
-        return new Date(date).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function formatDateTime(datetime) {
-        if (!datetime) return '';
-        const d = new Date(datetime);
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        }) + ' ' + d.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function formatPeriod(period) {
-        if (!period || period.length !== 6) return period;
-        const year = period.substring(0, 4);
-        const month = period.substring(4, 6);
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const monthName = months[parseInt(month) - 1] || month;
-        return monthName + ' ' + year;
-      }
-      
-      function subtract(a, b) {
-        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
-      }
-      
-      function eq(a, b) {
-        return a === b;
-      }
-      
-      function gt(a, b) {
-          return parseFloat(a) > parseFloat(b);
-      }
-
-      function isNegative(value) {
-        return parseFloat(value) < 0;
-      }
-      
-      function abs(value) {
-        return Math.abs(parseFloat(value) || 0);
-      }      
-      
-      function sum(array, property) {
-        if (!array || !Array.isArray(array)) return 0;
-        return array.reduce((sum, item) => sum + (parseFloat(item[property]) || 0), 0);
-      }
-      
-      function groupBy(array, property) {
-        if (!array || !Array.isArray(array)) return [];
-        
-        const groups = {};
-        array.forEach(item => {
-          const key = item[property] || 'Unknown';
-          if (!groups[key]) {
-            groups[key] = [];
-          }
-          groups[key].push(item);
-        });
-        
-        return Object.keys(groups).sort().map(key => ({
-          key: key,
-          values: groups[key]
-        }));
-      }
-    `;
-  }
-
 
   // ==========================================================================
   // SALARY VARIANCE ANALYSIS - MAIN ENDPOINT
@@ -440,7 +329,7 @@ class VarianceAnalysisController {
       const subtitle = `Period: ${varianceAnalysisService.formatPeriod(result.monthName)} | Threshold: ${result.threshold_percentage}% | Pay Element: ${result.pay_element}`;
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA - OVERPAYMENT ANALYSIS',
+        title: 'DIA PAYROLL - OVERPAYMENT ANALYSIS',
         subtitle: subtitle,
         className: className,
         columns: columns,
@@ -504,13 +393,6 @@ class VarianceAnalysisController {
   // SALARY VARIANCE - PDF GENERATION
   // ==========================================================================
   async generateSalaryVariancePDF(result, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       const templatePath = path.join(__dirname, '../../templates/salary-variance.html');
       const templateContent = fs.readFileSync(templatePath, 'utf8');
@@ -518,36 +400,29 @@ class VarianceAnalysisController {
       //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');    
 
-      const pdfResult = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true,
-            marginTop: '5mm',
-            marginBottom: '5mm',
-            marginLeft: '5mm',
-            marginRight: '5mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: result.data,
           reportDate: new Date(),
           period: varianceAnalysisService.formatPeriod(result.period),
           comparisonInfo: result.comparisonInfo,
           className: this.getDatabaseNameFromRequest(req),
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
+        }        
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=salary_variance_${result.period}.pdf`);
-      res.send(pdfResult.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Salary Variance PDF generation error:', error);
@@ -559,13 +434,6 @@ class VarianceAnalysisController {
   // OVERPAYMENT - PDF GENERATION
   // ==========================================================================
   async generateOverpaymentPDF(result, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       const templatePath = path.join(__dirname, '../../templates/overpayment-analysis.html');
       const templateContent = fs.readFileSync(templatePath, 'utf8');
@@ -573,24 +441,9 @@ class VarianceAnalysisController {
       //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');    
 
-      const pdfResult = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true,
-            marginTop: '5mm',
-            marginBottom: '5mm',
-            marginLeft: '5mm',
-            marginRight: '5mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: result.data,
           reportDate: new Date(),
           period: result.monthName,
@@ -598,12 +451,20 @@ class VarianceAnalysisController {
           payElement: result.pay_element,
           className: this.getDatabaseNameFromRequest(req),
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
+        }        
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=overpayment_analysis_${result.period}.pdf`);
-      res.send(pdfResult.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Overpayment PDF generation error:', error);

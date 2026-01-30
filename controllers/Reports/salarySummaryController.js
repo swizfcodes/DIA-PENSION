@@ -1,59 +1,15 @@
+const BaseReportController = require('../Reports/reportsFallbackController');
 const salarySummaryService = require('../../services/Reports/salarySummaryService');
 const companySettings = require('../helpers/companySettings');
 const ExcelJS = require('exceljs');
-const jsreport = require('jsreport-core')();
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
 
-class SalarySummaryController {
+class SalarySummaryController extends BaseReportController {
 
   constructor() {
-    this.jsreportReady = false;
-    this.initJSReport();
-  }
-
-  async initJSReport() {
-    try {
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized for Salary Summary Reports');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method for common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
-      
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        });
-      }
-      
-      function formatTime(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-    `;
+    super(); // Initialize base class
   }
 
   // ==========================================================================
@@ -138,13 +94,6 @@ class SalarySummaryController {
   // GENERATE PDF
   // ==========================================================================
   async generateSalarySummaryPDF(req, res, result, filters) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       const rawData = result.details;
       const grandTotals = result.grandTotals;
@@ -173,24 +122,9 @@ class SalarySummaryController {
         `${filteredData[0].month_name}, ${filteredData[0].year}` : 
         'N/A';
 
-      const pdfResult = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true,
-            marginTop: '5mm',
-            marginBottom: '5mm',
-            marginLeft: '5mm',
-            marginRight: '5mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: filteredData,  // Use filtered data instead of raw data
           grandTotals: grandTotals,
           reportDate: new Date(),
@@ -199,14 +133,22 @@ class SalarySummaryController {
           month: filters.month,
           className: this.getDatabaseNameFromRequest(req),
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
+        }        
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 
         `attachment; filename=salary_summary_${filters.month}_${filters.year}.pdf`
       );
-      res.send(pdfResult.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Salary Summary PDF generation error:', error);
@@ -229,7 +171,7 @@ class SalarySummaryController {
     // Title
     worksheet.mergeCells('A1:K1');
     const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'DIA - SALARY SUMMARY REPORT';
+    titleCell.value = 'DIA PAYROLL - SALARY SUMMARY REPORT';
     titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     titleCell.fill = {

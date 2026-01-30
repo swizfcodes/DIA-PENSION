@@ -14,9 +14,12 @@ const payrollclassChangeRoutes = require('./administration/payrollclassChange');
 const changeregNoRoutes = require('./administration/changeregNo');
 const companyProfileRoutes = require('./administration/companyProfile');
 const monthendProcessingRoutes = require('./administration/monthendProcessing');
+//one-off/irregular payments
 const oneoffrankRoutes = require('./administration/irregular-oneoff/oneoffrank');
 const reportRequirementSetupRoutes = require('./administration/irregular-oneoff/reportRequirementSetup');
 const individualPaymentRoutes = require('./administration/irregular-oneoff/individualPayment');
+const oneOffCalculationRoutes = require('./administration/irregular-oneoff/oneoff-calculation');
+const oneOffReportsRoutes = require('./administration/irregular-oneoff/oneoff-reports');
 
 
 
@@ -54,6 +57,8 @@ const calculationReportsRoutes = require('./payroll-calculations/calculationRepo
 //utilities
 const backupRoutes = require('./utilities/backup-db');
 const restoreRoutes = require('./utilities/restore-db');
+const ippisRoutes = require('./utilities/ippis-payment');
+const consolidatedPayslipRoutes = require('./utilities/consolidated-payslips');
 
 
 
@@ -100,6 +105,7 @@ const overpaymentRoutes = require('./audit-trail/overpayment');
 const personalDetailsRecordRoutes = require('./audit-trail/personalDetailsRecord');
 const salaryVarianceRoutes = require('./audit-trail/salaryVariance');
 const variationInputRoutes = require('./audit-trail/variationInput');
+const rangePaymentRoutes = require('./audit-trail/rangePayments');
 
 
 
@@ -131,9 +137,13 @@ module.exports = (app) => {
     app.use('/regno', changeregNoRoutes);
     app.use('/company', companyProfileRoutes);
     app.use('/monthend', monthendProcessingRoutes);
+    //one-off/irregular payments
     app.use('/oneoffrank', oneoffrankRoutes);
     app.use('/off', reportRequirementSetupRoutes);
     app.use('/individual', individualPaymentRoutes);
+    app.use('/oneoff', oneOffCalculationRoutes);
+    app.use('/oneoffreports', oneOffReportsRoutes);
+
 
 
     //personnel profile
@@ -165,6 +175,8 @@ module.exports = (app) => {
     //utilities
     app.use('/api/backup-db', backupRoutes);
     app.use("/api/restore-db", restoreRoutes);
+    app.use("/ippis", ippisRoutes);
+    app.use("/consolidated", consolidatedPayslipRoutes);
 
 
 
@@ -209,6 +221,7 @@ module.exports = (app) => {
     app.use('/personalrecord', personalDetailsRecordRoutes);
     app.use('/salaryvariance', salaryVarianceRoutes);
     app.use('/variationinput', variationInputRoutes);
+    app.use('/rangepayments', rangePaymentRoutes);
     
 
 
@@ -223,5 +236,3 @@ module.exports = (app) => {
     app.use("/puppeteer", paydedReportRoutes);
     app.use("/logs", logServiceRoutes);
 };
-
-

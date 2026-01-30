@@ -1,107 +1,16 @@
+const BaseReportController = require('../Reports/reportsFallbackController');
 const nsitfReportService = require('../../services/Reports/nsitfReportService');
 const ExcelJS = require('exceljs');
 const companySettings = require('../helpers/companySettings');
 const { GenericExcelExporter } = require('../helpers/excel');
-const jsreport = require('jsreport-core')();
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
-const { get } = require('http');
 const path = require('path');
 
-class NSITFReportController {
+class NSITFReportController extends BaseReportController {
 
   constructor() {
-    this.jsreportReady = false;
-    this.initJSReport();
-  }
-
-  async initJSReport() {
-    try {
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized for NSITF Reports');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method for common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
-      
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      }
-
-      function formatTime(date) {
-        return new Date(date).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-      
-      function subtract(a, b) {
-        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
-      }
-      
-      function eq(a, b) {
-        return a === b;
-      }
-      
-      function gt(a, b) {
-          return parseFloat(a) > parseFloat(b);
-      }
-      
-      function sum(array, property) {
-        if (!array || !Array.isArray(array)) return 0;
-        return array.reduce((sum, item) => sum + (parseFloat(item[property]) || 0), 0);
-      }
-      
-      function groupBy(array, property) {
-        if (!array || !Array.isArray(array)) return [];
-        
-        const groups = {};
-        array.forEach(item => {
-          const key = item[property] || 'Unknown';
-          if (!groups[key]) {
-            groups[key] = [];
-          }
-          groups[key].push(item);
-        });
-        
-        return Object.keys(groups).sort().map(key => ({
-          key: key,
-          values: groups[key]
-        }));
-      }
-      
-      function sumByType(earnings, type) {
-        let total = 0;
-        if (Array.isArray(earnings)) {
-          earnings.forEach(item => {
-            if (item.type === type) {
-              total += parseFloat(item.amount) || 0;
-            }
-          });
-        }
-        return total;
-      }
-    `;
+    super(); // Initialize base class
   }
 
   _getUniqueSheetName(baseName, tracker) {
@@ -231,7 +140,7 @@ class NSITFReportController {
         }
 
         const workbook = await exporter.createWorkbook({
-          title: 'DIA - NSITF REPORT',
+          title: 'DIA PAYROLL - NSITF REPORT',
           subtitle: subtitle,
           className: className,
           columns: columns,
@@ -306,7 +215,7 @@ class NSITFReportController {
 
           // Report Title
           worksheet.mergeCells(row, 1, row, columns.length);
-          worksheet.getCell(row, 1).value = 'DIA - NSITF REPORT';
+          worksheet.getCell(row, 1).value = 'DIA PAYROLL - NSITF REPORT';
           worksheet.getCell(row, 1).font = { size: 12, bold: true };
           worksheet.getCell(row, 1).alignment = { horizontal: 'center', vertical: 'middle' };
           row++;
@@ -423,13 +332,6 @@ class NSITFReportController {
   // PDF GENERATION
   // ==========================================================================
   async generateNSITFReportPDF(data, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       if (!data || data.length === 0) {
         throw new Error('No data available for the selected filters');
@@ -449,24 +351,9 @@ class NSITFReportController {
       //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true,
-            marginTop: '2mm',
-            marginBottom: '2mm',
-            marginLeft: '2mm',
-            marginRight: '2mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: data,
           summary: summary,
           reportDate: new Date(),
@@ -476,14 +363,22 @@ class NSITFReportController {
           className: this.getDatabaseNameFromRequest(req),
           isSummary: isSummary,
           ...image
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
         }
-      });
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 
         `attachment; filename=nsitf_report_${data[0]?.month || 'report'}_${data[0]?.year || 'report'}.pdf`
       );
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('NSITF Report PDF generation error:', error);

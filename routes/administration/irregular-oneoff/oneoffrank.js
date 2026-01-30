@@ -117,7 +117,7 @@ router.put("/:one_type", verifyToken, async (req, res) => {
 // Delete record by one_type
 router.delete("/:one_type", verifyToken, async (req, res) => {
   try {
-    await pool.query("DELETE FROM py_oneoffrrank WHERE one_type=?", [
+    await pool.query("DELETE FROM py_oneoffrank WHERE one_type=?", [
       req.params.one_type,
     ]);
     res.json({ message: "One-off rank amounts deleted successfully" });

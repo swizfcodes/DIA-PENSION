@@ -1,71 +1,16 @@
 const duplicateAccountService = require('../../services/audit-trail/duplicateAccnoService');
+const BaseReportController = require('../Reports/reportsFallbackController');
 const companySettings = require('../helpers/companySettings');
 const ExcelJS = require('exceljs');
-const jsreport = require('jsreport-core')();
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
 const pool = require('../../config/db');
 
-class DuplicateAccountController {
+class DuplicateAccountController extends BaseReportController {
 
   constructor() {
-    this.jsreportReady = false;
-    this.initJSReport();
-  }
-
-  async initJSReport() {
-    try {
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized for Duplicate Account Reports');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method for common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      }
-
-      function formatTime(date) {
-        return new Date(date).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-
-      function eq(a, b) {
-        return a === b;
-      }
-      
-      function gt(a, b) {
-        return parseFloat(a) > parseFloat(b);
-      }
-
-      function getSeverity(count) {
-        if (count === 2) return 'Low';
-        if (count <= 4) return 'Medium';
-        return 'High';
-      }
-
-      function getSeverityClass(count) {
-        if (count === 2) return 'severity-low';
-        if (count <= 4) return 'severity-medium';
-        return 'severity-high';
-      }
-    `;
+    super(); // Initialize base class
   }
 
   // ==========================================================================
@@ -152,7 +97,7 @@ class DuplicateAccountController {
     // Title
     worksheet.mergeCells('A1:H1');
     const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'DIA - DUPLICATE ACCOUNT NUMBER REPORT';
+    titleCell.value = 'DIA PAYROLL - DUPLICATE ACCOUNT NUMBER REPORT';
     titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     titleCell.fill = {
@@ -301,14 +246,6 @@ class DuplicateAccountController {
   // PDF GENERATION
   // ==========================================================================
   async generateDuplicateAccountPDF(data, req, res, filters, statistics) {
-    if (!this.jsreportReady) {
-      console.error('❌ JSReport not ready');
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       if (!data || data.length === 0) {
         console.error('❌ No duplicate accounts to generate PDF');
@@ -331,32 +268,25 @@ class DuplicateAccountController {
       let filterDescription = filters.bankCode ? `Bank: ${filters.bankCode}` : 'All Banks';
       filterDescription += filters.includeInactive ? ' | Including Inactive' : ' | Active Only';
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true,
-            marginTop: '8mm',
-            marginBottom: '8mm',
-            marginLeft: '8mm',
-            marginRight: '8mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: data,
           statistics: statistics,
           reportDate: new Date(),
           filters: filterDescription,
           className: this.getDatabaseNameFromRequest(req),
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
+        }        
+      );
 
       console.log('✅ PDF generated successfully');
 
@@ -364,7 +294,7 @@ class DuplicateAccountController {
       res.setHeader('Content-Disposition', 
         `attachment; filename=duplicate_accounts_${new Date().toISOString().split('T')[0]}.pdf`
       );
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('❌ ERROR generating Duplicate Account PDF:');

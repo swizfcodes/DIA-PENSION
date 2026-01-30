@@ -1,136 +1,19 @@
+const BaseReportController = require('../Reports/reportsFallbackController');
 const reportService = require('../../services/Reports/reportServices');
 const payslipGenService = require('../../services/Reports/payslipGenerationService');
 const { GenericExcelExporter } = require('../helpers/excel');
 const companySettings = require('../helpers/companySettings');
 const ExcelJS = require('exceljs');
-const PDFDocument = require('pdfkit');
-const jsreport = require('jsreport-core')();
+//const PDFDocument = require('pdfkit');
+//const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
 //const { get } = require('http');
 
-class ReportController {
+class ReportController extends BaseReportController {
 
   constructor() {
-    // Initialize JSReport once when controller is created
-    this.jsreportReady = false;
-    this.initJSReport();
-  }
-
-  async initJSReport() {
-    try {
-      // Register extensions before initializing
-      jsreport.use(require('jsreport-handlebars')());
-      jsreport.use(require('jsreport-chrome-pdf')());
-      
-      await jsreport.init();
-      this.jsreportReady = true;
-      console.log('✅ JSReport initialized successfully');
-    } catch (error) {
-      console.error('JSReport initialization failed:', error);
-    }
-  }
-
-  // Helper method to return common Handlebars helpers
-  _getCommonHelpers() {
-    return `
-      function formatCurrency(value) {
-        const num = parseFloat(value) || 0;
-        return num.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
-
-      function formatCurrencyWithSign(amount) {
-        const num = parseFloat(amount || 0);
-        const formatted = Math.abs(num).toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-        if (num < 0) {
-          return '(' + formatted + ')';
-        }
-        return formatted;
-      }
-      
-      function isNegative(amount) {
-        return parseFloat(amount || 0) < 0;
-      }
-      
-      function formatDate(date) {
-        const d = new Date(date || new Date());
-        return d.toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
-      }
-
-      function formatTime(date) {
-        return new Date(date).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-
-      function formatMonth(monthNumber) {
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        return monthNames[monthNumber - 1] || 'Unknown';
-      }
-
-      function add(a, b) {
-        return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-      }
-      
-      function subtract(a, b) {
-        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
-      }
-      
-      function eq(a, b) {
-        return a === b;
-      }
-      
-      function gt(a, b) {
-          return parseFloat(a) > parseFloat(b);
-      }
-      
-      function sum(array, property) {
-        if (!array || !Array.isArray(array)) return 0;
-        return array.reduce((sum, item) => sum + (parseFloat(item[property]) || 0), 0);
-      }
-      
-      function groupBy(array, property) {
-        if (!array || !Array.isArray(array)) return [];
-        
-        const groups = {};
-        array.forEach(item => {
-          const key = item[property] || 'Unknown';
-          if (!groups[key]) {
-            groups[key] = [];
-          }
-          groups[key].push(item);
-        });
-        
-        return Object.keys(groups).sort().map(key => ({
-          key: key,
-          values: groups[key]
-        }));
-      }
-      
-      function sumByType(earnings, type) {
-        let total = 0;
-        if (Array.isArray(earnings)) {
-          earnings.forEach(item => {
-            if (item.type === type) {
-              total += parseFloat(item.amount) || 0;
-            }
-          });
-        }
-        return total;
-      }
-    `;
+    super(); // Initialize base class
   }
 
   _getUniqueSheetName(baseName, tracker) {
@@ -324,56 +207,42 @@ class ReportController {
     const mappedData = req.body.data || [];
 
     if (mappedData.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: "No payslip data provided for PDF generation." 
-      });
-    }
-
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "Enhanced PDF generation service not ready. Please try again."
-      });
+        throw new Error("No payslip data for selection(s).");
     }
 
     try {
       const templatePath = path.join(__dirname, '../../templates/payslip-template.html');
-      const templateContent = fs.readFileSync(templatePath, 'utf8');
-
-      //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            timeout: 120000,
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A5'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        options: {
+      console.log(`📄 Generating payslips for ${mappedData.length} employees`);
+
+      const BATCH_SIZE = 500;
+      
+      const pdfBuffer = await this.generateBatchedPDF(
+        templatePath,
+        mappedData,
+        BATCH_SIZE,
+        {
+          format: 'A5',
+          landscape: false,
           timeout: 120000,
-          reportTimeout: 120000
+          options: {
+            timeout: 120000,
+            reportTimeout: 120000
+          }
         },
-        data: {
-          employees: mappedData,
+        {
           payDate: new Date(),
           ...image
         }
-      });
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'attachment; filename=payslips_enhanced.pdf');
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
-      console.error('JSReport PDF generation error:', error);
+      console.error('Payslip PDF generation error:', error);
       return res.status(500).json({ 
         success: false, 
         error: error.message || "An error occurred during PDF generation." 
@@ -480,6 +349,10 @@ class ReportController {
 
   async generatePaymentsByBankExcel(data, filters, summary, failedClasses, req, res) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+
       const exporter = new GenericExcelExporter();
       const isMultiClass = filters.allClasses === 'true' || filters.allClasses === true;
       const isSummary = filters.summaryOnly === 'true' || filters.summaryOnly === true;
@@ -883,24 +756,19 @@ class ReportController {
   }
 
   async generatePaymentsByBankPDF(data, filters, summary, failedClasses, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
-      const templatePath = path.join(__dirname, '../../templates/payments-by-bank.html');
-      const templateContent = fs.readFileSync(templatePath, 'utf8');
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
 
-      //Load image
+      const templatePath = path.join(__dirname, '../../templates/payments-by-bank.html');
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
       const isMultiClass = filters.allClasses === 'true' || filters.allClasses === true;
       const isSummary = filters.summaryOnly === 'true' || filters.summaryOnly === true;
 
-      // Prepare template data
+      //const BATCH_SIZE = 500;
+
       let templateData = {
         reportDate: new Date(),
         year: filters.year,
@@ -915,9 +783,7 @@ class ReportController {
       };
 
       if (isMultiClass) {
-        // Multi-class report structure
         templateData.classes = [];
-
         data.forEach(classData => {
           const classInfo = {
             payrollClass: classData.payrollClass,
@@ -928,12 +794,9 @@ class ReportController {
           };
 
           if (isSummary) {
-            // Summary data for this class
             classInfo.data = classData.data;
           } else {
-            // Detailed data - group by bank and branch
             const bankGroups = {};
-            
             classData.data.forEach(row => {
               const key = `${row.Bankcode}_${row.bank_branch_name || row.bankbranch || ''}`;
               
@@ -964,9 +827,7 @@ class ReportController {
 
           templateData.classes.push(classInfo);
         });
-
       } else {
-        // Single class report (original logic)
         const period = data.length > 0 ? 
           `${data[0].month_name || filters.month}, ${data[0].year || filters.year}` : 
           'N/A';
@@ -977,7 +838,6 @@ class ReportController {
           templateData.data = data;
         } else {
           const bankGroups = {};
-          
           data.forEach(row => {
             const key = `${row.Bankcode}_${row.bank_branch_name || row.bankbranch || ''}`;
             
@@ -1007,32 +867,23 @@ class ReportController {
         }
       }
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: templateData
-      });
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        templateData,
+        //BATCH_SIZE,
+        {
+          format: 'A4',
+          landscape: true
+        }
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'attachment; filename=payments_by_bank.pdf');
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('PDF generation error:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: error.message 
-      });
+      return res.status(500).json({ success: false, error: error.message });
     }
   }
 
@@ -1419,13 +1270,6 @@ class ReportController {
   }
 
   async generateEarningsDeductionsAnalysisPDF(data, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
       if (!data || data.length === 0) {
         throw new Error('No data available for the selected filters');
@@ -1436,14 +1280,12 @@ class ReportController {
       console.log('Is Summary:', isSummary);
       console.log('Data rows:', data.length);
       
-      // Group data by category
       const categoriesMap = {};
       
       data.forEach(row => {
         const category = row.category || 'Other';
         const paymentCode = row.payment_code;
         
-        // Initialize category if it doesn't exist
         if (!categoriesMap[category]) {
           categoriesMap[category] = {
             categoryName: category,
@@ -1452,7 +1294,6 @@ class ReportController {
           };
         }
         
-        // Initialize payment type if it doesn't exist
         if (!categoriesMap[category].paymentTypesMap[paymentCode]) {
           categoriesMap[category].paymentTypesMap[paymentCode] = {
             payment_code: paymentCode,
@@ -1464,13 +1305,11 @@ class ReportController {
         }
         
         if (isSummary) {
-          // Summary mode
           const amount = parseFloat(row.total_amount || 0);
           categoriesMap[category].paymentTypesMap[paymentCode].employee_count = parseInt(row.employee_count || 0);
           categoriesMap[category].paymentTypesMap[paymentCode].subtotal = amount;
           categoriesMap[category].categoryTotal += amount;
         } else {
-          // Detailed mode - add individual employee
           const amount = parseFloat(row.total_amount || 0);
           categoriesMap[category].paymentTypesMap[paymentCode].employees.push({
             his_empno: row.his_empno,
@@ -1484,7 +1323,6 @@ class ReportController {
         }
       });
       
-      // Convert to array format for template
       const categories = Object.values(categoriesMap).map(cat => {
         if (isSummary) {
           return {
@@ -1500,30 +1338,13 @@ class ReportController {
           };
         }
       });
-      
-      console.log('Categories processed:', categories.length);
-      console.log('First category structure:', JSON.stringify(categories[0], null, 2));
 
-      //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
-
       const templatePath = path.join(__dirname, '../../templates/earnings-deductions.html');
-      const templateContent = fs.readFileSync(templatePath, 'utf8');
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: !isSummary
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           categories: categories,
           reportDate: new Date(),
           month: data[0]?.month || 'N/A',
@@ -1531,19 +1352,20 @@ class ReportController {
           className: this.getDatabaseNameFromRequest(req),
           isSummary: isSummary,
           ...image
+        },
+        {
+          format: 'A4',
+          landscape: !isSummary
         }
-      });
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=earnings-deductions-${data[0]?.month}-${data[0]?.year}.pdf`);
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('PDF generation error:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: error.message 
-      });
+      return res.status(500).json({ success: false, error: error.message });
     }
   }
 
@@ -1859,14 +1681,11 @@ class ReportController {
   }
 
   async generateLoanAnalysisPDF(data, filters, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
-
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+
       const templatePath = path.join(__dirname, '../../templates/loan-analysis.html');
       const templateContent = fs.readFileSync(templatePath, 'utf8');
 
@@ -1880,35 +1699,32 @@ class ReportController {
         count: data.reduce((sum, g) => sum + g.totals.count, 0)
       };
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true
-          },
-          helpers: `
-            ${this._getCommonHelpers()}
-          `
-        },
-        data: {
-          groups: data,
-          grandTotals: grandTotals,
-          className: this.getDatabaseNameFromRequest(req),
-          reportDate: new Date(),
-          month: filters.month || 'N/A',
-          year: filters.year || 'N/A',
-          ...image
+      const templateData = {
+        groups: data,
+        grandTotals: grandTotals,
+        className: this.getDatabaseNameFromRequest(req),
+        reportDate: new Date(),
+        month: filters.month || 'N/A',
+        year: filters.year || 'N/A',
+        ...image        
+      }
+
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        templateData,
+        {
+          format: 'A4',
+          landscape: true,
+          marginTop: '5mm',
+          marginBottom: '5mm',
+          marginLeft: '5mm',
+          marginRight: '5mm'
         }
-      });
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'attachment; filename=loan_analysis.pdf');
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('PDF generation error:', error);
@@ -2040,12 +1856,6 @@ class ReportController {
   }
 
   async generatePaymentsDeductionsByBankPDF(data, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
 
     try {
       if (!data || data.length === 0) {
@@ -2160,20 +1970,9 @@ class ReportController {
       //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: !isSummary
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           banks: banks,
           reportDate: new Date(),
           month: data[0]?.month || 'N/A',
@@ -2181,12 +1980,16 @@ class ReportController {
           className: this.getDatabaseNameFromRequest(req),
           isSummary: isSummary,
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: !isSummary
+        }        
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=payments-by-bank-${data[0]?.month}-${data[0]?.year}.pdf`);
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Bank PDF generation error:', error);
@@ -2646,12 +2449,6 @@ class ReportController {
   }
 
   async generatePayrollRegisterPDF(data, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
 
     try {
       if (!data || data.length === 0) {
@@ -2782,24 +2579,9 @@ class ReportController {
       //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: true,
-            marginTop: '10mm',
-            marginBottom: '10mm',
-            marginLeft: '10mm',
-            marginRight: '10mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           locations: locations,
           grandTotals: grandTotals,
           period: period,
@@ -2808,12 +2590,16 @@ class ReportController {
           className: this.getDatabaseNameFromRequest(req),
           includeElements: includeElements,
           ...image
-        }
-      });
+        },
+        {
+          format: 'A4',
+          landscape: !isSummary
+        }        
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=payroll_register_${data[0]?.month}_${data[0]?.year}.pdf`);
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Payroll Register PDF generation error:', error);
@@ -2824,7 +2610,7 @@ class ReportController {
     }
   }
 
-  // ==========================================================================
+  /*// ==========================================================================
   // REPORT 7-13: Similar implementations...
   // ==========================================================================
 
@@ -2990,12 +2776,6 @@ class ReportController {
   }
 
   async generatePaymentStaffListPDF(data, filters, req, res) {
-    if (!this.jsreportReady) {
-      return res.status(500).json({
-        success: false,
-        error: "PDF generation service not ready."
-      });
-    }
 
     try {
       if (!data || data.length === 0) {
@@ -3029,24 +2809,9 @@ class ReportController {
       //Load image
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
-      const result = await jsreport.render({
-        template: {
-          content: templateContent,
-          engine: 'handlebars',
-          recipe: 'chrome-pdf',
-          chrome: {
-            displayHeaderFooter: false,
-            printBackground: true,
-            format: 'A4',
-            landscape: false,
-            marginTop: '10mm',
-            marginBottom: '10mm',
-            marginLeft: '10mm',
-            marginRight: '10mm'
-          },
-          helpers: this._getCommonHelpers()
-        },
-        data: {
+      const pdfBuffer = await this.generatePDFWithFallback(
+        templatePath,
+        {
           data: data,
           reportDate: new Date(),
           month: data[0]?.month || filters.month || 'N/A',
@@ -3057,11 +2822,11 @@ class ReportController {
           totalNetPay: totalNetPay,
           ...image
         }
-      });
+      );
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=payment-staff-list-${data[0]?.month || 'report'}-${data[0]?.year || 'report'}.pdf`);
-      res.send(result.content);
+      res.send(pdfBuffer);
 
     } catch (error) {
       console.error('Staff List PDF generation error:', error);
@@ -3071,6 +2836,7 @@ class ReportController {
       });
     }
   }
+  */
 
   // ==========================================================================
   // HELPER: Get Filter Options
@@ -3091,61 +2857,6 @@ class ReportController {
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
-  }
-
-  // ==========================================================================
-  // HELPER FUNCTIONS
-  // ==========================================================================
-  
-  async generateGenericExcel(data, sheetName, res) {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(sheetName);
-
-    if (data.length === 0) {
-      worksheet.addRow(['No data available']);
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename=${sheetName.replace(/\s+/g, '_')}.xlsx`);
-      await workbook.xlsx.write(res);
-      return res.end();
-    }
-
-    // Get columns from first row
-    const columns = Object.keys(data[0]).map(key => ({
-      header: key.replace(/_/g, ' ').toUpperCase(),
-      key: key,
-      width: 20
-    }));
-
-    worksheet.columns = columns;
-
-    // Style header
-    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF0070C0' }
-    };
-
-    // Add data
-    data.forEach(row => {
-      worksheet.addRow(row);
-    });
-
-    // Auto-format currency columns (columns containing 'amount', 'pay', 'tax', 'gross', 'net')
-    columns.forEach((col, index) => {
-      const colLetter = String.fromCharCode(65 + index);
-      const key = col.key.toLowerCase();
-      if (key.includes('amount') || key.includes('pay') || key.includes('tax') || 
-          key.includes('gross') || key.includes('net') || key.includes('deduction')) {
-        worksheet.getColumn(colLetter).numFmt = '₦#,##0.00';
-      }
-    });
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=${sheetName.replace(/\s+/g, '_')}.xlsx`);
-
-    await workbook.xlsx.write(res);
-    res.end();
   }
 
   formatCurrency(amount) {

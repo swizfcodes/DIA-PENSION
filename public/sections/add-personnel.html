@@ -2804,7 +2804,7 @@ function capitalizeWords(str) {
     : "";
 }
 
-["field-residential-address", "field-surname", "field-othername", "field-town","nokFirst", "nokLast", "nokAddress", "nokWork", "spouseName", "spouseStreet", "spouseTown", "childName", "childStreet", "childTown", "childSchool", "childOffice", "childOccupation"].forEach(fieldId => {
+["field-residential-address", "field-town","nokFirst", "nokLast", "nokAddress", "nokWork", "spouseName", "spouseStreet", "spouseTown", "childName", "childStreet", "childTown", "childSchool", "childOffice", "childOccupation"].forEach(fieldId => {
   const el = document.getElementById(fieldId);
   el.addEventListener("input", () => {
     el.value = capitalizeWords(el.value);
@@ -2812,7 +2812,7 @@ function capitalizeWords(str) {
 });
 
 //capitalize all
-["field-service-number", "TaxCode", "NSITFcode", "award", "InternalACNo", "Jobtitle", "NHFcode", "spousePoBox", "childPoBox"].forEach(id => {
+["field-service-number", "TaxCode", "field-surname", "field-othername", "NSITFcode", "award", "InternalACNo", "Jobtitle", "NHFcode", "spousePoBox", "childPoBox"].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener("input", () => {
     el.value = el.value.toUpperCase();
