@@ -1385,8 +1385,8 @@ if (typeof module !== 'undefined' && module.exports) {
 // Dashboard stats update
 async function updateDashboardStats() {
   try {
-    // Get payroll status
-    const response = await fetch('stats/2025/10', {
+    // Get total personnel and nominal processed for current payroll period
+    const response = await fetch('/stats/total-personnels', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -1397,17 +1397,18 @@ async function updateDashboardStats() {
     
     if (result.success) {
       // Update stats cards
-      document.getElementById('pendingApproval').textContent = result.data.total_employees || '0';
-      document.getElementById('nominalProcessed').textContent = result.data.total_employees || '0';
+      document.getElementById('active-personnel').textContent = result.data.totalPersonnels || '0';
       
-      // Update notifications based on status
-      updateNotifications(result.data);
     }
   } catch (error) {
     console.error('Error updating dashboard:', error);
   }
 }
 
+// Call updateDashboardStats on page load
+document.addEventListener('DOMContentLoaded', function() {
+  updateDashboardStats();
+});
 
 function logout() {
   // Clear user session data

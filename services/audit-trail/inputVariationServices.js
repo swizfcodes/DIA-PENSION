@@ -242,5 +242,3 @@ class PayPeriodReportService {
 }
 
 module.exports = new PayPeriodReportService();
-
-

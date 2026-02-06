@@ -56,6 +56,10 @@ class ControlSheetController extends BaseReportController {
   // ==========================================================================
   async generateControlSheetExcel(result, req, res) {
     try {
+      if (!result.details || result.details.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+      
       const exporter = new GenericExcelExporter();
       const data = result.details;
       const className = this.getDatabaseNameFromRequest(req);
@@ -207,16 +211,16 @@ class ControlSheetController extends BaseReportController {
 
   getDatabaseNameFromRequest(req) {
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFFS';
+    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
   }
 }
 

@@ -69,6 +69,10 @@ class PersonnelReportController extends BaseReportController {
   // ==========================================================================
   async generatePersonnelReportExcel(data, req, res, filters, statistics) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No Personnel data available for the selected filters');
+      }
+      
       const exporter = new GenericExcelExporter();
       const className = this.getDatabaseNameFromRequest(req);
 
@@ -174,7 +178,7 @@ class PersonnelReportController extends BaseReportController {
   async generatePersonnelReportPDF(data, req, res, filters, statistics) {
     try {
       if (!data || data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No Personnel data available for the selected filters');
       }
 
       console.log('📄 Generating PDF with', data.length, 'records');
@@ -203,12 +207,17 @@ class PersonnelReportController extends BaseReportController {
   
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
+      let className = this.getDatabaseNameFromRequest(req);
+      if (className && className.includes(' ')) {
+        className = className.replace(' ', '<br>');
+      }
+
       const templateData = {
         data: data,
         statistics: statistics,
         reportDate: new Date(),
         filters: filterDescription,
-        className: this.getDatabaseNameFromRequest(req),
+        className: className,
         ...image
       };
 
@@ -333,16 +342,16 @@ class PersonnelReportController extends BaseReportController {
   
   getDatabaseNameFromRequest(req) {
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFFS';
+    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
   }
 }
 

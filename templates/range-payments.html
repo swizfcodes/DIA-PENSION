@@ -14,7 +14,7 @@
             width: 100%;
             height: 100%;
             background-image: url('{{{logoDataUrl}}}');
-            background-size: auto 100%;
+            background-size: auto 100%;    /* 80% of height */
             background-repeat: no-repeat;
             background-position: center center;
             opacity: 0.02;
@@ -47,7 +47,7 @@
             font-weight: bold;
             margin-bottom: 2px;
             letter-spacing: 1.5px;
-            color: #1e40af;
+            color: #15803d;
             font-family: 'Libre Baskerville', Georgia, serif;
         }
         
@@ -69,32 +69,20 @@
 
         /* Amount Range Banner - NEW */
         .amount-range-banner {
-            background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
-            border: 2px solid #0066cc;
-            border-radius: 5px;
-            padding: 10px 15px;
-            margin: 10px 0;
-            text-align: center;
-            font-size: 10pt;
-            font-weight: bold;
-            color: #003d7a;
-            box-shadow: 0 2px 4px rgba(0, 102, 204, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-style: italic;
+            white-space: nowrap;        /* keeps all text on one line */
+            color: #555;                /* light, readable text */
         }
-        
-        .amount-range-banner .range-label {
-            font-size: 8pt;
-            font-weight: normal;
-            color: #0066cc;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .amount-range-banner .range-values {
-            font-size: 11pt;
-            font-weight: bold;
-            color: #003d7a;
-            margin-top: 3px;
-            font-family: 'Courier New', monospace;
+
+        .range-label,
+        .range-values {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
         }
 
         /* Warning Box */
@@ -125,8 +113,9 @@
         }
         
         /* Summary Table */
+        /* Summary Table */
         table.summary { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        table.summary th { padding: 8px; text-align: left; font-size: 9pt; color: #1e40af; border-bottom: solid 1px #1e40af; }
+        table.summary th { padding: 8px; text-align: left; font-size: 9pt; color: #15803d; border-bottom: solid 1px #15803d; }
         table.summary td { padding: 6px; border-bottom: 1px solid #e0e0e0; }
         
         /* Detailed View */
@@ -140,7 +129,7 @@
         
         .bank-header { 
             padding: 10px;
-            color: #1e40af;
+            color: #15803d;
             font-weight: bold; 
             font-size: 11pt;
             text-align: center;
@@ -151,11 +140,11 @@
         table.details { width: 100%; border-collapse: collapse; margin: 10px 0; }
         table.details th { 
             padding: 7px; 
-            color: #1e40af;
+            color: #15803d;
             text-align: left; 
             font-size: 8.5pt;
             font-weight: 600;
-            border-bottom: solid 1px #1e40af;
+            border-bottom: solid 1px #15803d;
         }
         table.details td { 
             padding: 5px 6px; 
@@ -211,10 +200,10 @@
         <div class="className">
             {{className}}
         </div>
-        <div class="header">
-            <h1>Nigerian Navy (Naval Headquarters)</h1>
-            <h2>CENTRAL PAY OFFICE, 23 POINT ROAD APAPA</h2>
-        </div>
+      <div class="header">
+          <h1>DEFENCE INTELLIGENCE AGENCY</h1>
+          <h2>ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY</h2>
+      </div>
     </div>
 
     <div class="header-info">
@@ -234,10 +223,10 @@
 
     <!-- Amount Range Banner - NEW -->
     <div class="amount-range-banner">
-        <div class="range-label">Amount Range Filter</div>
-        <div class="range-values">
+        <span class="range-label">Amount Range Filter:</span>
+        <span class="range-values">
             ₦{{formatCurrency amountRange.min}} to ₦{{formatCurrency amountRange.max}}
-        </div>
+        </span>
     </div>
     {{/unless}}
 

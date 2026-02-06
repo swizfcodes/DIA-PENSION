@@ -154,6 +154,7 @@
             <table class="min-w-full border border-gray-200 rounded-lg text-sm">
                 <thead class="bg-green-100 text-green-900">
                     <tr>
+                        <th class="border px-4 py-3 text-left">Code</th>
                         <th class="border px-4 py-3 text-left">Description</th>
                         <th class="border px-4 py-3 text-center">Actions</th>
                     </tr>
@@ -730,6 +731,7 @@ function renderTable() {
     const absoluteIndex = startIndex + index;
     return `
     <tr class="hover:bg-gray-50">
+      <td class="border px-4 py-2 text-left">${item.one_type}</td>
       <td class="border px-4 py-2 text-left">${getElmDesc(item.one_type)}</td>
       <td class="border px-4 py-2 text-center">
         <button onclick="viewRow(${absoluteIndex})" class="text-green-600 hover:text-green-800 mr-2">View</button>

@@ -213,10 +213,10 @@
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate report');
       }
-
+      
       if (exportFormat === 'json') {
         const result = await response.json();
         loadingModal.classList.add("hidden");

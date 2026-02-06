@@ -148,14 +148,20 @@ router.post('/process-monthend', verifyToken, async (req, res) => {
       
       // Step 6: Get processing statistics from py_performance_logs
       const [extractRecLog] = await connection.query(
-        `SELECT records_processed 
-         FROM py_performance_log 
-         WHERE procedure_name = 'sp_extractrec_optimized'
-           AND process_year = ? 
-           AND process_month = ?
-           AND status = 'SUCCESS'
-         ORDER BY completed_at DESC 
-         LIMIT 1`,
+        `SELECT records_processed
+          FROM py_performance_log
+          WHERE procedure_name IN (
+                  'sp_extractrec_optimized',
+                  'sp_calculate_01_complete_optimized'
+                )
+            AND process_year = ?
+            AND process_month = ?
+            AND status = 'SUCCESS'
+          ORDER BY
+            (procedure_name = 'sp_extractrec_optimized') DESC,
+            completed_at DESC
+          LIMIT 1;
+`,
         [currentPeriod.year, currentPeriod.month]
       );
       

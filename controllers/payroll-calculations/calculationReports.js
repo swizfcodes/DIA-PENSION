@@ -219,7 +219,7 @@ async function createAllowancesExcel(workbook, period) {
       ROUND(MIN(mp.amtthismth), 2) as min_amount,
       ROUND(MAX(mp.amtthismth), 2) as max_amount
     FROM py_masterpayded mp
-    INNER JOIN py_elementtype et ON et.PaymentType = mp.his_type
+    INNER JOIN py_elementType et ON et.PaymentType = mp.his_type
     WHERE LEFT(mp.his_type, 2) = 'PT' AND mp.amtthismth > 0
     GROUP BY mp.his_type, et.elmDesc
     ORDER BY total_amount DESC
@@ -325,7 +325,7 @@ async function createDeductionsExcel(workbook, period) {
       ROUND(MIN(mp.amtthismth), 2) as min_amount,
       ROUND(MAX(mp.amtthismth), 2) as max_amount
     FROM py_masterpayded mp
-    INNER JOIN py_elementtype et ON et.PaymentType = mp.his_type
+    INNER JOIN py_elementType et ON et.PaymentType = mp.his_type
     WHERE LEFT(mp.his_type, 2) = 'PR' AND mp.amtthismth > 0
     GROUP BY mp.his_type, et.elmDesc
     ORDER BY total_amount DESC
@@ -869,7 +869,7 @@ exports.getDeductionsSummary = async (req, res) => {
         ROUND(MIN(mp.amtthismth), 2) as min_amount,
         ROUND(MAX(mp.amtthismth), 2) as max_amount
       FROM py_masterpayded mp
-      INNER JOIN py_elementtype et ON et.PaymentType = mp.his_type
+      INNER JOIN py_elementType et ON et.PaymentType = mp.his_type
       WHERE LEFT(mp.his_type, 2) IN ('PR', 'PL')
         AND mp.amtthismth > 0
       GROUP BY mp.his_type, et.elmDesc
@@ -1090,7 +1090,7 @@ exports.getAllowancesSummary = async (req, res) => {
         ROUND(MIN(mp.amtthismth), 2) as min_amount,
         ROUND(MAX(mp.amtthismth), 2) as max_amount
       FROM py_masterpayded mp
-      INNER JOIN py_elementtype et ON et.PaymentType = mp.his_type
+      INNER JOIN py_elementType et ON et.PaymentType = mp.his_type
       WHERE LEFT(mp.his_type, 2) = 'PT'
         AND mp.amtthismth > 0
       GROUP BY mp.his_type, et.elmDesc

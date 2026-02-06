@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
 const pool = require('../../config/db'); // mysql2 pool
 const verifyToken = require('../../middware/authentication');
@@ -60,5 +60,4 @@ router.put('/update-stage', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
-
-
+*/

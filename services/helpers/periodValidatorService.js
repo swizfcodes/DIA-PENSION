@@ -64,7 +64,7 @@ class PeriodValidatorService {
           return {
             isValid: false,
             dataSource: 'current',
-            errorMessage: `Calculation not completed for ${this.getMonthName(requestedMonth)} ${requestedYear}. Current status: ${currentPeriod.status} - ${this.getStatusMessage(currentPeriod.status)}. Please complete payroll calculation before generating reports.`,
+            errorMessage: `Calculation not completed for ${this.getMonthName(requestedMonth)} ${requestedYear}. Please complete payroll calculation before generating reports for ${this.getMonthName(requestedMonth)} ${requestedYear}.`,
             period: currentPeriod
           };
         }

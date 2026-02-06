@@ -158,9 +158,9 @@ module.exports = (app) => {
 
 
     //file update
-    app.use('/inputvariable', inputVariableRoutes);
+    //app.use('/inputvariable', inputVariableRoutes);
     app.use('/masterfile', masterFileUpdateRoutes);
-    app.use('/personneldata', personnelDataRoutes);
+    //app.use('/personneldata', personnelDataRoutes);
     app.use('/recallpayment', recallPaymentRoutes);
     app.use('/savepayroll', savePayrollRoutes);
 

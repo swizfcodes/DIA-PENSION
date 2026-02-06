@@ -1,141 +1,244 @@
 const pool = require('../../config/db');
-const { startLog, updateLog } = require('../helpers/logService');
 
-exports.getInputVariables = async (year, month, user) => {
-  const logId = await startLog('FileUpdate', 'InputVariables', year, month, user);
-  try {
-    // Use the simplified view
-    const [rows] = await pool.query(`
-      SELECT 
-        Empl_id,
-        full_name,
-        Location,
-        pay_type,
-        element_name,
-        function_type_desc,
-        function_type_code,
-        pay_indicator_desc,
-        pay_indicator_code,
-        element_category,
-        mak1,
-        amtp,
-        mak2,
-        amt,
-        amtad,
-        amttd,
-        nomth,
-        created_at
-      FROM vw_input_variables
-      ORDER BY 
-        full_name,
-        pay_type
-    `);
-
-    await updateLog(logId, 'SUCCESS', `Retrieved ${rows.length} input variable records.`);
+class PayPeriodReportService {
+  
+  // ========================================================================
+  // PAY PERIOD REPORT - DETAILED LISTING
+  // ========================================================================
+  async getPayPeriodReport(filters = {}) {
+    const { fromPeriod, toPeriod, emplId, createdBy, payType } = filters;
     
-    // Return summary statistics
-    const summary = {
-      totalRecords: rows.length,
-      byElementType: {
-        required: rows.filter(r => r.element_category === 'REQUIRED_FOR_ALL').length,
-        notRequired: rows.filter(r => r.element_category === 'NOT_REQUIRED_FOR_ALL').length,
-        allowances: rows.filter(r => r.element_category === 'ALLOWANCE').length,
-        deductions: rows.filter(r => r.element_category === 'DEDUCTION').length,
-        other: rows.filter(r => r.element_category === 'OTHER').length
-      },
-      byFunctionType: {
-        loans: rows.filter(r => r.function_type_code === 'L').length,
-        permanent: rows.filter(r => r.function_type_code === 'P').length,
-        temporary: rows.filter(r => r.function_type_code === 'T').length,
-        hourly: rows.filter(r => r.function_type_code === 'H').length,
-        freePay: rows.filter(r => r.function_type_code === 'F').length,
-        independent: rows.filter(r => r.function_type_code === 'X').length
-      },
-      byPayIndicator: rows.reduce((acc, r) => {
-        const indicator = r.pay_indicator_desc || 'NO_INDICATOR';
-        acc[indicator] = (acc[indicator] || 0) + 1;
-        return acc;
-      }, {}),
-      financialTotals: {
-        totalAmt: rows.reduce((sum, r) => sum + (r.amt || 0), 0),
-        totalAmtp: rows.reduce((sum, r) => sum + (r.amtp || 0), 0),
-        totalAmttd: rows.reduce((sum, r) => sum + (r.amttd || 0), 0),
-        totalAllowances: rows
-          .filter(r => r.amtad === 'Add')
-          .reduce((sum, r) => sum + (r.amt || 0), 0),
-        totalDeductions: rows
-          .filter(r => r.amtad === 'Deduct')
-          .reduce((sum, r) => sum + (r.amt || 0), 0)
-      },
-      topAmounts: {
-        highestAmounts: rows
-          .sort((a, b) => (b.amt || 0) - (a.amt || 0))
-          .slice(0, 10)
-          .map(r => ({
-            Empl_id: r.Empl_id,
-            full_name: r.full_name,
-            element_name: r.element_name,
-            amt: r.amt,
-            amtad: r.amtad
-          })),
-        lowestAmounts: rows
-          .filter(r => (r.amt || 0) > 0)
-          .sort((a, b) => (a.amt || 0) - (b.amt || 0))
-          .slice(0, 10)
-          .map(r => ({
-            Empl_id: r.Empl_id,
-            full_name: r.full_name,
-            element_name: r.element_name,
-            amt: r.amt,
-            amtad: r.amtad
-          }))
-      }
-    };
-
-    return { 
-      summary, records: rows,
-      message: 'Input Variables loaded successfully'
-    };
-  } catch (err) {
-    await updateLog(logId, 'FAILED', err.message);
-    throw err;
+    console.log('Pay Period Report Filters:', filters); // DEBUG
+    
+    try {
+      // Build the main query with all filters
+      const query = `
+        SELECT 
+          pp.pay_period,
+          SUBSTRING(pp.pay_period, 1, 4) as year,
+          SUBSTRING(pp.pay_period, 5, 2) as month,
+          pp.Empl_ID as employee_id,
+          CONCAT(TRIM(h.Surname), ' ', TRIM(IFNULL(h.OtherName, ''))) as full_name,
+          tt.Description as title,
+          h.Title as title_code,
+          pp.type as pay_element_type,
+          COALESCE(et.elmDesc, pp.type) as pay_element_description,
+          pp.mak1,
+          ROUND(pp.amtp, 2) as amount_primary,
+          pp.mak2,
+          ROUND(pp.amt, 2) as amount_secondary,
+          ROUND(pp.amtad, 2) as amount_additional,
+          ROUND(pp.amttd, 2) as amount_to_date,
+          pp.payind as payment_indicator,
+          pp.nomth as number_of_months,
+          pp.createdby as created_by,
+          DATE_FORMAT(pp.datecreated, '%Y-%m-%d %H:%i:%s') as date_created
+        FROM py_inputhistory pp
+        INNER JOIN hr_employees h ON h.empl_id = pp.Empl_ID
+        LEFT JOIN py_Title tt ON tt.Titlecode = h.Title
+        LEFT JOIN py_elementType et ON et.PaymentType = pp.type
+        WHERE 1=1
+          ${fromPeriod ? 'AND pp.pay_period >= ?' : ''}
+          ${toPeriod ? 'AND pp.pay_period <= ?' : ''}
+          ${emplId ? 'AND pp.Empl_ID = ?' : ''}
+          ${createdBy ? 'AND pp.createdby LIKE ?' : ''}
+          ${payType ? 'AND pp.type = ?' : ''}
+        ORDER BY pp.pay_period DESC, pp.Empl_ID, pp.type
+      `;
+      
+      const params = [];
+      if (fromPeriod) params.push(fromPeriod);
+      if (toPeriod) params.push(toPeriod);
+      if (emplId) params.push(emplId);
+      if (createdBy) params.push(`%${createdBy}%`);
+      if (payType) params.push(payType);
+      
+      const [rows] = await pool.query(query, params);
+      
+      console.log('Pay Period Report - Rows returned:', rows.length); // DEBUG
+      
+      return rows;
+      
+    } catch (error) {
+      console.error('Error in getPayPeriodReport:', error);
+      throw error;
+    }
   }
-};
 
-// Optional: Get filtered records by element category
-exports.getInputVariablesByCategory = async (category, year, month, user) => {
-  const logId = await startLog('FileUpdate', `InputVariables_${category}`, year, month, user);
-  try {
-    const [rows] = await pool.query(`
-      SELECT * FROM vw_input_variables
-      WHERE element_category = ?
-      ORDER BY full_name, pay_type
-    `, [category]);
-
-    await updateLog(logId, 'SUCCESS', `Found ${rows.length} ${category} records.`);
-    return { totalRecords: rows.length, records: rows };
-  } catch (err) {
-    await updateLog(logId, 'FAILED', err.message);
-    throw err;
+  // ========================================================================
+  // GET STATISTICS FOR PAY PERIOD REPORT
+  // ========================================================================
+  async getPayPeriodStatistics(filters = {}) {
+    const { fromPeriod, toPeriod, emplId, createdBy, payType } = filters;
+    
+    try {
+      const query = `
+        SELECT 
+          COUNT(*) as total_records,
+          COUNT(DISTINCT pp.Empl_ID) as total_employees,
+          COUNT(DISTINCT pp.pay_period) as total_periods,
+          COUNT(DISTINCT pp.type) as total_pay_elements,
+          COUNT(DISTINCT pp.createdby) as total_operators,
+          ROUND(SUM(pp.amtp), 2) as total_amount_primary,
+          ROUND(SUM(pp.amt), 2) as total_amount_secondary,
+          ROUND(SUM(pp.amtad), 2) as total_amount_additional,
+          ROUND(SUM(pp.amttd), 2) as total_amount_to_date,
+          ROUND(AVG(pp.amtp), 2) as avg_amount_primary,
+          MIN(pp.pay_period) as earliest_period,
+          MAX(pp.pay_period) as latest_period
+        FROM py_inputhistory pp
+        WHERE 1=1
+          ${fromPeriod ? 'AND pp.pay_period >= ?' : ''}
+          ${toPeriod ? 'AND pp.pay_period <= ?' : ''}
+          ${emplId ? 'AND pp.Empl_ID = ?' : ''}
+          ${createdBy ? 'AND pp.createdby LIKE ?' : ''}
+          ${payType ? 'AND pp.type = ?' : ''}
+      `;
+      
+      const params = [];
+      if (fromPeriod) params.push(fromPeriod);
+      if (toPeriod) params.push(toPeriod);
+      if (emplId) params.push(emplId);
+      if (createdBy) params.push(`%${createdBy}%`);
+      if (payType) params.push(payType);
+      
+      const [rows] = await pool.query(query, params);
+      return rows[0];
+      
+    } catch (error) {
+      console.error('Error in getPayPeriodStatistics:', error);
+      throw error;
+    }
   }
-};
 
-// Optional: Get records by payment indicator (e.g., LOAN)
-exports.getInputVariablesByIndicator = async (indicator, year, month, user) => {
-  const logId = await startLog('FileUpdate', `InputVariables_${indicator}`, year, month, user);
-  try {
-    const [rows] = await pool.query(`
-      SELECT * FROM vw_input_variables
-      WHERE pay_indicator_code = ?
-      ORDER BY full_name
-    `, [indicator]);
-
-    await updateLog(logId, 'SUCCESS', `Found ${rows.length} ${indicator} records.`);
-    return { totalRecords: rows.length, records: rows };
-  } catch (err) {
-    await updateLog(logId, 'FAILED', err.message);
-    throw err;
+  // ========================================================================
+  // GET FILTER OPTIONS - Pay Periods Available
+  // ========================================================================
+  async getAvailablePayPeriods() {
+    try {
+      const query = `
+        SELECT DISTINCT 
+          pay_period,
+          SUBSTRING(pay_period, 1, 4) as year,
+          SUBSTRING(pay_period, 5, 2) as month
+        FROM py_inputhistory
+        ORDER BY pay_period DESC
+        LIMIT 50
+      `;
+      
+      const [rows] = await pool.query(query);
+      return rows;
+      
+    } catch (error) {
+      console.error('Error in getAvailablePayPeriods:', error);
+      throw error;
+    }
   }
-};
 
+  // ========================================================================
+  // GET FILTER OPTIONS - Pay Element Types
+  // ========================================================================
+  async getAvailablePayTypes() {
+    try {
+      const query = `
+        SELECT DISTINCT 
+          pp.type as code,
+          COALESCE(et.elmDesc, pp.type) as description
+        FROM py_inputhistory pp
+        LEFT JOIN py_elementType et ON et.PaymentType = pp.type
+        ORDER BY pp.type
+      `;
+      
+      const [rows] = await pool.query(query);
+      return rows;
+      
+    } catch (error) {
+      console.error('Error in getAvailablePayTypes:', error);
+      throw error;
+    }
+  }
 
+  // ========================================================================
+  // GET FILTER OPTIONS - Operators/Created By
+  // ========================================================================
+  async getAvailableOperators() {
+    try {
+      const query = `
+        SELECT DISTINCT 
+          createdby as operator_name
+        FROM py_inputhistory
+        WHERE createdby IS NOT NULL
+        ORDER BY createdby
+      `;
+      
+      const [rows] = await pool.query(query);
+      return rows;
+      
+    } catch (error) {
+      console.error('Error in getAvailableOperators:', error);
+      throw error;
+    }
+  }
+
+  // ========================================================================
+  // GET FILTER OPTIONS - Employees
+  // ========================================================================
+  async getAvailableEmployees() {
+    try {
+      const query = `
+        SELECT DISTINCT 
+          pp.Empl_ID as employee_id,
+          CONCAT(TRIM(h.Surname), ' ', TRIM(IFNULL(h.OtherName, ''))) as full_name
+        FROM py_inputhistory pp
+        INNER JOIN hr_employees h ON h.empl_id = pp.Empl_ID
+        ORDER BY pp.Empl_ID
+        LIMIT 1000
+      `;
+      
+      const [rows] = await pool.query(query);
+      return rows;
+      
+    } catch (error) {
+      console.error('Error in getAvailableEmployees:', error);
+      throw error;
+    }
+  }
+
+  // ========================================================================
+  // HELPER: Format Period to Readable String
+  // ========================================================================
+  formatPeriod(period) {
+    if (!period || period.length !== 6) return period;
+    
+    const year = period.substring(0, 4);
+    const month = period.substring(4, 6);
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const monthName = months[parseInt(month) - 1] || month;
+    
+    return `${monthName} ${year}`;
+  }
+
+  // ========================================================================
+  // HELPER: Get Current Period
+  // ========================================================================
+  async getCurrentPeriod() {
+    try {
+      const query = `
+        SELECT MAX(pay_period) as current_period
+        FROM py_inputhistory
+      `;
+      
+      const [rows] = await pool.query(query);
+      return rows[0]?.current_period || null;
+      
+    } catch (error) {
+      console.error('Error in getCurrentPeriod:', error);
+      throw error;
+    }
+  }
+}
+
+module.exports = new PayPeriodReportService();

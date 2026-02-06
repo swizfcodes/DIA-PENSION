@@ -923,6 +923,10 @@ class ReportController extends BaseReportController {
 
   async generateEarningsDeductionsAnalysisExcel(data, filters, req, res) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+
       const exporter = new GenericExcelExporter();
       
       // Check if it's summary or detailed mode
@@ -1392,6 +1396,10 @@ class ReportController extends BaseReportController {
 
   async generateLoanAnalysisExcel(data, filters, req, res) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No outstanding loans this month');
+      }
+
       const exporter = new GenericExcelExporter();
       const workbook = new ExcelJS.Workbook();
       workbook.creator = 'Payroll System';
@@ -1683,7 +1691,7 @@ class ReportController extends BaseReportController {
   async generateLoanAnalysisPDF(data, filters, req, res) {
     try {
       if (!data || data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No outstanding loans this month');
       }
 
       const templatePath = path.join(__dirname, '../../templates/loan-analysis.html');
@@ -1772,6 +1780,10 @@ class ReportController extends BaseReportController {
 
   async generatePaymentsDeductionsByBankExcel(data, res, isSummary = false) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+
       const exporter = new GenericExcelExporter();
 
       if (isSummary) {
@@ -2036,6 +2048,10 @@ class ReportController extends BaseReportController {
 
   async generatePayrollRegisterExcel(data, req, res, isSummary = false, includeElements = false) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+
       const exporter = new GenericExcelExporter();
       const period = data.length > 0 ? {
         year: data[0].year,
@@ -2610,234 +2626,6 @@ class ReportController extends BaseReportController {
     }
   }
 
-  /*// ==========================================================================
-  // REPORT 7-13: Similar implementations...
-  // ==========================================================================
-
-  async generatePaymentStaffList(req, res) {
-    try {
-      const { format, summary, bank_name, location, ...otherFilters } = req.query;
-      
-      // Map frontend parameter names to backend expected names
-      const filters = {
-        ...otherFilters,
-        summaryOnly: summary === '1' || summary === 'true',
-        bankName: bank_name,
-        location: location
-      };
-      
-      console.log('Staff List Filters:', filters); // DEBUG
-      
-      const data = await reportService.getPaymentStaffList(filters);
-      
-      console.log('Staff List Data rows:', data.length); // DEBUG
-      console.log('Staff List Sample row:', data[0]); // DEBUG
-
-      if (format === 'excel') {
-        return this.generatePaymentStaffListExcel(data, res, filters.summaryOnly);
-      } else if (format === 'pdf') {
-        return this.generatePaymentStaffListPDF(data, filters, req, res);
-      }
-
-      res.json({ success: true, data });
-    } catch (error) {
-      console.error('Error generating payment staff list:', error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  }
-
-  async generatePaymentStaffListExcel(data, res, isSummary = false) {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Payment Staff List');
-
-    // Define columns based on summary mode
-    if (isSummary) {
-      worksheet.columns = [
-        { header: 'Location', key: 'location', width: 30 },
-        { header: 'Bank Code', key: 'Bankcode', width: 20 },
-        { header: 'Bank Branch', key: 'bankbranch', width: 25 },
-        { header: 'State of Origin', key: 'state_of_origin', width: 20 },
-        { header: 'Employee Count', key: 'employee_count', width: 18 },
-        { header: 'Net Pay', key: 'net_pay', width: 20 }
-      ];
-    } else {
-      worksheet.columns = [
-        { header: 'Service Number', key: 'service_number', width: 18 },
-        { header: 'Title', key: 'title', width: 12 },
-        { header: 'Full Name', key: 'fullname', width: 35 },
-        { header: 'Location', key: 'location', width: 30 },
-        { header: 'Bank Code', key: 'Bankcode', width: 20 },
-        { header: 'Bank Branch', key: 'bankbranch', width: 25 },
-        { header: 'Account Number', key: 'BankACNumber', width: 20 },
-        { header: 'Grade Level', key: 'gradelevel', width: 15 },
-        { header: 'Years in Level', key: 'level_years', width: 15 },
-        { header: 'State of Origin', key: 'state_of_origin', width: 20 },
-        { header: 'Net Pay', key: 'net_pay', width: 20 }
-      ];
-    }
-
-    // Style header
-    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF0070C0' }
-    };
-
-    if (isSummary) {
-      // Group by location and bank
-      const groups = {};
-      data.forEach(row => {
-        const groupKey = `${row.location || 'Unknown'} - ${row.Bankcode || 'N/A'}`;
-        if (!groups[groupKey]) groups[groupKey] = [];
-        groups[groupKey].push(row);
-      });
-
-      // Add data with group separators
-      Object.keys(groups).forEach((group, index) => {
-        if (index > 0) worksheet.addRow([]);
-        
-        // Group header
-        const headerRow = worksheet.addRow([group]);
-        headerRow.font = { bold: true, size: 12 };
-        headerRow.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFE7E6E6' }
-        };
-        worksheet.mergeCells(headerRow.number, 1, headerRow.number, 6);
-
-        // Add group data
-        groups[group].forEach(row => {
-          worksheet.addRow(row);
-        });
-
-        // Group subtotal
-        const subtotalRow = worksheet.lastRow.number + 1;
-        worksheet.getCell(`D${subtotalRow}`).value = 'Subtotal:';
-        worksheet.getCell(`D${subtotalRow}`).font = { bold: true };
-        worksheet.getCell(`F${subtotalRow}`).value = {
-          formula: `SUBTOTAL(9,F${headerRow.number + 1}:F${subtotalRow - 1})`
-        };
-        worksheet.getCell(`F${subtotalRow}`).font = { bold: true };
-      });
-
-      // Format currency
-      worksheet.getColumn('F').numFmt = '₦#,##0.00';
-    } else {
-      // Detailed mode - group by bank
-      const banks = {};
-      data.forEach(row => {
-        const bankKey = `${row.Bankcode || 'Unknown'} - ${row.bankbranch || 'Unknown'}`;
-        if (!banks[bankKey]) banks[bankKey] = [];
-        banks[bankKey].push(row);
-      });
-
-      // Add data with bank separators
-      Object.keys(banks).forEach((bank, index) => {
-        if (index > 0) worksheet.addRow([]);
-        
-        // Bank header
-        const headerRow = worksheet.addRow([bank]);
-        headerRow.font = { bold: true, size: 12 };
-        headerRow.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFE7E6E6' }
-        };
-        worksheet.mergeCells(headerRow.number, 1, headerRow.number, 11);
-
-        // Add bank data
-        banks[bank].forEach(row => {
-          worksheet.addRow(row);
-        });
-
-        // Bank subtotal
-        const subtotalRow = worksheet.lastRow.number + 1;
-        worksheet.getCell(`I${subtotalRow}`).value = 'Bank Subtotal:';
-        worksheet.getCell(`I${subtotalRow}`).font = { bold: true };
-        worksheet.getCell(`K${subtotalRow}`).value = {
-          formula: `SUBTOTAL(9,K${headerRow.number + 1}:K${subtotalRow - 1})`
-        };
-        worksheet.getCell(`K${subtotalRow}`).font = { bold: true };
-      });
-
-      // Format currency
-      worksheet.getColumn('K').numFmt = '₦#,##0.00';
-      // Format years in level
-      worksheet.getColumn('I').numFmt = '0.00';
-    }
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=payment_staff_list.xlsx');
-
-    await workbook.xlsx.write(res);
-    res.end();
-  }
-
-  async generatePaymentStaffListPDF(data, filters, req, res) {
-
-    try {
-      if (!data || data.length === 0) {
-        throw new Error('No data available for the selected filters');
-      }
-
-      const isSummary = data.length > 0 && !data[0].hasOwnProperty('service_number');
-      
-      console.log('Staff List PDF - Is Summary:', isSummary);
-      console.log('Staff List PDF - Data rows:', data.length);
-      
-      // Calculate totals
-      let totalEmployees = 0;
-      let totalNetPay = 0;
-
-      if (isSummary) {
-        data.forEach(row => {
-          totalEmployees += parseInt(row.employee_count || 0);
-          totalNetPay += parseFloat(row.net_pay || 0);
-        });
-      } else {
-        totalEmployees = data.length;
-        data.forEach(row => {
-          totalNetPay += parseFloat(row.net_pay || 0);
-        });
-      }
-
-      const templatePath = path.join(__dirname, '../../templates/payment-staff-list.html');
-      const templateContent = fs.readFileSync(templatePath, 'utf8');
-  
-      //Load image
-      const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
-
-      const pdfBuffer = await this.generatePDFWithFallback(
-        templatePath,
-        {
-          data: data,
-          reportDate: new Date(),
-          month: data[0]?.month || filters.month || 'N/A',
-          year: data[0]?.year || filters.year || 'N/A',
-          isSummary: isSummary,
-          className: this.getDatabaseNameFromRequest(req),
-          totalEmployees: totalEmployees,
-          totalNetPay: totalNetPay,
-          ...image
-        }
-      );
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=payment-staff-list-${data[0]?.month || 'report'}-${data[0]?.year || 'report'}.pdf`);
-      res.send(pdfBuffer);
-
-    } catch (error) {
-      console.error('Staff List PDF generation error:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: error.message 
-      });
-    }
-  }
-  */
-
   // ==========================================================================
   // HELPER: Get Filter Options
   // ==========================================================================
@@ -2872,16 +2660,16 @@ class ReportController extends BaseReportController {
 
   getDatabaseNameFromRequest(req) {
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFFS';
+    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
   }
 }
 

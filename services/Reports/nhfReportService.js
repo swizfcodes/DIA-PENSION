@@ -29,7 +29,7 @@ class NHFReportService {
         CROSS JOIN (SELECT ord, mth FROM py_stdrate WHERE type = 'BT05') sr
         INNER JOIN py_mastercum mc ON mc.his_empno = we.empl_id AND mc.his_type = sr.mth
         INNER JOIN py_masterpayded mp ON mp.his_empno = we.empl_id 
-          AND mp.his_type = 'PR309'
+          AND mp.his_type = 'PR306'
         WHERE mp.amtthismth > 0
           ${year ? 'AND sr.ord = ?' : ''}
           ${month ? 'AND sr.mth = ?' : ''}
@@ -54,7 +54,7 @@ class NHFReportService {
         CROSS JOIN (SELECT ord, mth FROM py_stdrate WHERE type = 'BT05') sr
         INNER JOIN py_mastercum mc ON mc.his_empno = we.empl_id AND mc.his_type = sr.mth
         INNER JOIN py_masterpayded mp ON mp.his_empno = we.empl_id 
-          AND mp.his_type = 'PR309'
+          AND mp.his_type = 'PR306'
         WHERE mp.amtthismth > 0
           ${year ? 'AND sr.ord = ?' : ''}
           ${month ? 'AND sr.mth = ?' : ''}
@@ -101,7 +101,7 @@ class NHFReportService {
           CROSS JOIN (SELECT ord, mth FROM py_stdrate WHERE type = 'BT05') sr
           INNER JOIN py_mastercum mc ON mc.his_empno = we.empl_id AND mc.his_type = sr.mth
           INNER JOIN py_masterpayded mp ON mp.his_empno = we.empl_id 
-            AND mp.his_type = 'PR309'
+            AND mp.his_type = 'PR306'
           LEFT JOIN py_Title tt ON tt.Titlecode = we.Title
           LEFT JOIN ac_costcentre cc ON cc.unitcode = we.Location
           WHERE mp.amtthismth > 0

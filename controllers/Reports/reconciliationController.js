@@ -182,6 +182,15 @@ class ReconciliationController extends BaseReportController {
    */
   async generateSalaryReconciliationPDF(req, res, result, filters) {
     try {
+      if (!result || (!result.details && !result.all_details)) {
+        throw new Error('Control Sheet balanced no variance this month');
+      }
+      
+      // Ensure result has the expected structure
+      if (!result.details && !result.all_details) {
+        throw new Error('Invalid data structure returned from reconciliation service');
+      }
+      
       // Determine which data to use based on showErrorsOnly filter
       const showErrorsOnly = filters.showErrorsOnly !== false; // defaults to true
       const data = showErrorsOnly ? (result.details || []) : (result.all_details || []);
@@ -268,16 +277,16 @@ class ReconciliationController extends BaseReportController {
 
   getDatabaseNameFromRequest(req) {
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFFS';
+    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
   }
 }
 

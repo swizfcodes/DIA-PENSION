@@ -1,6 +1,6 @@
 <!-- Print Out-Of-Range Payments by Bank Section -->
 <section class="items border rounded-lg m-6 max-w-lg mr-auto p-6 mx-auto">
-  <h2 class="text-xl text-center border-b font-bold text-blue-600 mb-4">Print Out-Of-Range payments Reports</h2>
+  <h2 class="text-xl text-center border-b font-bold text-green-600 mb-4">Print Out-Of-Range payments Reports</h2>
 
   <form id="printInRangeForm" class="space-y-4">
     <!-- Radio selection -->
@@ -22,7 +22,7 @@
     <div id="bankSelectInRangeContainer" class="hidden">
       <label for="bankNameInRange" class="block text-sm font-medium mb-1">Bank Name</label>
       <select id="bankNameInRange" name="bankNameInRange"
-        class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        class="w-full bg-transparent border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
         <option value="">Select Bank</option>
         <!-- Options will be loaded from API -->
       </select>
@@ -33,7 +33,7 @@
       <div>
         <label for="processingMonthInRange" class="block text-sm font-medium mb-1">Processing Month</label>
         <select id="processingMonthInRange" name="processingMonthInRange"
-          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          class="w-full bg-transparent border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
           <option value="">Select Month</option>
           <option value="1">January</option>
           <option value="2">February</option>
@@ -53,7 +53,7 @@
       <div>
         <label for="processingYearInRange" class="block text-sm font-medium mb-1">Processing Year</label>
         <input type="number" id="processingYearInRange" name="processingYearInRange"
-          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="w-full bg-transparent border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           placeholder="e.g., 2025" min="2020" max="2099">
       </div>
     </div>
@@ -63,14 +63,14 @@
       <div>
         <label for="minAmount" class="block text-sm font-medium mb-1">Min Amount <span class="text-red-500">*</span></label>
         <input type="number" id="minAmount" name="minAmount" step="0.01"
-          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="w-full bg-transparent border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           placeholder="e.g., -1000">
       </div>
 
       <div>
         <label for="maxAmount" class="block text-sm font-medium mb-1">Max Amount <span class="text-red-500">*</span></label>
         <input type="number" id="maxAmount" name="maxAmount" step="0.01"
-          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="w-full bg-transparent border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           placeholder="e.g., 1000">
       </div>
     </div>
@@ -104,7 +104,7 @@
           Clear
         </button>
         <button type="button" id="printInRangeBtn"
-          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
           Generate
         </button>
       </div>
@@ -121,7 +121,7 @@
       <div id="specificClassInRangeContainer" class="hidden">
         <label for="specificClassInRangeSelect" class="block text-sm font-medium mb-1">Or Select Specific Class</label>
         <select id="specificClassInRangeSelect" name="specificClassInRangeSelect"
-          class="w-full bg-transparent border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          class="w-full bg-transparent border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
           <option value="">Continue with All Classes</option>
           <!-- Options will be loaded from API -->
         </select>
@@ -133,7 +133,7 @@
 <!-- Loading Indicator -->
 <div id="bankInRangeLoadingIndicator" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
   <div class="bg-white rounded-lg shadow-lg w-80 p-6 text-center">
-    <div class="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+    <div class="animate-spin h-10 w-10 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
     <span>Generating in-range report...</span>
   </div>
 </div>
@@ -150,7 +150,7 @@
         Cancel
       </button>
       <button id="printInRangeContinueBtn"
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
         Continue
       </button>
     </div>

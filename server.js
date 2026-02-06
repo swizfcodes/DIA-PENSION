@@ -49,7 +49,7 @@ const corsOptions = {
   origin: [
     'http://localhost:7700',
     'http://127.0.0.1:7700',
-    'https://hicad.ng',// production
+    'https://evenplains.com',// production
   ].filter(Boolean),
   methods: ['GET','POST','PUT','DELETE'],
   credentials: true

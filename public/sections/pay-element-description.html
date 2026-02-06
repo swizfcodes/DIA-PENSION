@@ -1122,9 +1122,23 @@
   // Add event listener to generate report button
   document.getElementById('generateReportBtn').addEventListener('click', generateReport);
 
-  // Initialize the application
-  fetchPayElements();
-  loadAllDropdowns();
+  // Init
+  async function initializeApp() {
+    try {
+      // First load all dropdowns and wait for completion
+      await loadAllDropdowns();
+      
+      // Only after dropdowns are loaded, fetch and render data
+      await fetchPayElements();
+      
+    } catch (error) {
+      console.error('Failed to initialize app:', error);
+      showError('Failed to load application data');
+    }
+  }
+
+  // Call the initialization
+  initializeApp();
 })();
 </script>
 

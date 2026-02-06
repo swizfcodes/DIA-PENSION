@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
 //const pool = require('../../config/db'); // mysql2 pool
 const verifyToken = require('../../middware/authentication');
@@ -20,5 +20,5 @@ router.get('/export/excel', verifyToken, exportInputVariablesExcel);
 
 module.exports = router;
 
-
+*/
 

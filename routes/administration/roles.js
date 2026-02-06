@@ -22,10 +22,10 @@ router.get("/roles", verifyToken, async (req, res) => {
 //classes for user login
 router.get("/classes", (req, res) => {
   const classes = [
-    { id: process.env.DB_OFFICERS, name: "MILITARY STAFFS" },
-    { id: process.env.DB_WOFFICERS, name: "CIVILIAN STAFFS" },
-    { id: process.env.DB_RATINGS, name: "PENSION STAFFS" },
-    { id: process.env.DB_RATINGS_A, name: "NYSC ATTACHES" },
+    { id: process.env.DB_OFFICERS, name: "MILITARY STAFF" },
+    { id: process.env.DB_WOFFICERS, name: "CIVILIAN STAFF" },
+    { id: process.env.DB_RATINGS, name: "PENSION STAFF" },
+    { id: process.env.DB_RATINGS_A, name: "NYSC ATTACHE" },
     { id: process.env.DB_RATINGS_B, name: "RUNNING COST" },
     // { id: process.env.DB_JUNIOR_TRAINEE, name: "TRAINEE" }
   ];

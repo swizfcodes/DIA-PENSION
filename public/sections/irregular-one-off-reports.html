@@ -2,7 +2,7 @@
 <div class="items border rounded-lg m-6 max-w-lg mr-auto p-6 mx-auto">
   <!-- Header -->
   <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-3">
-    <h3 class="text-lg font-bold text-blue-700 flex items-center gap-2">
+    <h3 class="text-lg font-bold text-green-700 flex items-center gap-2">
       Select an option and Print One-Off Payments Report
     </h3>
   </div>
@@ -11,38 +11,38 @@
     <!-- Radio + Checkboxes Grid -->
     <div class="grid grid-cols-2 gap-3">
       <label class="flex items-center space-x-2">
-        <input type="radio" name="reportType" value="bank" class="text-blue-600" checked>
+        <input type="radio" name="reportType" value="bank" class="text-green-600" checked>
         <span class="text-gray-700">Bank Report</span>
       </label>
       <label class="flex items-center space-x-2">
-        <input type="checkbox" id="chkAllClasses" class="text-blue-600">
+        <input type="checkbox" id="chkAllClasses" class="text-green-600">
         <span class="text-gray-700">All Classes</span>
       </label>
 
       <label class="flex items-center space-x-2">
-        <input type="radio" name="reportType" value="analysis" class="text-blue-600">
+        <input type="radio" name="reportType" value="analysis" class="text-green-600">
         <span class="text-gray-700">Payment Analysis</span>
       </label>
       <label class="hidden flex items-center space-x-2">
-        <input type="checkbox" id="chkUbaUpload" class="text-blue-600">
+        <input type="checkbox" id="chkUbaUpload" class="text-green-600">
         <span class="text-gray-700">UBA Data Upload</span>
       </label>
 
       <label class="flex items-center space-x-2">
-        <input type="radio" name="reportType" value="remittance" class="text-blue-600">
+        <input type="radio" name="reportType" value="remittance" class="text-green-600">
         <span class="text-gray-700">Remittance Advice</span>
       </label>
       <label class="hidden flex items-center space-x-2">
-        <input type="checkbox" id="chkIppis" class="text-blue-600">
+        <input type="checkbox" id="chkIppis" class="text-green-600">
         <span class="text-gray-700 font-semibold">IPPIS</span>
       </label>
 
       <label class="flex items-center space-x-2">
-        <input type="radio" name="reportType" value="summary" class="text-blue-600">
+        <input type="radio" name="reportType" value="summary" class="text-green-600">
         <span class="text-gray-700">Summary</span>
       </label>
       <label class="flex items-center space-x-2">
-        <input type="checkbox" id="chkCopyToHistory" class="text-blue-600">
+        <input type="checkbox" id="chkCopyToHistory" class="text-green-600">
         <span class="text-gray-700">Copy To History</span>
       </label>
     </div>
@@ -55,7 +55,7 @@
       <select 
         id="reportPayrollClass" 
         name="reportPayrollClass"
-        class="w-full border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
+        class="w-full border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500"
         required>
         <option value="">Select Payroll Class...</option>
       </select>
@@ -68,7 +68,7 @@
       </label>
       <select 
         id="specificPaymentType"
-        class="w-full border border-blue-500 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500">
+        class="w-full border border-green-500 rounded px-3 py-2 focus:ring-2 focus:ring-green-500">
         <option value="">All Payment Types</option>
       </select>
     </div>
@@ -80,11 +80,11 @@
       </label>
       <div class="flex space-x-4">
         <label class="flex items-center space-x-2">
-          <input type="radio" name="outputFormat" value="excel" class="text-blue-600" checked>
+          <input type="radio" name="outputFormat" value="excel" class="text-green-600" checked>
           <span class="text-gray-700">Excel</span>
         </label>
         <label class="flex items-center space-x-2">
-          <input type="radio" name="outputFormat" value="pdf" class="text-blue-600">
+          <input type="radio" name="outputFormat" value="pdf" class="text-green-600">
           <span class="text-gray-700">PDF</span>
         </label>
       </div>
@@ -93,7 +93,7 @@
     <!-- Bottom Row -->
     <div class="flex items-center justify-between pt-4 border-t border-gray-200">
       <label class="flex items-center space-x-2">
-        <input type="checkbox" id="chkAllMembers" class="text-blue-600" checked>
+        <input type="checkbox" id="chkAllMembers" class="text-green-600" checked>
         <span class="text-gray-700 font-medium">ALL Members</span>
       </label>
 
@@ -107,7 +107,7 @@
         <button 
           type="submit"
           id="reportGenerateBtn"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">
+          class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">
           Generate Report
         </button>
       </div>
@@ -118,7 +118,7 @@
 <!-- Loading Indicator -->
 <div id="reportLoadingIndicator" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
   <div class="bg-white rounded-lg shadow-lg w-96 p-6 text-center">
-    <div class="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+    <div class="animate-spin h-12 w-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
     <p class="text-lg font-semibold mb-2" id="loadingTitle">Generating Report</p>
     <p class="text-sm text-gray-600" id="loadingMessage">Please wait while we process your request...</p>
   </div>

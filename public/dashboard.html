@@ -316,11 +316,11 @@
               <div class="submenu hidden opacity-0 invisible transition-all duration-150 rounded-lg p-4 shadow-lg border bg-white border-amber-100 z-50 text-sm cursor-pointer"
               style="position:absolute; left:100%; top:0; margin-left:3px; white-space:nowrap;">
                 <ul class="space-y-2 m-0 p-0 list-none">
-                  <li><a href="#" data-section="emolument-form-processing" class="block px-3 py-1 rounded hover:bg-amber-50">Emolument Form Processing</a></li>
-                  <li><a href="#" data-section="ippis-payments" class="block px-3 py-1 rounded hover:bg-amber-50">Pull IPPIS Payments</a></li>
+                  <!--<li><a href="#" data-section="emolument-form-processing" class="block px-3 py-1 rounded hover:bg-amber-50">Emolument Form Processing</a></li>
+                  <li><a href="#" data-section="ippis-payments" class="block px-3 py-1 rounded hover:bg-amber-50">Pull IPPIS Payments</a></li>-->
                   <li><a href="#" data-section="database-backup" class="block px-3 py-1 rounded hover:bg-amber-50">Payroll Class Backup</a></li>
                   <li><a href="#" data-section="database-restore" class="block px-3 py-1 rounded hover:bg-amber-50">Payroll Class Restore</a></li>
-                  <li><a href="#" data-section="consolidated-payslip" class="block px-3 py-1 rounded hover:bg-amber-50">Consolidated Payslips</a></li>
+                  <!--<li><a href="#" data-section="consolidated-payslip" class="block px-3 py-1 rounded hover:bg-amber-50">Consolidated Payslips</a></li>-->
                 </ul>
               </div>
             </li>
@@ -413,21 +413,21 @@
         <section class="mt-4 flex justify-center">
           <div class="frame-2 relative w-full sm:w-[640px] sm:h-[209px] h-auto bg-white/15 rounded-xl border border-amber-100 shadow-lg p-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 h-full rounded-lg overflow-hidden">
-                <div class="p-6 flex flex-col items-center gap-4">
-                  <div class="flex items-center">
-                    <h3 class="text-navy font-bold">Payroll Pending Approval</h3>
-                      <i class="fas fa-hourglass-half font-bold text-yellow-600" style="font-size: 24px"></i>
-                  </div>
-                  <div id="pendingApproval" class="rounded-md bg-amber-50 px-4 mt-6 py-2 text-2xl font-bold text-warning">1,500</div>
+              <div class="p-6 flex flex-col items-center gap-4">
+                <div class="flex items-center">
+                  <h3 class="text-navy font-bold">Current Active Personnels</h3>
+                    <i class="fa-solid fa-users font-bold text-blue-600" style="font-size: 24px"></i>
                 </div>
+                <div id="active-personnel" class="rounded-md bg-amber-50 px-4 mt-6 py-2 text-2xl font-bold text-warning">Loading...</div>
+              </div>
 
-                <div class="p-6 flex flex-col items-center gap-4">
-                  <div class="flex items-center">
-                    <h3 class="text-navy font-bold">Nominal Number Processed</h3>
-                      <i class="fas fa-check-circle text-success" style="font-size: 24px"></i>
-                  </div>
-                  <div id="nominalProcessed" class="rounded-md bg-amber-50 px-4 mt-6 py-2 text-2xl font-bold text-success">2,700</div>
+              <div class="p-6 flex flex-col items-center gap-4">
+                <div class="flex items-center">
+                  <h3 class="text-navy font-bold">Nominal Number Processed</h3>
+                    <i class="fas fa-check-circle text-success" style="font-size: 24px"></i>
                 </div>
+                <div id="nominalProcessed" class="rounded-md bg-amber-50 px-4 mt-6 py-2 text-2xl font-bold text-success">2,700</div>
+              </div>
 
               <div class="p-6 flex flex-col items-center gap-4">
                 <div class="flex items-center gap-3">

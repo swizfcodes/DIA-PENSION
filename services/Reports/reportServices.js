@@ -31,12 +31,12 @@ class ReportService {
       } else {
         // Database to class name mapping
         const dbToClassMap = {
-          [process.env.DB_OFFICERS]: 'OFFICERS',
-          [process.env.DB_WOFFICERS]: 'W_OFFICERS', 
-          [process.env.DB_RATINGS]: 'RATE A',
-          [process.env.DB_RATINGS_A]: 'RATE B',
-          [process.env.DB_RATINGS_B]: 'RATE C',
-          [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+          [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+          [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+          [process.env.DB_RATINGS]: 'PENSION STAFF',
+          [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
+          [process.env.DB_RATINGS_B]: 'RUNNING COST',
+          // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
         };
 
         // Get all available databases including the current one
@@ -82,7 +82,11 @@ class ReportService {
             FROM py_wkemployees we
             CROSS JOIN (SELECT ord, mth FROM py_stdrate WHERE type = 'BT05') sr
             INNER JOIN py_mastercum mc ON mc.his_empno = we.empl_id AND mc.his_type = sr.mth
-            LEFT JOIN py_bank bnk ON bnk.bankcode = we.Bankcode AND bnk.branchcode = LPAD(we.bankbranch, 3, '0')
+            LEFT JOIN py_bank bnk ON bnk.bankcode = we.Bankcode
+              AND (
+                  bnk.branchcode = we.bankbranch
+                  OR bnk.branchcode = LPAD(we.bankbranch, 3, '0')
+              )
             WHERE 1=1
               ${year ? 'AND sr.ord = ?' : ''}
               ${month ? 'AND sr.mth = ?' : ''}
@@ -123,7 +127,11 @@ class ReportService {
             FROM py_wkemployees we
             CROSS JOIN (SELECT ord, mth FROM py_stdrate WHERE type = 'BT05') sr
             INNER JOIN py_mastercum mc ON mc.his_empno = we.empl_id AND mc.his_type = sr.mth
-            LEFT JOIN py_bank bnk ON bnk.bankcode = we.Bankcode AND bnk.branchcode = LPAD(we.bankbranch, 3, '0')
+            LEFT JOIN py_bank bnk ON bnk.bankcode = we.Bankcode
+            AND (
+                bnk.branchcode = we.bankbranch
+                OR bnk.branchcode = LPAD(we.bankbranch, 3, '0')
+            )
             LEFT JOIN py_Title tt ON tt.Titlecode = we.Title
             WHERE 1=1
               ${year ? 'AND sr.ord = ?' : ''}
@@ -506,8 +514,11 @@ class ReportService {
     const query = `
       SELECT DISTINCT we.Bankcode, we.bankbranch, bnk.branchname
       FROM py_wkemployees we
-      LEFT JOIN py_bank bnk ON bnk.bankcode = we.Bankcode 
-                            AND bnk.branchcode = LPAD(we.bankbranch, 3, '0')
+      LEFT JOIN py_bank bnk ON bnk.bankcode = we.Bankcode
+        AND (
+            bnk.branchcode = we.bankbranch
+            OR bnk.branchcode = LPAD(we.bankbranch, 3, '0')
+        )
       ORDER BY we.Bankcode, we.bankbranch
     `;
     const [rows] = await pool.query(query);

@@ -479,7 +479,7 @@ async function generateBankGroupedExcel(workbook, data, classDescription, ippis 
 
     // Header info
     worksheet.mergeCells('A1:F1');
-    worksheet.getCell('A1').value = 'Nigerian Navy (Naval Headquarters)';
+    worksheet.getCell('A1').value = 'DEFENCE INTELLIGENCE AGENCY';
     worksheet.getCell('A1').font = { bold: true, size: 14 };
     worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
@@ -587,7 +587,7 @@ async function generateAnalysisGroupedExcel(workbook, data, classDescription) {
 
     // Header info
     worksheet.mergeCells('A1:D1');
-    worksheet.getCell('A1').value = 'Nigerian Navy (Naval Headquarters)';
+    worksheet.getCell('A1').value = 'DEFENCE INTELLIGENCE AGENCY';
     worksheet.getCell('A1').font = { bold: true, size: 14 };
     worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
@@ -689,7 +689,7 @@ async function generateRemittanceExcel(workbook, data, classDescription) {
 
   // Header
   worksheet.mergeCells('A1:E1');
-  worksheet.getCell('A1').value = 'Nigerian Navy (Naval Headquarters)';
+  worksheet.getCell('A1').value = 'DEFENCE INTELLIGENCE AGENCY';
   worksheet.getCell('A1').font = { bold: true, size: 14 };
   worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
@@ -766,7 +766,7 @@ async function generateSummaryExcel(workbook, payrollClass, classDescription, co
 
   // Header
   worksheet.mergeCells('A1:D1');
-  worksheet.getCell('A1').value = 'Nigerian Navy (Naval Headquarters)';
+  worksheet.getCell('A1').value = 'DEFENCE INTELLIGENCE AGENCY';
   worksheet.getCell('A1').font = { bold: true, size: 14 };
   worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
@@ -1027,7 +1027,7 @@ function generatePDFHTML(groups, reportType, classDescription) {
           font-weight: bold;
           margin: 0 0 2px 0;
           letter-spacing: 1.5px;
-          color: #1e40af;
+          color: #15803d;
           font-family: 'Libre Baskerville', Georgia, serif;
         }
         
@@ -1063,7 +1063,7 @@ function generatePDFHTML(groups, reportType, classDescription) {
         
         .bank-header { 
           padding: 10px;
-          color: #1e40af;
+          color: #15803d;
           font-weight: bold; 
           font-size: 11pt;
           text-align: center;
@@ -1081,11 +1081,11 @@ function generatePDFHTML(groups, reportType, classDescription) {
         
         table.details th { 
           padding: 7px; 
-          color: #1e40af;
+          color: #15803d;
           text-align: left; 
           font-size: 8.5pt;
           font-weight: 600;
-          border-bottom: solid 1px #1e40af;
+          border-bottom: solid 1px #15803d;
           background-color: rgba(30, 64, 175, 0.05);
         }
         
@@ -1154,8 +1154,8 @@ function generatePDFHTML(groups, reportType, classDescription) {
           ${classDescription}
         </div>
         <div class="header">
-          <h1>Nigerian Navy (Naval Headquarters)</h1>
-          <h2>CENTRAL PAY OFFICE, 23 POINT ROAD APAPA</h2>
+          <h1>DEFENCE INTELLIGENCE AGENCY</h1>
+          <h2>ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY</h2>
         </div>
       </div>
 
@@ -1258,7 +1258,7 @@ async function generateSummaryPDFHTML(payrollClass, classDescription, connection
           font-weight: bold;
           margin: 0 0 2px 0;
           letter-spacing: 1.5px;
-          color: #1e40af;
+          color: #15803d;
           font-family: 'Libre Baskerville', Georgia, serif;
         }
         
@@ -1281,11 +1281,11 @@ async function generateSummaryPDFHTML(payrollClass, classDescription, connection
         table.summary { width: 100%; border-collapse: collapse; margin: 20px 0; }
         table.summary th { 
           padding: 10px; 
-          color: #1e40af; 
+          color: #15803d; 
           text-align: left; 
           font-size: 9pt; 
           font-weight: 600; 
-          border-bottom: solid 2px #1e40af; 
+          border-bottom: solid 2px #15803d; 
           background-color: rgba(30, 64, 175, 0.05); 
         }
         table.summary td { padding: 8px; border-bottom: 1px solid #e0e0e0; font-size: 9pt; }
@@ -1298,8 +1298,8 @@ async function generateSummaryPDFHTML(payrollClass, classDescription, connection
       <div class="header-wrapper">
         <div class="className">${classDescription}</div>
         <div class="header">
-          <h1>Nigerian Navy (Naval Headquarters)</h1>
-          <h2>CENTRAL PAY OFFICE, 23 POINT ROAD APAPA</h2>
+          <h1>DEFENCE INTELLIGENCE AGENCY</h1>
+          <h2>ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY</h2>
         </div>
       </div>
 

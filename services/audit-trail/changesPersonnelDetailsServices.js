@@ -452,5 +452,3 @@ class EmployeeChangeHistoryService {
 }
 
 module.exports = new EmployeeChangeHistoryService();
-
-

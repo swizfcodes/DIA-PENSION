@@ -2588,6 +2588,22 @@ async function submitPersonnelForm() {
 
     let value = input.value?.trim() ?? '';
 
+    // Handle DATE fields FIRST (all date fields)
+    if (input.type === 'date') {
+      if (!value) {
+        if (DB_FIELD_MAP[fieldName]) personnelData[DB_FIELD_MAP[fieldName]] = null;
+      } else {
+        const dateObj = new Date(value);
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = dateObj.getFullYear();
+        const formattedDate = `${year}${month}${day}`;
+        console.log(`Date converted: ${fieldName} = ${formattedDate}`);
+        if (DB_FIELD_MAP[fieldName]) personnelData[DB_FIELD_MAP[fieldName]] = formattedDate;
+      }
+      continue;
+    }
+
     // Handle SELECT
     if (input.tagName === 'SELECT') {
       const lowerValue = value.toLowerCase();
@@ -2607,7 +2623,7 @@ async function submitPersonnelForm() {
     }
 
     // Handle dropdownConfig
-    if (input.tagName === '.custom-dropdown-wrapper' || 'DIV') {
+    if (input.classList.contains('custom-dropdown-wrapper') || input.tagName === 'DIV') {
       const lowerValue = value.toLowerCase();
       const isPlaceholder =
         lowerValue === 'select' ||
@@ -2620,19 +2636,6 @@ async function submitPersonnelForm() {
 
       if (DB_FIELD_MAP[fieldName]) {
         personnelData[DB_FIELD_MAP[fieldName]] = isPlaceholder ? null : value;
-      }
-      continue;
-    }
-
-    if (input.type === 'date') {
-      if (!value) {
-        if (DB_FIELD_MAP[fieldName]) personnelData[DB_FIELD_MAP[fieldName]] = null;
-      } else {
-        const dateObj = new Date(value);
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const year = dateObj.getFullYear();
-        if (DB_FIELD_MAP[fieldName]) personnelData[DB_FIELD_MAP[fieldName]] = `${year}${month}${day}`; // YYYYMMDD
       }
       continue;
     }

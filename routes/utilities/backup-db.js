@@ -154,10 +154,10 @@ router.get('/database', verifyToken, (req, res) => {
     
     // Get friendly name for the database
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
@@ -195,10 +195,10 @@ router.post('/backup/mysql', verifyToken, async (req, res) => {
 
     // Get friendly name for the database
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
@@ -237,10 +237,10 @@ router.post('/backup/schedule', verifyToken, (req, res) => {
 
     // Get friendly name for the database
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
@@ -290,10 +290,10 @@ router.get('/backups', verifyToken, (req, res) => {
   
   // Get friendly name for the database
   const dbToClassMap = {
-    [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-    [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-    [process.env.DB_RATINGS]: 'PENSION STAFFS',
-    [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+    [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+    [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+    [process.env.DB_RATINGS]: 'PENSION STAFF',
+    [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
     [process.env.DB_RATINGS_B]: 'RUNNING COST',
     // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
   };
@@ -345,10 +345,10 @@ router.get('/backup/stats', verifyToken, (req, res) => {
   
   // Get friendly name for the database
   const dbToClassMap = {
-    [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-    [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-    [process.env.DB_RATINGS]: 'PENSION STAFFS',
-    [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+    [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+    [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+    [process.env.DB_RATINGS]: 'PENSION STAFF',
+    [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
     [process.env.DB_RATINGS_B]: 'RUNNING COST',
     // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
   };

@@ -111,6 +111,10 @@ class NSITFReportController extends BaseReportController {
   // ==========================================================================
   async generateNSITFReportExcel(data, req, res, isSummary = false) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No NSITF contribution this month');
+      }
+
       const exporter = new GenericExcelExporter();
       const period = data.length > 0 ? { year: data[0].year, month: data[0].month } : 
                     { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
@@ -334,7 +338,7 @@ class NSITFReportController extends BaseReportController {
   async generateNSITFReportPDF(data, req, res) {
     try {
       if (!data || data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No NSITF contribution this month');
       }
 
       const isSummary = data.length > 0 && !data[0].hasOwnProperty('employee_id');
@@ -422,16 +426,16 @@ class NSITFReportController extends BaseReportController {
 
   getDatabaseNameFromRequest(req) {
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFFS';
+    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
   }
 }
 

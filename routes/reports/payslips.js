@@ -24,12 +24,12 @@ router.get('/database', verifyToken, (req, res) => {
     
     // Get friendly name for the database
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'OFFICERS',
-      [process.env.DB_WOFFICERS]: 'W_OFFICERS', 
-      [process.env.DB_RATINGS]: 'RATE A',
-      [process.env.DB_RATINGS_A]: 'RATE B',
-      [process.env.DB_RATINGS_B]: 'RATE C',
-      [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
+      [process.env.DB_RATINGS_B]: 'RUNNING COST',
+      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const dbToNumberMap = {

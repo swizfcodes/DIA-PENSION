@@ -96,6 +96,10 @@ class NHFReportController extends BaseReportController {
     try {
       const exporter = new GenericExcelExporter();
 
+      if (!data || data.length === 0) {
+        throw new Error('No NHF contribution this month');
+      }
+
       // Extract period from data
       const period = data.length > 0 ? {
         year: data[0].year,
@@ -213,7 +217,7 @@ class NHFReportController extends BaseReportController {
   async generateNHFReportPDF(data, req, res) {
     try {
       if (!data || data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No NHF contribution this month');
       }
 
       const isSummary = data.length > 0 && !data[0].hasOwnProperty('employee_id');
@@ -301,16 +305,16 @@ class NHFReportController extends BaseReportController {
 
   getDatabaseNameFromRequest(req) {
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFFS';
+    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
   }
 }
 

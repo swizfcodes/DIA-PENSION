@@ -103,6 +103,10 @@ class RangePaymentController extends BaseReportController {
 
   async generatePaymentsByBankInRangeExcel(data, filters, amountRange, summary, failedClasses, req, res) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+      
       const exporter = new GenericExcelExporter();
       const isMultiClass = filters.allClasses === 'true' || filters.allClasses === true;
       const isSummary = filters.summaryOnly === 'true' || filters.summaryOnly === true;
@@ -555,6 +559,10 @@ class RangePaymentController extends BaseReportController {
 
   async generatePaymentsByBankInRangePDF(data, filters, amountRange, summary, failedClasses, req, res) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available for the selected filters');
+      }
+
       const templatePath = path.join(__dirname, '../../templates/range-payments.html');
       const templateContent = fs.readFileSync(templatePath, 'utf8');
 
@@ -731,16 +739,16 @@ class RangePaymentController extends BaseReportController {
 
   getDatabaseNameFromRequest(req) {
     const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFFS',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFFS', 
-      [process.env.DB_RATINGS]: 'PENSION STAFFS',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHES',
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
       [process.env.DB_RATINGS_B]: 'RUNNING COST',
       // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFFS';
+    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
   }
 }
 
