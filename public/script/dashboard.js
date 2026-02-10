@@ -526,195 +526,6 @@ window.addEventListener('resize', ()=>{
 });
 window.addEventListener('scroll', ()=> repositionOpen(), { passive: true });
 
-// Figure out the current time of day
-function getTimeOfDay() {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Morning';
-  if (hour >= 12 && hour < 16) return 'Afternoon';
-  if (hour >= 16 && hour < 21) return 'Evening';
-  return 'Night';
-}
-
-// Get logged-in user from JWT token
-function getLoggedInUser() {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      // Fallback to localStorage for backward compatibility
-      return {
-        user_id: localStorage.getItem("user_id"),
-        full_name: localStorage.getItem("full_name"),
-        role: localStorage.getItem("role"),
-        primary_class: localStorage.getItem("class"),
-        current_class: localStorage.getItem("class")
-      };
-    }
-
-    // ✅ Decode JWT token to get user info including current_class
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    
-    return {
-      user_id: payload.user_id,
-      full_name: payload.full_name,
-      role: payload.role,
-      primary_class: payload.primary_class,
-      current_class: payload.current_class || payload.primary_class // ✅ Use current_class from token
-    };
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    // Fallback to localStorage
-    return {
-      user_id: localStorage.getItem("user_id"),
-      full_name: localStorage.getItem("full_name"),
-      role: localStorage.getItem("role"),
-      primary_class: localStorage.getItem("class"),
-      current_class: localStorage.getItem("class")
-    };
-  }
-}
-
-// Cache for class mappings
-let classMapping = {};
-
-// Load class mappings from backend endpoint
-async function loadClassMappings() {
-  try {
-    const token = localStorage.getItem('token');
-
-    const response = await fetch('/dbclasses', {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-    }); 
-
-    const data = await response.json();
-
-    // ✅ Create mapping from db_name → display_name
-    classMapping = {};
-    data.classes.forEach(cls => {
-      classMapping[cls.dbName] = cls.display;
-    });
-
-    console.log('✅ Class mappings loaded:', classMapping);
-
-  } catch (error) {
-    console.error('❌ Failed to load class mappings:', error);
-  }
-}
-
-// Update greeting message
-function updateGreeting() {
-  const greetingElement = document.getElementById('dynamicGreeting');
-  const workingClassElement = document.getElementById('payrollClassName');
-  if (!greetingElement && !workingClassElement) return; // Only run if element exists
-
-  const user = getLoggedInUser();
-  const timeOfDay = getTimeOfDay();
-
-  // ✅ Use current_class from JWT token (the database they switched to)
-  const effectiveClass = user.current_class;
-  const userClass = classMapping[effectiveClass] || effectiveClass || 'OFFICERS';
-
-  // Default to "User" if no login info
-  const userName = user?.full_name || user?.user_id || 'User';
-
-  const greeting = `Good ${timeOfDay} ${userName}, welcome to ${userClass} payroll`;
-  greetingElement.textContent = greeting;
-  workingClassElement.textContent = userClass;
-
-  console.log('📊 Dashboard greeting updated:', {
-    user: userName,
-    primaryClass: user.primary_class,
-    currentClass: user.current_class,
-    displayClass: userClass
-  });
-}
-
-// Update current time display
-function updateCurrentTime() {
-  const timeElement = document.getElementById('currentTime');
-  if (!timeElement) return;
-
-  const now = new Date();
-  const timeString = now.toLocaleString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
-  timeElement.textContent = timeString;
-}
-
-// ✅ Update function for when payroll class is switched
-window.updateDashboardGreeting = function(newClassName) {
-  console.log('🔄 Updating dashboard greeting for new class:', newClassName);
-  
-  // Reload user info from updated token
-  const user = getLoggedInUser();
-  if (user) {
-    updateGreeting();
-  }
-};
-
-// ✅ Listen for payroll class switch events
-document.addEventListener('payrollClassFocused', (event) => {
-  console.log('🎯 Payroll class focused event received:', event.detail);
-  updateGreeting();
-});
-
-// Get current payroll period from database
-async function getCurrentPayrollPeriod() {
-  try {
-    const token = localStorage.getItem('token');
-    const user = getLoggedInUser();
-    const dbName = user.current_class;
-    
-    const response = await fetch('/payroll-period', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      // Update the payroll period display
-      const periodElement = document.querySelector('#current-payroll-period');
-      if (periodElement) {
-        const monthNames = ['Jan', 'Feb', 'March', 'April', 'May', 'June',
-                           'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
-        const monthName = monthNames[data.month - 1] || 'Unknown';
-        periodElement.textContent = `${monthName} ${data.year}`;
-      }
-      
-      return { month: data.month, year: data.year };
-    }
-  } catch (error) {
-    console.error('Failed to load payroll period:', error);
-  }
-}
-
-// Init only on dashboard pages
-(async function initDashboard() {
-  if (document.getElementById('dynamicGreeting')) {
-    await loadClassMappings();   // ✅ wait for mapping to load
-    updateGreeting();
-    updateCurrentTime();
-
-    setInterval(updateCurrentTime, 1000);  // Update time every second
-    setInterval(updateGreeting, 60000);    // Refresh greeting every minute (to catch token updates)
-    await getCurrentPayrollPeriod();  // Load current payroll period
-  }
-})();
-
-
 // SIMPLE SUBSUBMENU FUNCTIONALITY - Direct approach
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM loaded, setting up subsubmenus...');
@@ -805,6 +616,207 @@ function setupSubsubmenus() {
   
   console.log('Subsubmenu setup complete');
 }
+
+// Figure out the current time of day
+function getTimeOfDay() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Morning';
+  if (hour >= 12 && hour < 16) return 'Afternoon';
+  if (hour >= 16 && hour < 21) return 'Evening';
+  return 'Night';
+}
+
+// Get logged-in user from JWT token
+function getLoggedInUser() {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Fallback to localStorage for backward compatibility
+      return {
+        user_id: localStorage.getItem("user_id"),
+        full_name: localStorage.getItem("full_name"),
+        role: localStorage.getItem("role"),
+        primary_class: localStorage.getItem("class"),
+        current_class: localStorage.getItem("class")
+      };
+    }
+
+    // ✅ Decode JWT token to get user info including current_class
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    
+    return {
+      user_id: payload.user_id,
+      full_name: payload.full_name,
+      role: payload.role,
+      primary_class: payload.primary_class,
+      current_class: payload.current_class || payload.primary_class // ✅ Use current_class from token
+    };
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    // Fallback to localStorage
+    return {
+      user_id: localStorage.getItem("user_id"),
+      full_name: localStorage.getItem("full_name"),
+      role: localStorage.getItem("role"),
+      primary_class: localStorage.getItem("class"),
+      current_class: localStorage.getItem("class")
+    };
+  }
+}
+
+// Cache for class mappings
+let classMapping = {};
+
+// Load class mappings from backend endpoint
+async function loadClassMappings() {
+  try {
+    const token = localStorage.getItem('token');
+
+    const response = await fetch('/dbclasses', {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    }); 
+
+    const data = await response.json();
+
+    // ✅ Create mapping from db_name → display_name
+    classMapping = {};
+    data.classes.forEach(cls => {
+      classMapping[cls.dbName] = cls.display;
+    });
+
+    console.log('✅ Class mappings loaded:', classMapping);
+
+  } catch (error) {
+    console.error('❌ Failed to load class mappings:', error);
+  }
+}
+
+// Update greeting message
+function updateGreeting() {
+  const greetingElement = document.getElementById('dynamicGreeting');
+  const workingClassElement = document.getElementById('payrollClassName');
+  
+  // Return only if BOTH elements are missing
+  if (!greetingElement && !workingClassElement) return;
+
+  const user = getLoggedInUser();
+  const timeOfDay = getTimeOfDay();
+
+  // Use current_class from JWT token (the database they switched to)
+  const effectiveClass = user.current_class;
+  
+  // FIX: Wait for classMapping to be populated before using it
+  const userClass = classMapping[effectiveClass] || effectiveClass || 'OFFICERS';
+
+  // Default to "User" if no login info
+  const userName = user?.full_name || user?.user_id || 'User';
+
+  // Only update elements that exist (prevents null property error)
+  if (greetingElement) {
+    const greeting = `Good ${timeOfDay} ${userName}, welcome to ${userClass} payroll`;
+    greetingElement.textContent = greeting;
+  }
+  
+  if (workingClassElement) {
+    workingClassElement.textContent = userClass;
+  }
+
+  console.log('📊 Dashboard greeting updated:', {
+    user: userName,
+    primaryClass: user.primary_class,
+    currentClass: user.current_class,
+    displayClass: userClass
+  });
+}
+
+// Update current time display
+function updateCurrentTime() {
+  const timeElement = document.getElementById('currentTime');
+  if (!timeElement) return;
+
+  const now = new Date();
+  const timeString = now.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  timeElement.textContent = timeString;
+}
+
+// Update function for when payroll class is switched
+window.updateDashboardGreeting = function(newClassName) {
+  console.log('🔄 Updating dashboard greeting for new class:', newClassName);
+  
+  // Reload user info from updated token
+  const user = getLoggedInUser();
+  if (user) {
+    updateGreeting();
+  }
+};
+
+// Listen for payroll class switch events
+document.addEventListener('payrollClassFocused', (event) => {
+  console.log('🎯 Payroll class focused event received:', event.detail);
+  updateGreeting();
+});
+
+// Get current payroll period from database
+async function getCurrentPayrollPeriod() {
+  try {
+    const token = localStorage.getItem('token');
+    const user = getLoggedInUser();
+    const dbName = user.current_class;
+    
+    const response = await fetch('/payroll-period', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update the payroll period display
+      const periodElement = document.querySelector('#current-payroll-period');
+      if (periodElement) {
+        const monthNames = ['Jan', 'Feb', 'March', 'April', 'May', 'June',
+                           'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+        const monthName = monthNames[data.month - 1] || 'Unknown';
+        periodElement.textContent = `${monthName} ${data.year}`;
+      }
+      
+      return { month: data.month, year: data.year };
+    }
+  } catch (error) {
+    console.error('Failed to load payroll period:', error);
+  }
+}
+
+// FIX: Init with proper async/await to prevent race conditions
+(async function initDashboard() {
+  if (document.getElementById('dynamicGreeting') || document.getElementById('payrollClassName')) {
+    // Wait for class mappings to load BEFORE updating greeting
+    await loadClassMappings();
+    
+    // Now update greeting with populated classMapping
+    updateGreeting();
+    updateCurrentTime();
+
+    setInterval(updateCurrentTime, 1000);  // Update time every second
+    setInterval(updateGreeting, 60000);    // Refresh greeting every minute (to catch token updates)
+    await getCurrentPayrollPeriod();  // Load current payroll period
+  }
+})();
 
 
 
@@ -1382,9 +1394,16 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = NavigationSystem;
 }
 
-// Dashboard stats update
+// Dashboard stats update - FIXED VERSION
 async function updateDashboardStats() {
   try {
+    // Check if the element exists before making the API call
+    const personnelElement = document.getElementById('active-personnel');
+    if (!personnelElement) {
+      console.log('📊 Stats elements not found on this page, skipping update');
+      return;
+    }
+
     // Get total personnel and nominal processed for current payroll period
     const response = await fetch('/stats/total-personnels', {
       method: 'GET',
@@ -1396,12 +1415,13 @@ async function updateDashboardStats() {
     const result = await response.json();
     
     if (result.success) {
-      // Update stats cards
-      document.getElementById('active-personnel').textContent = result.data.totalPersonnels || '0';
+      // Update stats cards (element already verified to exist)
+      personnelElement.textContent = result.data.totalPersonnels || '0';
       
+      console.log('Dashboard stats updated:', result.data.totalPersonnels);
     }
   } catch (error) {
-    console.error('Error updating dashboard:', error);
+    console.error('❌ Error updating dashboard stats:', error);
   }
 }
 
@@ -1455,5 +1475,3 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener(event, resetInactivityTimer, true);
   });
 });
-
-

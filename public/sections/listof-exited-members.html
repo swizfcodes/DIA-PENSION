@@ -2,61 +2,57 @@
 
   <!-- Report Title -->
   <div class="hidden mb-6 text-center">
-    <h2 class="text-2xl font-bold text-green-700">Personnel Report</h2>
-    <p class="text-sm text-gray-600 mt-1">Generate comprehensive personnel reports with customizable filters</p>
+    <h2 class="text-2xl font-bold text-blue-700">Old Personnel Report</h2>
+    <p class="text-sm text-gray-600 mt-1">Generate comprehensive Old personnel reports with customizable filters</p>
   </div>
 
   <!-- Radio Selection -->
-  <div class="mb-6 border  border-green-500 p-4 rounded-lg">
-    <span class="text-green-600 font-semibold text-lg block mb-3">Select Report Scope:</span>
+  <div class="mb-6 border  border-blue-500 p-4 rounded-lg">
+    <span class="text-blue-600 font-semibold text-lg block mb-3">Select Report Scope:</span>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="all" class="text-green-600 w-4 h-4" checked>
-        <span class="ml-2 font-medium">All Current Personnel</span>
+        <input type="radio" name="personnelScope" value="all" class="text-blue-600 w-4 h-4" checked>
+        <span class="ml-2 font-medium">All Old Personnel</span>
       </label>
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="rank" class="text-green-600 w-4 h-4">
+        <input type="radio" name="personnelScope" value="rank" class="text-blue-600 w-4 h-4">
         <span class="ml-2 font-medium">By Rank</span>
       </label>
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="location" class="text-green-600 w-4 h-4">
+        <input type="radio" name="personnelScope" value="location" class="text-blue-600 w-4 h-4">
         <span class="ml-2 font-medium">By Location</span>
       </label>
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="pfa" class="text-green-600 w-4 h-4">
+        <input type="radio" name="personnelScope" value="pfa" class="text-blue-600 w-4 h-4">
         <span class="ml-2 font-medium">By PFA</span>
       </label>
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="gradetype" class="text-green-600 w-4 h-4">
+        <input type="radio" name="personnelScope" value="gradetype" class="text-blue-600 w-4 h-4">
         <span class="ml-2 font-medium">By Grade Type</span>
       </label>
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="gradelevel" class="text-green-600 w-4 h-4">
+        <input type="radio" name="personnelScope" value="gradelevel" class="text-blue-600 w-4 h-4">
         <span class="ml-2 font-medium">By Grade Level</span>
       </label>
-      <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="bank" class="text-green-600 w-4 h-4">
+      <label class="hidden flex items-center cursor-pointer">
+        <input type="radio" name="personnelScope" value="bank" class="text-blue-600 w-4 h-4">
         <span class="ml-2 font-medium">By Bank Branch</span>
       </label>
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="state" class="text-green-600 w-4 h-4">
+        <input type="radio" name="personnelScope" value="state" class="text-blue-600 w-4 h-4">
         <span class="ml-2 font-medium">By State</span>
       </label>
       <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="emolument" class="text-green-600 w-4 h-4">
-        <span class="ml-2 font-medium">Emolument Form</span>
-      </label>
-      <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="rent" class="text-green-600 w-4 h-4">
-        <span class="ml-2 font-medium">Rent Subsidy</span>
-      </label>
-      <label class="flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="taxed" class="text-green-600 w-4 h-4">
-        <span class="ml-2 font-medium">Tax Status</span>
+        <input type="radio" name="personnelScope" value="exittype" class="text-blue-600 w-4 h-4">
+        <span class="ml-2 font-medium">By Exit Type</span>
       </label>
       <label class="hidden flex items-center cursor-pointer">
-        <input type="radio" name="personnelScope" value="oldemployees" class="text-green-600 w-4 h-4">
-        <span class="ml-2 font-medium">Employment Status</span>
+        <input type="radio" name="personnelScope" value="rent" class="text-blue-600 w-4 h-4">
+        <span class="ml-2 font-medium">Rent Subsidy</span>
+      </label>
+      <label class="hidden flex items-center cursor-pointer">
+        <input type="radio" name="personnelScope" value="taxed" class="text-blue-600 w-4 h-4">
+        <span class="ml-2 font-medium">Tax Status</span>
       </label>
     </div>
   </div>
@@ -65,13 +61,13 @@
   <div id="personnelForm" class="space-y-5">
 
     <!-- Conditional Filters with Export Format on Same Line -->
-    <div id="rankWrapper" class="hidden border border-green-500 p-4 rounded-lg">
+    <div id="rankWrapper" class="hidden border border-blue-500 p-4 rounded-lg">
       <div class="grid md:grid-cols-2 gap-4 items-end">
         <div>
           <label class="block text-sm font-medium text-gray-900 mb-2">
-            <i class="fas fa-star text-green-600 mr-2"></i>Select Rank/Title
+            <i class="fas fa-star text-blue-600 mr-2"></i>Select Rank/Title
           </label>
-          <select id="rankSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+          <select id="rankSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <option value="">-- Choose Rank --</option>
           </select>
         </div>
@@ -79,13 +75,13 @@
       </div>
     </div>
 
-    <div id="locationWrapper" class="hidden border border-blue-500 p-4 rounded-lg">
+    <div id="locationWrapper" class="hidden border border-green-500 p-4 rounded-lg">
       <div class="grid md:grid-cols-2 gap-4 items-end">
         <div>
           <label class="block text-sm font-medium text-gray-900 mb-2">
-            <i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>Select Location
+            <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>Select Location
           </label>
-          <select id="locationSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <select id="locationSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
             <option value="">-- Choose Location --</option>
           </select>
         </div>
@@ -163,14 +159,14 @@
       </div>
     </div>
 
-    <div id="emolumentWrapper" class="hidden border border-yellow-500 p-4 rounded-lg">
+    <div id="exittypeWrapper" class="hidden border border-yellow-500 p-4 rounded-lg">
       <div class="grid md:grid-cols-2 gap-4 items-end">
         <div>
           <label class="block text-sm font-medium text-gray-900 mb-2">
-            <i class="fas fa-file-invoice text-yellow-600 mr-2"></i>Emolument Form Status
+            <i class="fas fa-file-invoice text-yellow-600 mr-2"></i>Exit Type
           </label>
-          <select id="emolumentSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
-            <option value="">-- Choose Status --</option>
+          <select id="exittypeSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+            <option value="">-- Choose Exit Type --</option>
           </select>
         </div>
         <div class="exportFormatSection"></div>
@@ -205,20 +201,6 @@
       </div>
     </div>
 
-    <div id="oldemployeesWrapper" class="hidden border border-gray-500 p-4 rounded-lg">
-      <div class="grid md:grid-cols-2 gap-4 items-end">
-        <div>
-          <label class="block text-sm font-medium text-gray-900 mb-2">
-            <i class="fas fa-users text-gray-600 mr-2"></i>Employment Status
-          </label>
-          <select id="oldemployeesSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
-            <option value="">-- Choose Status --</option>
-          </select>
-        </div>
-        <div class="exportFormatSection"></div>
-      </div>
-    </div>
-
     <!-- Export Format Selection (shown when "All Personnel" is selected) -->
     <div id="exportFormatStandalone" class="border border-gray-500 p-4 rounded-lg">
       <label class="block text-sm font-medium text-gray-900 mb-2">
@@ -226,15 +208,15 @@
       </label>
       <div class="flex gap-4">
         <label class="flex items-center cursor-pointer">
-          <input type="radio" name="exportFormat" value="pdf" class="text-green-600 w-4 h-4" checked>
+          <input type="radio" name="exportFormat" value="pdf" class="text-blue-600 w-4 h-4" checked>
           <span class="ml-2">PDF</span>
         </label>
         <label class="flex items-center cursor-pointer">
-          <input type="radio" name="exportFormat" value="excel" class="text-green-600 w-4 h-4">
+          <input type="radio" name="exportFormat" value="excel" class="text-blue-600 w-4 h-4">
           <span class="ml-2">Excel (.xlsx)</span>
         </label>
         <label class="hidden flex items-center cursor-pointer">
-          <input type="radio" name="exportFormat" value="json" class="text-green-600 w-4 h-4">
+          <input type="radio" name="exportFormat" value="json" class="text-blue-600 w-4 h-4">
           <span class="ml-2">JSON</span>
         </label>
       </div>
@@ -246,7 +228,7 @@
         <i class="fas fa-times mr-2"></i>Clear
       </button>
 
-      <button id="generatePersonnel" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl">
+      <button id="generatePersonnel" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl">
         <i class="fas fa-file-alt mr-2"></i>Generate Report
       </button>
     </div>
@@ -257,7 +239,7 @@
 <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white rounded-lg shadow-lg p-8 text-center">
     <div class="mb-4">
-      <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
+      <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
     </div>
     <h3 class="text-lg font-semibold mb-2">Generating Report...</h3>
     <p class="text-gray-600">Please wait while we prepare your personnel report.</p>
@@ -275,7 +257,7 @@
       </div>
     </div>
     <div class="flex justify-end">
-      <button id="personnelModalCloseBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">OK</button>
+      <button id="personnelModalCloseBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">OK</button>
     </div>
   </div>
 </div>
@@ -292,10 +274,9 @@
     gradelevel: document.getElementById("gradelevelWrapper"),
     bank: document.getElementById("bankWrapper"),
     state: document.getElementById("stateWrapper"),
-    emolument: document.getElementById("emolumentWrapper"),
+    exittype: document.getElementById("exittypeWrapper"),
     rent: document.getElementById("rentWrapper"),
-    taxed: document.getElementById("taxedWrapper"),
-    oldemployees: document.getElementById("oldemployeesWrapper")
+    taxed: document.getElementById("taxedWrapper")
   };
 
   const exportFormatStandalone = document.getElementById("exportFormatStandalone");
@@ -308,15 +289,15 @@
       </label>
       <div class="flex gap-4">
         <label class="flex items-center cursor-pointer">
-          <input type="radio" name="exportFormat" value="pdf" class="text-green-600 w-4 h-4" checked>
+          <input type="radio" name="exportFormat" value="pdf" class="text-blue-600 w-4 h-4" checked>
           <span class="ml-2">PDF</span>
         </label>
         <label class="flex items-center cursor-pointer">
-          <input type="radio" name="exportFormat" value="excel" class="text-green-600 w-4 h-4">
+          <input type="radio" name="exportFormat" value="excel" class="text-blue-600 w-4 h-4">
           <span class="ml-2">Excel</span>
         </label>
         <label class="hidden flex items-center cursor-pointer">
-          <input type="radio" name="exportFormat" value="json" class="text-green-600 w-4 h-4">
+          <input type="radio" name="exportFormat" value="json" class="text-blue-600 w-4 h-4">
           <span class="ml-2">JSON</span>
         </label>
       </div>
@@ -332,10 +313,9 @@
     gradelevel: document.getElementById("gradelevelSelect"),
     bank: document.getElementById("bankSelect"),
     state: document.getElementById("stateSelect"),
-    emolument: document.getElementById("emolumentSelect"),
+    exittype: document.getElementById("exittypeSelect"),
     rent: document.getElementById("rentSelect"),
-    taxed: document.getElementById("taxedSelect"),
-    oldemployees: document.getElementById("oldemployeesSelect")
+    taxed: document.getElementById("taxedSelect")
   };
 
   const generatePersonnelBtn = document.getElementById("generatePersonnel");
@@ -354,7 +334,7 @@
   async function loadFilterOptions() {
     try {
       const token = localStorage.getItem('token') || '';
-      const response = await fetch('/personnel-report/filter-options', {
+      const response = await fetch('/personnel-report/filter-options-old', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -372,10 +352,9 @@
         populateDropdown(selects.gradelevel, filterOptions.gradeLevels);
         populateDropdown(selects.bank, filterOptions.bankBranches);
         populateDropdown(selects.state, filterOptions.states);
-        populateDropdown(selects.emolument, filterOptions.emolumentForms);
+        populateDropdown(selects.exittype, filterOptions.exitTypes);
         populateDropdown(selects.rent, filterOptions.rentSubsidy);
         populateDropdown(selects.taxed, filterOptions.taxedStatus);
-        populateDropdown(selects.oldemployees, filterOptions.oldEmployeesOptions);
       }
     } catch (error) {
       console.error('Error loading filter options:', error);
@@ -401,7 +380,7 @@
     personnelModalMessage.textContent = message;
     personnelModalIcon.innerHTML = isError 
       ? '<i class="fas fa-exclamation-circle text-red-500"></i>'
-      : '<i class="fas fa-check-circle text-blue-500"></i>';
+      : '<i class="fas fa-check-circle text-green-500"></i>';
     personnelModal.classList.remove("hidden");
   }
 
@@ -480,10 +459,9 @@
         gradelevel: 'gradelevel',
         bank: 'bankBranch',
         state: 'stateOfOrigin',
-        emolument: 'emolumentForm',
+        exittype: 'exitType',
         rent: 'rentSubsidy',
-        taxed: 'taxed',
-        oldemployees: 'oldEmployees'
+        taxed: 'taxed'
       };
       
       const paramName = paramMap[selectedScope];
@@ -495,15 +473,14 @@
 
     try {
       const token = localStorage.getItem('token') || '';
-      const response = await fetch(`/personnel-report?${queryParams}`, {
+      const response = await fetch(`/personnel-report/old?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to generate report');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       if (exportFormat === 'json') {
@@ -531,7 +508,7 @@
 
         const a = document.createElement('a');
         a.href = url;
-        a.download = `personnel_report_${new Date().toISOString().split('T')[0]}.${exportFormat === 'excel' ? 'xlsx' : 'pdf'}`;
+        a.download = `separated_personnel_report_${new Date().toISOString().split('T')[0]}.${exportFormat === 'excel' ? 'xlsx' : 'pdf'}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -574,6 +551,3 @@
   loadFilterOptions();
   updateExportFormatDisplay('all');
 </script>
-
-
-

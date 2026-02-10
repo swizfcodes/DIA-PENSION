@@ -485,11 +485,10 @@ window.loadReconciliation = async function() {
   showLoading('Loading reconciliation data...');
 
   try {
-    const periodCode = `${year}${month}`;
     
     // Load summary
     const summaryResponse = await fetch(
-      `${API_BASE}/summary?year=${year}&month=${periodCode}`,
+      `${API_BASE}/summary?year=${year}&month=${month}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -499,7 +498,26 @@ window.loadReconciliation = async function() {
     );
 
     let summaryData = null;
-    if (summaryResponse.ok) {
+    
+    // Check for calculation incomplete error
+    if (!summaryResponse.ok) {
+      const errorResult = await summaryResponse.json();
+      
+      if (errorResult.errorType === 'CALCULATION_INCOMPLETE') {
+        hideLoading();
+        showError(errorResult.error);
+        return;
+      }
+      
+      if (errorResult.errorType === 'NO_DATA') {
+        hideLoading();
+        showWarning(errorResult.error);
+        return;
+      }
+      
+      // Other errors - continue to try loading employee data
+      console.warn('Summary load failed:', errorResult.error);
+    } else {
       const summaryResult = await summaryResponse.json();
       if (summaryResult.success && summaryResult.data && summaryResult.data.length > 0) {
         summaryData = summaryResult.data[0];
@@ -508,7 +526,7 @@ window.loadReconciliation = async function() {
 
     // Load employee details
     const employeesResponse = await fetch(
-      `${API_BASE}/employees?year=${year}&month=${periodCode}&showErrorsOnly=${showErrorsOnly}`,
+      `${API_BASE}/employees?year=${year}&month=${month}&showErrorsOnly=${showErrorsOnly}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -518,7 +536,21 @@ window.loadReconciliation = async function() {
     );
 
     if (!employeesResponse.ok) {
-      throw new Error('Failed to load employee reconciliation data');
+      const errorResult = await employeesResponse.json();
+      
+      if (errorResult.errorType === 'CALCULATION_INCOMPLETE') {
+        hideLoading();
+        showError(errorResult.error);
+        return;
+      }
+      
+      if (errorResult.errorType === 'NO_DATA') {
+        hideLoading();
+        showWarning(errorResult.error);
+        return;
+      }
+      
+      throw new Error(errorResult.error || 'Failed to load employee reconciliation data');
     }
 
     const employeesResult = await employeesResponse.json();
@@ -810,7 +842,7 @@ window.exportReport = async function() {
     // Build query parameters
     const params = new URLSearchParams({
       year: year,
-      month: `${year}${month}`,
+      month: `${month}`,
       showErrorsOnly: showErrorsOnly
     });
 
@@ -890,6 +922,3 @@ window.onclick = function(event) {
 // Initialize
 loadFilters();
 </script>
-
-
-

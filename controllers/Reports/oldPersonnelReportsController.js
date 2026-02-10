@@ -15,7 +15,7 @@ class OldPersonnelReportController extends BaseReportController {
   // ==========================================================================
   // PERSONNEL REPORT - MAIN ENDPOINT (OLD EMPLOYEES)
   // ==========================================================================
-  async generatePersonnelReport(req, res) {
+  async generateOldPersonnelReport(req, res) {
     try {
       const { format, ...filterParams } = req.query;
       
@@ -46,9 +46,9 @@ class OldPersonnelReportController extends BaseReportController {
       console.log('Personnel Report Statistics:', statistics);
 
       if (format === 'excel') {
-        return this.generatePersonnelReportExcel(data, req, res, filters, statistics);
+        return this.generateOldPersonnelReportExcel(data, req, res, filters, statistics);
       } else if (format === 'pdf') {
-        return this.generatePersonnelReportPDF(data, req, res, filters, statistics);
+        return this.generateOldPersonnelReportPDF(data, req, res, filters, statistics);
       }
 
       // Return JSON with statistics
@@ -67,12 +67,8 @@ class OldPersonnelReportController extends BaseReportController {
   // ==========================================================================
   // EXCEL GENERATION (OLD EMPLOYEES)
   // ==========================================================================
-  async generatePersonnelReportExcel(data, req, res, filters, statistics) {
+  async generateOldPersonnelReportExcel(data, req, res, filters, statistics) {
     try {
-      if (!data || data.length === 0) {
-        throw new Error('No Old Personnel data available for the selected filters');
-      }
-
       const exporter = new GenericExcelExporter();
       const className = this.getDatabaseNameFromRequest(req);
 
@@ -153,7 +149,7 @@ class OldPersonnelReportController extends BaseReportController {
       const fullSubtitle = `${filterDescription}\n${statsInfo}`;
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA PAYROLL - PERSONNEL REPORT (EXITED PERSONNELS)',
+        title: 'NIGERIAN NAVY - PERSONNEL REPORT (SEPARATED EMPLOYEES)',
         subtitle: fullSubtitle,
         className: className,
         columns: columns,
@@ -212,10 +208,10 @@ class OldPersonnelReportController extends BaseReportController {
   // ==========================================================================
   // PDF GENERATION (OLD EMPLOYEES)
   // ==========================================================================
-  async generatePersonnelReportPDF(data, req, res, filters, statistics) {
+  async generateOldPersonnelReportPDF(data, req, res, filters, statistics) {
     try {
       if (!data || data.length === 0) {
-        throw new Error('No Old Personnel data available for the selected filters');
+        throw new Error('No data available for the selected filters');
       }
 
       console.log('📄 Generating PDF with', data.length, 'records');
@@ -227,6 +223,42 @@ class OldPersonnelReportController extends BaseReportController {
       }
       
       const templateContent = fs.readFileSync(templatePath, 'utf8');
+
+      // Format years served for old employees
+      const formatYearsServed = (totalMonths, totalDays) => {
+        const years = Math.floor(totalMonths / 12);
+        const months = totalMonths % 12;
+        const days = totalDays % 30; // Approximate days in remaining month
+        
+        if (years >= 1) {
+          return years.toString();
+        } else if (months >= 1) {
+          return `${months} month${months !== 1 ? 's' : ''}`;
+        } else if (days >= 0) {
+          return `${days} day${days !== 1 ? 's' : ''}`;
+        }
+        return 'N/A';
+      };
+
+      // Add years_served_formatted to data
+      const formattedData = data.map(item => {
+        const totalMonths = item.total_months_of_service || 0;
+        const totalDays = item.total_days_of_service || 0;
+        
+        let yearsServedFormatted;
+        if (totalMonths < 12) {
+          // Less than a year - format as months or days
+          yearsServedFormatted = formatYearsServed(totalMonths, totalDays);
+        } else {
+          // 1 year or more - show years
+          yearsServedFormatted = item.years_of_service || 0;
+        }
+
+        return {
+          ...item,
+          years_served_formatted: yearsServedFormatted
+        };
+      });
 
       const appliedFilters = [];
       if (filters.title) appliedFilters.push(`Rank: ${filters.title}`);
@@ -245,7 +277,7 @@ class OldPersonnelReportController extends BaseReportController {
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
       const templateData = {
-        data: data,
+        data: formattedData,
         statistics: statistics,
         reportDate: new Date(),
         filters: filterDescription,
@@ -287,7 +319,7 @@ class OldPersonnelReportController extends BaseReportController {
   // ==========================================================================
   // GET FILTER OPTIONS (OLD EMPLOYEES)
   // ==========================================================================
-  async getPersonnelFilterOptions(req, res) {
+  async getOldPersonnelFilterOptions(req, res) {
     try {
       // Get current database from pool using user_id
       const currentDb = pool.getCurrentDatabase(req.user_id.toString());

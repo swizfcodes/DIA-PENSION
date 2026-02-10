@@ -61,11 +61,11 @@ class QuickAccessManager {
         section: 'payments-deductions',
         title: 'Payments/Deductions'
       },
-      'payments-deductions': {
+      'payments-deductions-upload': {
         id: 'payments-deductions-upload',
-        label: 'Payment/Deduction',
+        label: 'Payment/Deduction Upload',
         section: 'payments-deductions-upload',
-        title: 'Payments/Deductions'
+        title: 'Payments/Deductions Upload'
       },
       'current-personnel': {
         id: 'current-personnel',

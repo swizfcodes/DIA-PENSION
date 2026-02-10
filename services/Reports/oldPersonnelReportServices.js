@@ -32,7 +32,7 @@ class OldPersonnelReportService {
       gradelevel, 
       bankBranch, 
       stateOfOrigin, 
-      emolumentForm,
+      exitType,
       rentSubsidy,
       taxed
     } = filters;
@@ -168,7 +168,7 @@ class OldPersonnelReportService {
           ${stateOfOrigin ? 'AND h.StateofOrigin = ?' : ''}
           ${rentSubsidy ? 'AND h.rent_subsidy = ?' : ''}
           ${taxed ? 'AND h.taxed = ?' : ''}
-          ${emolumentForm ? 'AND h.emolumentform = ?' : ''}
+          ${exitType ? 'AND h.exittype = ?' : ''}
         ORDER BY h.Title, h.gradelevel DESC, h.Surname
       `;
       
@@ -182,7 +182,7 @@ class OldPersonnelReportService {
       if (stateOfOrigin) params.push(stateOfOrigin);
       if (rentSubsidy) params.push(rentSubsidy);
       if (taxed) params.push(taxed);
-      if (emolumentForm) params.push(emolumentForm);
+      if (exitType) params.push(exitType);
       
       console.log('🔍 Executing query with params:', params);
       
@@ -201,7 +201,7 @@ class OldPersonnelReportService {
           stateOfOrigin: stateOfOrigin || 'All',
           rentSubsidy: rentSubsidy || 'All',
           taxed: taxed || 'All',
-          emolumentForm: emolumentForm || 'All',
+          exitType: exitType || 'All',
           employeeType: 'Old Employees Only'
         });
       } else {
@@ -233,7 +233,7 @@ class OldPersonnelReportService {
       gradelevel, 
       bankBranch, 
       stateOfOrigin, 
-      emolumentForm,
+      exitType,
       rentSubsidy,
       taxed
     } = filters;
@@ -309,7 +309,7 @@ class OldPersonnelReportService {
           ${stateOfOrigin ? 'AND h.StateofOrigin = ?' : ''}
           ${rentSubsidy ? 'AND h.rent_subsidy = ?' : ''}
           ${taxed ? 'AND h.taxed = ?' : ''}
-          ${emolumentForm ? 'AND h.emolumentform = ?' : ''}
+          ${exitType ? 'AND h.exittype = ?' : ''}
       `;
       
       const params = [payrollClass];
@@ -322,7 +322,7 @@ class OldPersonnelReportService {
       if (stateOfOrigin) params.push(stateOfOrigin);
       if (rentSubsidy) params.push(rentSubsidy);
       if (taxed) params.push(taxed);
-      if (emolumentForm) params.push(emolumentForm);
+      if (exitType) params.push(exitType);
       
       const [rows] = await pool.query(query, params);
       

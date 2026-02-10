@@ -1,5 +1,5 @@
 <div class="p-6">
-  <!-- Top Action Bar -->
+  <!-- Top Action Bar (Hidden after stage >= 777) -->
   <div id="topActionBar" class="hidden mb-6 w-full flex justify-between items-center border-b-2 pb-4 no-print">
     <h2 class="text-green-600 font-semibold lg:text-lg">
       <i class="fas fa-info-circle mr-2"></i>First ensure you have printed changes in personnel data
@@ -10,1087 +10,270 @@
     </button>
   </div>
 
-  <!-- Filter Tabs -->
-  <div id="filterTabs" class="hidden bg-yellow-50/25 border-2 border-amber-100 flex flex-wrap gap-2 p-2 mb-4 rounded-lg no-print">
-    <button id="allToggle" class="flex-1 px-2 py-2 text-sm lg:text-lg font-medium rounded-lg bg-green-50 text-gray-900 shadow transition-colors duration-200">
-      <i class="fas fa-list mr-2"></i>All Variables
-    </button>
-    <button id="personnelToggle" class="flex-1 px-2 py-2 text-sm lg:text-lg font-medium rounded-lg text-gray-500 hover:text-gray-900 transition-colors duration-200">
-      <i class="fas fa-user mr-2"></i>By Personnel
-    </button>
-    <button id="categoryToggle" class="flex-1 px-2 py-2 text-sm lg:text-lg font-medium rounded-lg text-gray-500 hover:text-gray-900 transition-colors duration-200">
-      <i class="fas fa-tags mr-2"></i>By Category
-    </button>
-    <button id="loanToggle" class="flex-1 px-2 py-2 text-sm lg:text-lg font-medium rounded-lg text-gray-500 hover:text-gray-900 transition-colors duration-200">
-      <i class="fas fa-money-bill-wave mr-2"></i>Loans
-    </button>
-  </div>
-
-  <!-- Filter Form Container -->
-  <div id="filterFormContainer" class="hidden p-2 rounded-lg mb-4 no-print">
-    <div id="filterFormContent" class="flex flex-col md:flex-row md:items-end md:gap-6">            
-      <div id="personnelSelectWrapperFilter" class="hidden flex-1">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2 lg:text-lg">
-            <i class="fas fa-search mr-2"></i>Select Personnel
-          </label>              
-          <div class="md:flex md:items-start md:space-x-4">                   
-            <div class="relative col-span-1 flex-1 mb-3 md:mb-0">
-              <div class="relative">
-                <input 
-                  type="text" 
-                  id="searchInputFilter"
-                  class="w-full border border-green-500 focus:border-yellow-500 bg-transparent rounded-md px-3 py-2 pr-10"
-                  placeholder="Search Name or Number..."
-                  autocomplete="off">
-                <i class="fas fa-chevron-down absolute right-3 top-4 text-gray-400"></i>
-              </div>
-              <div id="dropdownListFilter" class="absolute z-10 w-full mt-1 bg-yellow-50 border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden">
-                <div class="py-1" id="employeeDropdownItemsFilter"></div>
-              </div>
-            </div>
-              
-            <button 
-              type="button" 
-              id="applyFilterBtn" 
-              class="px-3 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-all shadow-lg whitespace-nowrap w-full md:w-auto">
-              Apply Filter
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="categorySelectWrapperFilter" class="hidden flex-1">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2 lg:text-lg">
-            <i class="fas fa-filter mr-2"></i>Select Category
-          </label>
-          <div class="md:flex md:items-start md:space-x-4">
-            <select id="categorySelect" class="flex-1 border border-green-500 focus:border-yellow-500 bg-transparent rounded-md px-3 py-2 mb-3 md:mb-0">
-              <option value="">-- Select Category --</option>
-              <option value="REQUIRED_FOR_ALL">Required for All</option>
-              <option value="NOT_REQUIRED_FOR_ALL">Not Required for All</option>
-              <option value="ALLOWANCE">Allowance</option>
-              <option value="DEDUCTION">Deduction</option>
-              <option value="OTHER">Other</option>
-            </select>
-            <button 
-              type="button" 
-              id="applyCategoryFilterBtn" 
-              class="px-3 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-all shadow-lg whitespace-nowrap w-full md:w-auto">
-              Apply Filter
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Form -->
-  <form id="inputVarForm" class="space-y-6 p-6 no-print">
-    <div class="p-6">
-      <div class="flex items-center space-x-3 mb-4">
-        <div class="bg-yellow-500 text-white p-3 rounded-full shadow">
-          <i class="fas fa-file-invoice text-2xl"></i>
-        </div>
-        <h2 class="text-2xl font-bold text-gray-900">Input Variables Report</h2>
-      </div>
-      <p class="text-gray-600 font-semibold lg:text-lg">
-        Preview payroll input variables and generate printable reports.
+  <!-- Not Ready Message (Stage < 775) -->
+  <div id="notReadyMessage" class="hidden mb-6">
+    <div class="border-2 border-green-300 rounded-lg p-8 text-center">
+      <i class="fas fa-lock text-green-600 text-6xl mb-4"></i>
+      <h2 class="text-2xl font-bold text-green-900 mb-3">
+        Input Variable Report Not Available Yet
+      </h2>
+      <p class="text-green-800 text-lg mb-4">
+        This section will become available once the personnel data changes are printed.
+      </p>
+      <p class="text-green-700">
+        Please complete all prior steps before accessing this report.
       </p>
     </div>
+  </div>
 
-    <div class="flex justify-end space-x-4 pt-4">
-      <button type="button" id="loadInputVarBtn" class="px-8 py-3 bg-yellow-600 text-white font-medium rounded-lg hover:bg-yellow-700 transition-all shadow-lg cursor-not-allowed opacity-50" disabled>
-        <i class="fas fa-file-alt mr-2"></i>Waiting For Personnel Changes To Be Processed
+  <!-- Main Section (Stage >= 775) -->
+  <section id="mainSection" class="hidden">
+    <!-- Generate Button (moves to top-left after first print) -->
+    <div id="generateBtnContainer" class="flex justify-center items-center p-8">
+      <button id="generateBtn" class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all">
+        <i class="fas fa-file-alt mr-2"></i>Generate Input Variable Report
       </button>
     </div>
-  </form>
+  </section>
 
-  <!-- Progress Modal -->
-  <div id="progressModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
-      <div class="text-center">
-        <div class="flex justify-center mb-4">
-          <div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">Processing...</h3>
-        <p id="progressMessage" class="text-gray-600 mb-4">Processing input variables...</p>
-        <div id="logContainer" class="bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto text-left text-sm">
-          <!-- Backend logs will appear here -->
-        </div>
+  <!-- Format Selection Modal -->
+  <div id="formatModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
+      <div class="text-center mb-6">
+        <i class="fas fa-file-export text-green-600 text-5xl mb-3"></i>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Select Export Format</h3>
+        <p class="text-gray-600">Choose the format for your report</p>
       </div>
+      
+      <div class="space-y-3 mb-6">
+        <button id="selectPdfBtn" class="w-full px-6 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition-all flex items-center justify-center">
+          <i class="fas fa-file-pdf mr-3 text-2xl"></i>
+          <span class="text-lg">PDF Format</span>
+        </button>
+        
+        <button id="selectExcelBtn" class="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition-all flex items-center justify-center">
+          <i class="fas fa-file-excel mr-3 text-2xl"></i>
+          <span class="text-lg">Excel Format (.xlsx)</span>
+        </button>
+      </div>
+      
+      <button id="cancelFormatBtn" class="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition-colors">
+        <i class="fas fa-times mr-2"></i>Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Modal -->
+  <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+      <div class="mb-4">
+        <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">Generating Report...</h3>
+      <p class="text-gray-600">Please wait while we prepare your variation report.</p>
     </div>
   </div>
 
   <!-- Alert Modal -->
-  <div id="alertModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
-      <div class="text-center">
-        <div id="alertIcon" class="flex justify-center mb-4">
-          <i class="fas fa-exclamation-circle text-red-500 text-6xl"></i>
-        </div>
-        <h3 id="alertTitle" class="text-xl font-semibold text-gray-900 mb-2">Error</h3>
-        <p id="alertMessage" class="text-gray-600 mb-6">An error occurred</p>
-        <button id="alertCloseBtn" class="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-all shadow-lg">
-          OK
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Variables Table -->
-  <div id="changesTable" class="hidden mb-4 rounded-lg overflow-hidden">
-    <div class="pb-4 flex justify-between items-center no-print">
-      <h3 class="text-xl text-yellow-700 font-bold">Input Variables Report Results</h3>
-      <div class="flex gap-2">
-        <button id="exportExcelBtn" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition shadow">
-          <i class="fas fa-file-excel mr-2"></i>Excel
-        </button>
-        <button id="exportPdfBtn" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition shadow">
-          <i class="fas fa-file-pdf mr-2"></i>PDF
-        </button>
-        <button id="printBtn" class="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 transition shadow">
-          <i class="fas fa-print mr-2"></i>Print
-        </button>
-      </div>
-    </div>
-
-    <div class="overflow-x-auto">
-      <table class="min-w-full border border-gray-200 rounded-lg text-sm">
-        <thead class="bg-yellow-100/25 text-yellow-900">
-          <tr>
-            <th class="border px-2 py-3 text-left"><i class="fas fa-id-badge mr-1"></i>Service No</th>
-            <th class="border px-2 py-3 text-left"><i class="fas fa-user mr-1"></i>Full Name</th>
-            <th class="border px-2 py-3 text-left"><i class="fas fa-coins mr-1"></i>Pay Type</th>
-            <!--<th class="border px-2 py-3 text-left"><i class="fas fa-tag mr-1"></i>Category</th>
-            <th class="border px-2 py-3 text-right"><i class="fas fa-money-bill mr-1"></i>Amount</th>-->
-            <th class="border px-2 py-3 text-left no-print"><i class="fas fa-cog mr-1"></i>Action</th>
-          </tr>
-        </thead>
-        <tbody id="changesTableBody" class="divide-y divide-gray-200">
-          <!-- Rows populated dynamically -->
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination Controls -->
-    <div id="paginationControls" class="flex justify-between items-center mt-4 no-print">
-      <div class="text-sm text-gray-600">
-        Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRecords">0</span> records
-      </div>
-      <div class="flex gap-2">
-        <button id="firstPageBtn" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
-          <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button id="prevPageBtn" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
-          <i class="fas fa-angle-left"></i> Prev
-        </button>
-        <span id="pageInfo" class="px-4 py-2 bg-yellow-50/25 text-yellow-900 rounded-lg font-medium">Page 1 of 1</span>
-        <button id="nextPageBtn" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
-          Next <i class="fas fa-angle-right"></i>
-        </button>
-        <button id="lastPageBtn" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
-          <i class="fas fa-angle-double-right"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cancel Filter Button -->
-  <div id="cancelFilterContainer" class="hidden mb-4 flex justify-end no-print">
-    <button id="cancelFilterBtn" class="px-3 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all shadow-lg">
-      Cancel Filter
-    </button>
-  </div>
-
-  <!-- Summary Cards -->
-  <!--<div id="summaryCards" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-    <div class="p-4 rounded-lg border-2 transform hover:scale-105 transition">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-gray-600 text-sm font-medium">Total Records</div>
-          <div id="totalRecordsCard" class="text-3xl font-bold text-yellow-900">0</div>
+  <div id="alertModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+      <div class="flex items-start mb-4">
+        <div id="alertIcon" class="mr-3 text-2xl"></div>
+        <div class="flex-1">
+          <h3 id="alertTitle" class="text-lg font-semibold mb-2"></h3>
+          <p id="alertMessage" class="text-gray-700"></p>
         </div>
       </div>
-    </div>
-    <div class="p-4 rounded-lg border-2 hover:scale-105 transition">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-gray-600 text-sm font-medium">Allowances</div>
-          <div id="allowancesCount" class="text-3xl font-bold text-blue-600">0</div>
-        </div>
-        <i class="fas fa-plus-circle text-blue-500 text-3xl"></i>
+      <div class="flex justify-end">
+        <button id="alertCloseBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">OK</button>
       </div>
-    </div>
-    <div class="p-4 rounded-lg border-2 transform hover:scale-105 transition">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-gray-600 text-sm font-medium">Deductions</div>
-          <div id="deductionsCount" class="text-3xl font-bold text-red-600">0</div>
-        </div>
-        <i class="fas fa-minus-circle text-red-500 text-3xl"></i>
-      </div>
-    </div>
-    <div class="p-4 rounded-lg border-2 transform hover:scale-105 transition">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-gray-600 text-sm font-medium">Total Amount</div>
-          <div id="totalAmount" class="text-3xl font-bold text-yellow-900">₦0</div>
-        </div>
-      </div>
-    </div>
-  </div>-->
-
-  <!-- Details Modal -->
-  <div id="detailsModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-    <div class="bg-gray-100 rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-      <div class="p-6 sticky top-0 z-20 bg-yellow-600 text-white">
-        <div class="flex justify-between items-center">
-          <h3 class="text-2xl font-bold"><i class="fas fa-info-circle mr-2"></i>Input Variable Details</h3>
-          <button id="closeModal" class="text-white hover:text-gray-200 transition"><i class="fas fa-times text-2xl"></i></button>
-        </div>
-      </div>
-      <div id="modalContent" class="p-6"></div>
     </div>
   </div>
 
   <!-- Success Banner -->
-  <div id="nextStepBanner" class="hidden mt-6 p-6 no-print">
-    <div class="flex items-start">
-      <i class="fas fa-check-circle text-blue-500 text-3xl mr-4"></i>
-      <div class="flex-1">
-        <h4 class="text-blue-800 font-bold text-lg mb-2">Input Variables Loaded Successfully!</h4>
-        <p class="text-blue-700 mb-4">Review the input variables above, filter as needed, and export reports. Ready to proceed?</p>
-        <button onclick="window.navigation && window.navigation.navigateToSection && window.navigation.navigateToSection('master-file-update', 'Master File Update')" 
-                class="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition font-medium">
-          <i class="fas fa-arrow-right mr-2"></i>Master File Update
-        </button>
+  <div id="nextStepBanner" class="hidden mt-6 no-print">
+    <div class="border-2 border-blue-200 rounded-lg p-6 bg-blue-50">
+      <div class="flex items-start">
+        <i class="fas fa-check-circle text-blue-500 text-3xl mr-4"></i>
+        <div class="flex-1">
+          <h4 class="text-blue-800 font-bold text-lg mb-2">Variation Input Report Generated Successfully!</h4>
+          <p class="text-blue-700 mb-4">Your report has been downloaded. Ready to proceed to the next step?</p>
+          <button onclick="window.navigation && window.navigation.navigateToSection && window.navigation.navigateToSection('master-file-update', 'Master File Update')" 
+                  class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+            <i class="fas fa-arrow-right mr-2"></i>Master File Update
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-(function () {
+(function() {
   const API_BASE = '/inputvariable';
-
+  
   // Stage constants
-  const STAGE_CHANGES_READY = 775;
-  const STAGE_INPUT_VAR_READY = 777;
-
-  // Pagination
-  const RECORDS_PER_PAGE = 5;
-  let currentPage = 1;
-  let filteredData = [];
-
+  const STAGE_READY = 775;
+  const STAGE_PRINTED = 777;
+  
   // State
-  let currentPayrollStage = 0;
-  let allVariablesData = null;
-  let allEmployees = [];
-  let hasLoadedOnce = false;
-  let currentMode = 'all';
-  let selectedEmployee = null;
-  let selectedCategory = '';
-  let filterApplied = false;
-
+  let currentStage = 0;
+  let hasGenerated = false;
+  
   // DOM Elements
   const topActionBar = document.getElementById('topActionBar');
-  const filterTabs = document.getElementById('filterTabs');
-  const allToggle = document.getElementById('allToggle');
-  const personnelToggle = document.getElementById('personnelToggle');
-  const categoryToggle = document.getElementById('categoryToggle');
-  const loanToggle = document.getElementById('loanToggle');
-  const filterFormContainer = document.getElementById('filterFormContainer');
-  const personnelSelectWrapperFilter = document.getElementById('personnelSelectWrapperFilter');
-  const categorySelectWrapperFilter = document.getElementById('categorySelectWrapperFilter');
-  const searchInputFilter = document.getElementById('searchInputFilter');
-  const dropdownListFilter = document.getElementById('dropdownListFilter');
-  const employeeDropdownItemsFilter = document.getElementById('employeeDropdownItemsFilter');
-  const categorySelect = document.getElementById('categorySelect');
-  const applyFilterBtn = document.getElementById('applyFilterBtn');
-  const applyCategoryFilterBtn = document.getElementById('applyCategoryFilterBtn');
-  const cancelFilterContainer = document.getElementById('cancelFilterContainer');
-  const cancelFilterBtn = document.getElementById('cancelFilterBtn');
-  const loadBtn = document.getElementById('loadInputVarBtn');
-  const progressModal = document.getElementById('progressModal');
+  const notReadyMessage = document.getElementById('notReadyMessage');
+  const mainSection = document.getElementById('mainSection');
+  const generateBtnContainer = document.getElementById('generateBtnContainer');
+  const generateBtn = document.getElementById('generateBtn');
+  const nextStepBanner = document.getElementById('nextStepBanner');
+  
+  const formatModal = document.getElementById('formatModal');
+  const selectPdfBtn = document.getElementById('selectPdfBtn');
+  const selectExcelBtn = document.getElementById('selectExcelBtn');
+  const cancelFormatBtn = document.getElementById('cancelFormatBtn');
+  
+  const loadingModal = document.getElementById('loadingModal');
   const alertModal = document.getElementById('alertModal');
   const alertTitle = document.getElementById('alertTitle');
   const alertMessage = document.getElementById('alertMessage');
   const alertIcon = document.getElementById('alertIcon');
   const alertCloseBtn = document.getElementById('alertCloseBtn');
-  const progressMessage = document.getElementById('progressMessage');
-  const logContainer = document.getElementById('logContainer');
-  const inputVarForm = document.getElementById('inputVarForm');
-  const changesTable = document.getElementById('changesTable');
-  const changesTableBody = document.getElementById('changesTableBody');
-  //const summaryCards = document.getElementById('summaryCards');
-  const nextStepBanner = document.getElementById('nextStepBanner');
-  const detailsModal = document.getElementById('detailsModal');
-  const modalContent = document.getElementById('modalContent');
-  const closeModal = document.getElementById('closeModal');
-  const exportExcelBtn = document.getElementById('exportExcelBtn');
-  const exportPdfBtn = document.getElementById('exportPdfBtn');
-  const printBtn = document.getElementById('printBtn');
 
-  // Pagination DOM
-  const firstPageBtn = document.getElementById('firstPageBtn');
-  const prevPageBtn = document.getElementById('prevPageBtn');
-  const nextPageBtn = document.getElementById('nextPageBtn');
-  const lastPageBtn = document.getElementById('lastPageBtn');
-  const pageInfo = document.getElementById('pageInfo');
-  const showingStart = document.getElementById('showingStart');
-  const showingEnd = document.getElementById('showingEnd');
-  const totalRecords = document.getElementById('totalRecords');
-
-  // Helper functions
-  function addLog(message, type = 'info') {
-    const log = document.createElement('div');
-    log.className = `py-1 text-xs ${type === 'success' ? 'text-blue-600' : type === 'error' ? 'text-red-600' : 'text-gray-600'}`;
-    log.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'circle'} mr-2"></i>${message}`;
-    logContainer.appendChild(log);
-    logContainer.scrollTop = logContainer.scrollHeight;
-  }
-
-  function showAlert(title, message, type = 'error') {
+  // Show alert modal
+  function showAlert(title, message, isError = false) {
     alertTitle.textContent = title;
     alertMessage.textContent = message;
-    const iconClass = type === 'success' ? 'fa-check-circle text-blue-500' : type === 'warning' ? 'fa-exclamation-triangle text-yellow-500' : 'fa-exclamation-circle text-red-500';
-    alertIcon.innerHTML = `<i class="fas ${iconClass} text-6xl"></i>`;
+    alertIcon.innerHTML = isError 
+      ? '<i class="fas fa-exclamation-circle text-red-500"></i>'
+      : '<i class="fas fa-check-circle text-blue-500"></i>';
     alertModal.classList.remove('hidden');
   }
 
-  function formatCurrency(amount) {
-    if (!amount && amount !== 0) return 'N/A';
-    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
-  }
+  alertCloseBtn.onclick = () => alertModal.classList.add('hidden');
+  cancelFormatBtn.onclick = () => formatModal.classList.add('hidden');
 
-  // Update UI visibility
+  // Update UI visibility based on stage
   function updateUIVisibility() {
-    const isStageReady = currentPayrollStage >= STAGE_INPUT_VAR_READY;
-
-    if (hasLoadedOnce || (isStageReady && allVariablesData)) {
+    // Stage >= 775: Ready to use
+    if (currentStage >= STAGE_READY) {
       topActionBar.classList.add('hidden');
-      inputVarForm.classList.add('hidden');
-      filterTabs.classList.remove('hidden');
-      //summaryCards.classList.remove('hidden');
-      changesTable.classList.remove('hidden');
-      nextStepBanner.classList.remove('hidden');
+      notReadyMessage.classList.add('hidden');
+      mainSection.classList.remove('hidden');
       
-      if (currentMode === 'personnel' || currentMode === 'category') {
-        if (filterApplied) {
-          filterFormContainer.classList.add('hidden');
-          cancelFilterContainer.classList.remove('hidden');
-          //summaryCards.classList.add('hidden');
-          nextStepBanner.classList.add('hidden');
-        } else {
-          filterFormContainer.classList.remove('hidden');
-          cancelFilterContainer.classList.add('hidden');
-        }
+      if (hasGenerated) {
+        // After first print (stage >= 777): move button to top-left, show banner
+        generateBtnContainer.classList.remove('justify-center', 'p-8');
+        generateBtnContainer.classList.add('justify-end', 'mb-4');
+        generateBtn.classList.remove('text-lg', 'px-8', 'py-4');
+        generateBtn.classList.add('px-4', 'py-2', 'text-sm');
+        generateBtn.innerHTML = '<i class="fas fa-redo mr-2"></i>Print Again';
+        nextStepBanner.classList.remove('hidden');
       } else {
-        filterFormContainer.classList.add('hidden');
-        cancelFilterContainer.classList.add('hidden');
+        // Before first print (stage 775-776): button centered, no banner
+        generateBtnContainer.classList.add('justify-center', 'p-8');
+        generateBtnContainer.classList.remove('justify-start', 'mb-4');
+        generateBtn.classList.add('text-lg', 'px-8', 'py-4');
+        generateBtn.classList.remove('px-4', 'py-2', 'text-sm');
+        generateBtn.innerHTML = '<i class="fas fa-file-alt mr-2"></i>Generate Input Variable Report';
+        nextStepBanner.classList.add('hidden');
       }
       return;
     }
 
-    if (currentPayrollStage < STAGE_CHANGES_READY) {
-      topActionBar.classList.remove('hidden');
-      inputVarForm.classList.remove('hidden');
-      filterTabs.classList.add('hidden');
-      filterFormContainer.classList.add('hidden');
-      cancelFilterContainer.classList.add('hidden');
-      //summaryCards.classList.add('hidden');
-      changesTable.classList.add('hidden');
-      nextStepBanner.classList.add('hidden');
-      return;
-    }
-
-    if (currentPayrollStage === STAGE_CHANGES_READY) {
-      topActionBar.classList.add('hidden');
-      inputVarForm.classList.remove('hidden');
-      loadBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Process & Load Input Variables';
-      loadBtn.classList.remove('bg-yellow-600','hover:bg-yellow-700', 'cursor-not-allowed', 'opacity-50');
-      loadBtn.disabled = false;
-      loadBtn.classList.add('bg-blue-600','hover:bg-blue-700');
-      filterTabs.classList.add('hidden');
-      filterFormContainer.classList.add('hidden');
-      cancelFilterContainer.classList.add('hidden');
-      //summaryCards.classList.add('hidden');
-      changesTable.classList.add('hidden');
-      nextStepBanner.classList.add('hidden');
-      return;
-    }
-
+    // Not ready yet (stage < 775)
     topActionBar.classList.remove('hidden');
-    inputVarForm.classList.remove('hidden');
-    filterTabs.classList.add('hidden');
-    filterFormContainer.classList.add('hidden');
-    cancelFilterContainer.classList.add('hidden');
-    //summaryCards.classList.add('hidden');
-    changesTable.classList.add('hidden');
+    notReadyMessage.classList.remove('hidden');
+    mainSection.classList.add('hidden');
     nextStepBanner.classList.add('hidden');
   }
 
-  // Switch filter mode
-  function switchMode(mode) {
-    currentMode = mode;
-    currentPage = 1;
-    filterApplied = false;
-    
-    [allToggle, personnelToggle, categoryToggle, loanToggle].forEach(btn => {
-      btn.classList.remove('bg-green-50','text-gray-900','shadow');
-      btn.classList.add('text-gray-500');
-    });
-    
-    const activeBtn = mode === 'all' ? allToggle : mode === 'personnel' ? personnelToggle : mode === 'category' ? categoryToggle : loanToggle;
-    if (activeBtn) {
-      activeBtn.classList.add('bg-green-50','text-gray-900','shadow');
-      activeBtn.classList.remove('text-gray-500');
-    }
-
-    if (mode === 'all') {
-      filterFormContainer.classList.add('hidden');
-      cancelFilterContainer.classList.add('hidden');
-      //summaryCards.classList.remove('hidden');
-      nextStepBanner.classList.remove('hidden');
-      if (allVariablesData) filterAndRenderData();
-    } else if (mode === 'personnel' || mode === 'category') {
-      filterFormContainer.classList.remove('hidden');
-      cancelFilterContainer.classList.add('hidden');
-      //summaryCards.classList.add('hidden');
-      nextStepBanner.classList.add('hidden');
-      
-      personnelSelectWrapperFilter.classList.toggle('hidden', mode !== 'personnel');
-      categorySelectWrapperFilter.classList.toggle('hidden', mode !== 'category');
-      
-      if (!allVariablesData) return;
-      changesTableBody.innerHTML = `
-        <tr>
-          <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-            <span class="text-lg font-medium">Please apply filter to view results</span>
-          </td>
-        </tr>`;
-    } else if (mode === 'loan') {
-      filterFormContainer.classList.add('hidden');
-      cancelFilterContainer.classList.add('hidden');
-      //summaryCards.classList.add('hidden');
-      nextStepBanner.classList.add('hidden');
-      if (allVariablesData) filterAndRenderData();
-    } 
-  }
-
-  // Populate employee dropdown
-  function populateEmployeeDropdown() {
-    if (!allVariablesData || !Array.isArray(allVariablesData.records)) return;
-    const unique = new Map();
-    allVariablesData.records.forEach(r => {
-      const id = String(r.Empl_id || '').trim();
-      const name = r.full_name || '';
-      if (!id) return;
-      if (!unique.has(id)) unique.set(id, { id, name });
-    });
-    allEmployees = Array.from(unique.values());
-    
-    employeeDropdownItemsFilter.innerHTML = allEmployees.map(emp => `
-      <div class="px-3 py-2 hover:bg-green-50 cursor-pointer transition border-b border-gray-100" data-id="${emp.id}">
-        <span class="font-semibold text-green-600">${emp.name}</span>
-        (<span class="text-xs font-semibold text-gray-500">${emp.id}</span>)
-      </div>`).join('');
-    dropdownListFilter.classList.remove('hidden');
-    
-    employeeDropdownItemsFilter.querySelectorAll('div[data-id]').forEach(item => {
-      item.addEventListener('click', () => {
-        selectedEmployee = item.getAttribute('data-id');
-        searchInputFilter.value = item.querySelector('.font-semibold').textContent;
-        dropdownListFilter.classList.add('hidden');
-      });
-    });
-  }
-
-  // Search handler
-  searchInputFilter.addEventListener('input', () => {
-    const q = searchInputFilter.value.trim().toLowerCase();
-    if (!q) { 
-      dropdownListFilter.classList.add('hidden'); 
-      selectedEmployee = null; 
-      return; 
-    }
-    const filtered = allEmployees.filter(emp => (emp.name||'').toLowerCase().includes(q) || (emp.id||'').toLowerCase().includes(q));
-    employeeDropdownItemsFilter.innerHTML = filtered.map(emp => `
-      <div class="px-3 py-2 hover:bg-green-50 cursor-pointer transition border-b border-gray-100" data-id="${emp.id}">
-        <span class="font-semibold text-green-600">${emp.name}</span>
-        (<span class="text-xs font-semibold text-gray-500">${emp.id}</span>)
-      </div>`).join('');
-    dropdownListFilter.classList.remove('hidden');
-
-    employeeDropdownItemsFilter.querySelectorAll('div[data-id]').forEach(item => {
-      item.addEventListener('click', () => {
-        selectedEmployee = item.getAttribute('data-id');
-        searchInputFilter.value = item.querySelector('.font-semibold').textContent;
-        dropdownListFilter.classList.add('hidden');
-      });
-    });
-  });
-
-  // Apply filter buttons
-  applyFilterBtn.addEventListener('click', () => {
-    if (currentMode === 'personnel' && !selectedEmployee) {
-      return showAlert('Validation Error', 'Please select a personnel', 'warning');
-    }
-    filterApplied = true;
-    filterAndRenderData();
-    updateUIVisibility();
-  });
-
-  applyCategoryFilterBtn.addEventListener('click', () => {
-    if (currentMode === 'category' && !categorySelect.value) {
-      return showAlert('Validation Error', 'Please select a category', 'warning');
-    }
-    selectedCategory = categorySelect.value;
-    filterApplied = true;
-    filterAndRenderData();
-    updateUIVisibility();
-  });
-
-  // Cancel filter
-  cancelFilterBtn.addEventListener('click', () => {
-    filterApplied = false;
-    selectedEmployee = null;
-    selectedCategory = '';
-    searchInputFilter.value = '';
-    categorySelect.value = '';
-    dropdownListFilter.classList.add('hidden');
-    
-    filterFormContainer.classList.remove('hidden');
-    cancelFilterContainer.classList.add('hidden');
-    
-    changesTableBody.innerHTML = `
-      <tr>
-        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-          <span class="text-lg font-medium">Please apply filter to view results</span>
-        </td>
-      </tr>`;
-  });
-
-  // Pagination functions
-  function updatePaginationControls() {
-    const totalPages = Math.ceil(filteredData.length / RECORDS_PER_PAGE);
-    const start = (currentPage - 1) * RECORDS_PER_PAGE + 1;
-    const end = Math.min(currentPage * RECORDS_PER_PAGE, filteredData.length);
-
-    showingStart.textContent = filteredData.length > 0 ? start : 0;
-    showingEnd.textContent = end;
-    totalRecords.textContent = filteredData.length;
-    pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
-
-    firstPageBtn.disabled = currentPage === 1;
-    prevPageBtn.disabled = currentPage === 1;
-    nextPageBtn.disabled = currentPage >= totalPages;
-    lastPageBtn.disabled = currentPage >= totalPages;
-  }
-
-  function goToPage(page) {
-    const totalPages = Math.ceil(filteredData.length / RECORDS_PER_PAGE);
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-    currentPage = page;
-    renderTable(getPaginatedData());
-    updatePaginationControls();
-  }
-
-  function getPaginatedData() {
-    const start = (currentPage - 1) * RECORDS_PER_PAGE;
-    const end = start + RECORDS_PER_PAGE;
-    return filteredData.slice(start, end);
-  }
-
-  // Pagination event listeners
-  firstPageBtn.addEventListener('click', () => goToPage(1));
-  prevPageBtn.addEventListener('click', () => goToPage(currentPage - 1));
-  nextPageBtn.addEventListener('click', () => goToPage(currentPage + 1));
-  lastPageBtn.addEventListener('click', () => {
-    const totalPages = Math.ceil(filteredData.length / RECORDS_PER_PAGE);
-    goToPage(totalPages);
-  });
-
-  // Render table
-  function renderTable(variables) {
-    changesTableBody.innerHTML = '';
-    if (!variables || variables.length === 0) {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-          <i class="fas fa-inbox text-4xl mb-2"></i>
-          <br>No input variables found for the selected filter
-        </td>`;
-      changesTableBody.appendChild(row);
-      return;
-    }
-
-    variables.forEach(variable => {
-      const row = document.createElement('tr');
-      row.className = 'hover:bg-yellow-50/25 transition';
-      
-      const categoryColor = 
-        variable.element_category === 'ALLOWANCE' ? 'green' :
-        variable.element_category === 'DEDUCTION' ? 'red' :
-        variable.element_category === 'REQUIRED_FOR_ALL' ? 'blue' : 'gray';
-      
-      row.innerHTML = `
-        <td class="border px-2 py-3 text-left">${variable.Empl_id}</td>
-        <td class="border px-2 py-3 text-left">${variable.full_name || 'N/A'}</td>
-        <td class="border px-2 py-3 text-left">
-          <span class="inline-flex items-center px-2 py-1 text-xs font-bold rounded bg-yellow-50/25 text-yellow-900">
-            ${variable.pay_type || 'N/A'}
-          </span>
-        </td>
-        <!--<td class="border px-2 py-3 text-left">
-          <span class="inline-flex items-center px-2 py-1 text-xs font-bold rounded bg-${categoryColor}-100 text-${categoryColor}-800">
-            ${variable.element_category || 'N/A'}
-          </span>
-        </td>
-        <td class="border px-2 py-3 text-right font-semibold ${variable.amtad === 'Deduct' ? 'text-red-600' : 'text-blue-600'}">
-          ${formatCurrency(variable.amt || 0)}
-          ${variable.amtad === 'Deduct' ? '<i class="fas fa-arrow-down ml-1"></i>' : variable.amtad === 'Add' ? '<i class="fas fa-arrow-up ml-1"></i>' : ''}
-        </td>-->
-        <td class="border px-2 py-3 text-left text-sm no-print">
-          <button class="text-yellow-700 hover:text-yellow-800 font-semibold transition" 
-                  data-id="${variable.Empl_id}" 
-                  data-paytype="${variable.pay_type}">
-            <i class="fas fa-eye mr-1"></i>View
-          </button>
-        </td>`;
-      changesTableBody.appendChild(row);
-      
-      const btn = row.querySelector('button[data-id]');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          showDetails(String(variable.Empl_id), btn.getAttribute('data-paytype'));
-        });
-      }
-    });
-    
-    updatePaginationControls();
-  }
-
-  // Filter and render data
-  function filterAndRenderData() {
-    if (!allVariablesData) return;
-    let filtered = (allVariablesData.records || []).slice();
-
-    if (currentMode === 'loan') {
-      filtered = filtered.filter(v => (v.pay_indicator_code || '').toUpperCase().includes('LOAN') || (v.pay_indicator_desc || '').toUpperCase().includes('LOAN'));
-    } else if (currentMode === 'personnel' && selectedEmployee) {
-      filtered = filtered.filter(v => String(v.Empl_id) === String(selectedEmployee));
-    } else if (currentMode === 'category' && selectedCategory) {
-      filtered = filtered.filter(v => v.element_category === selectedCategory);
-    }
-
-    filteredData = filtered;
-    currentPage = 1;
-    renderTable(getPaginatedData());
-  }
-
-  // Show details modal
-  function showDetails(emplId, payType) {
-    const variable = allVariablesData?.records?.find(v => 
-      String(v.Empl_id) === String(emplId) && v.pay_type === payType
-    );
-    if (!variable) return;
-
-    // Helper function to format currency (assuming it's defined elsewhere)
-    const formatCurrency = window.formatCurrency || ((val) => `₦${Number(val).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`);
-
-    // Define ALL fields and their labels in the desired display order
-    const fields = {
-      // Employee Information
-      Empl_id: 'Employee ID',
-      full_name: 'Employee Name',
-      Location: 'Location',
-      // Element Details
-      element_name: 'Pay Description',
-      pay_type: 'Pay Code',
-      function_type_desc: 'Function Type',
-      pay_indicator_desc: 'Pay Indicator',
-      // Amount & Financial Details
-      mak1: 'MAK1',
-      amtp: 'Amount Payable (AMTP)',
-      mak2: 'MAK2',
-      amttd: 'Amount To Date (AMTTD)',
-      amt: 'Amount (AMT)',
-      amtad: 'Action (AMTAD)',
-      nomth: 'Number of Months',
-    };
-
-    // Map data keys to their display values
-    const dataMap = {
-      Empl_id: variable.Empl_id,
-      full_name: variable.full_name,
-      Location: variable.Location,
-      element_name: variable.element_name,
-      pay_type: variable.pay_type,
-      function_type_desc: variable.function_type_desc || variable.function_type_code,
-      pay_indicator_desc: variable.pay_indicator_desc || variable.pay_indicator_code,
-      mak1: variable.mak1,
-      amtp: formatCurrency(variable.amtp || 0),
-      mak2: variable.mak2,
-      amttd: formatCurrency(variable.amttd || 0),
-      amt: formatCurrency(variable.amt || 0),
-      amtad: variable.amtad || '',
-      nomth: variable.nomth,
-    };
-
-    // --- HTML Generation ---
-
-    let html = `
-      <!--<h3 class="text-2xl font-extrabold text-gray-800 mb-6 border-b pb-2">
-        <i class="fas fa-file-invoice mr-3 text-indigo-500"></i>Input Variable Details
-      </h3>-->`;
-
-    // Loop through all fields and apply the consistent grid structure
-    Object.keys(fields).forEach(key => {
-      let value = dataMap[key];
-      
-      // Special styling for Element Category
-      if (key === 'element_category') {
-        value = `
-          <span class="px-3 py-1 rounded-full text-xs font-bold ${
-            value === 'REQUIRED_FOR_ALL' ? 'bg-green-100 text-green-800' :
-            value === 'ALLOWANCE' ? 'bg-blue-100 text-blue-800' :
-            value === 'DEDUCTION' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-          }">${value || 'N/A'}</span>`;
-      } 
-      // Special styling for Amount (AMT) and Action (AMTAD)
-      else if (key === 'amt') {
-          value = `<span class="font-bold text-lg ${variable.amtad === 'Deduct' ? 'text-red-600' : 'text-blue-600'}">${value}</span>`;
-      } else if (key === 'amtad') {
-          value = `<span class="font-bold ${value === 'Deduct' ? 'text-red-600' : 'text-blue-600'}">${value || 'N/A'}</span>`;
-      } else {
-          value = value || 'N/A'; // Default value if key exists but data is null/undefined
-      }
-
-      // Apply the desired grid layout for every field
-      html += `
-        <div class="grid grid-cols-3 gap-2 py-2 border-b border-gray-200">
-          <dt class="font-medium text-gray-600">${fields[key]}:</dt>
-          <dd class="col-span-2 font-bold text-gray-900">${value}</dd>
-        </div>`;
-    });
-
-    // Update the modal content and show
-    modalContent.innerHTML = `<div class="p-6">${html}</div>`;
-    detailsModal.classList.remove('hidden');
-  }
-    
-  // Export handlers
-  exportExcelBtn.addEventListener('click', async () => {
-    if (!allVariablesData) return showAlert('Export Failed', 'No data to export', 'error');
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/export/excel`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `input_variables_${new Date().toISOString().split('T')[0]}.xlsx`; 
-      a.click();
-      showAlert('Success!', 'Excel file downloaded successfully', 'success');
-    } catch (err) {
-      showAlert('Export Failed', 'Excel export failed: ' + err.message, 'error');
-    }
-  });
-
-  exportPdfBtn.addEventListener('click', async () => {
-    if (!allVariablesData) return showAlert('Export Failed', 'No data to export', 'error');
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/export/pdf`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `input_variables_${new Date().toISOString().split('T')[0]}.pdf`; 
-      a.click();
-      showAlert('Success!', 'PDF file downloaded successfully', 'success');
-    } catch (err) {
-      showAlert('Export Failed', 'PDF export failed: ' + err.message, 'error');
-    }
-  });
-
-  printBtn.addEventListener('click', () => {
-    if (!filteredData || filteredData.length === 0) {
-      return showAlert('Print Failed', 'No data to print', 'warning');
-    }
-    
-    const printWindow = window.open('', '_blank');
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-NG', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Input Variables Report</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 40px; }
-          .print-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          .print-table th { background-color: #fef3c7; color: #92400e; padding: 12px; text-align: left; border: 1px solid #e5e7eb; }
-          .print-table td { padding: 12px; border: 1px solid #e5e7eb; }
-          .print-header { text-align: center; margin-bottom: 20px; }
-          .date-generated { font-size: 14px; color: #666; margin-bottom: 30px; }
-          .print-footer { text-align: center; margin-top: 20px; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px; }
-          .deduction { color: #dc2626; font-weight: bold; }
-          .allowance { color: #16a34a; font-weight: bold; }
-        </style>
-      </head>
-      <body>
-        <div class="print-header">
-          <h1>Input Variables Report</h1>
-          <p class="date-generated">Generated on: ${dateStr}</p>
-        </div>
-        
-        <table class="print-table">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>Employee ID</th>
-              <th>Full Name</th>
-              <th>Pay Type</th>
-              <th>Pay Description</th>
-              <th>Function Type</th>
-              <th>Pay Indicator</th>
-              <th>Mak1</th>
-              <th>Amount Payable (₦)</th>
-              <th>Mak2</th>
-              <th>Amtto Date</th>
-              <th>Amount</th>              
-              <th>Amt ad</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filteredData.map((v, index) => `
-              <tr>
-                <td>${index + 1}</td>
-                <td>${v.Empl_id}</td>
-                <td>${v.full_name}</td>
-                <td>${v.pay_type}</td>
-                <td>${v.element_name || 'N/A'}</td>
-                <td>${v.function_type_desc || 'N/A'}</td>
-                <td>${v.pay_indicator_desc || 'N/A'}</td>
-                <td>${v.mak1 || 'N/A'}</td>
-                <td>${formatCurrency(v.amtp || 0)}</td>
-                <td>${v.mak2 || 'N/A'}</td>
-                <td>${formatCurrency(v.amttd || 0)}</td>
-                <td class="${v.amtad === 'Deduct' ? 'deduction' : 'allowance'}">
-                  ${formatCurrency(v.amt || 0)}
-                </td>
-                <td>${v.amtad || 'N/A'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        
-        <div class="print-footer">
-          <p>Total Records: ${filteredData.length}</p>
-          <p>Generated by: ${localStorage.getItem('full_name') || 'System User'}</p>
-          <p>*** End of Report ***</p>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.onload = function() {
-      printWindow.print();
-    };
-  });
-
-  // Load input variables
-  async function loadInputVariables(isAutoLoad = false, isManualProcess = false) {
-    let endpoint = `${API_BASE}/view`;
-    let method = 'GET';
-    let showProgress = false;
-    let progressLabel = 'Fetching input variables...';
-
-    if (currentPayrollStage === STAGE_CHANGES_READY && isManualProcess) {
-      endpoint = `${API_BASE}`;
-      method = 'POST';
-      showProgress = true;
-      progressLabel = 'Processing input variables...';
-    } else if (currentPayrollStage >= STAGE_INPUT_VAR_READY) {
-      endpoint = `${API_BASE}/view`;
-      method = 'GET';
-      showProgress = false;
-      progressLabel = 'Loading processed input variables...';
-    }
-
-    if (!isAutoLoad && !showProgress && currentPayrollStage < STAGE_CHANGES_READY) {
-      return showAlert('Not Ready', 'Please ensure personnel changes are processed first.', 'warning');
-    }
+  // Generate report with selected format
+  async function generateReport(format) {
+    formatModal.classList.add('hidden');
+    loadingModal.classList.remove('hidden');
 
     try {
-      const token = localStorage.getItem('token');
-
-      if (showProgress) {
-        progressModal.classList.remove('hidden');
-        logContainer.innerHTML = '';
-        progressMessage.textContent = progressLabel;
-        addLog('Starting processing...', 'info');
-      }
-
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token}` 
+      const token = localStorage.getItem('token') || '';
+      const response = await fetch(`${API_BASE}?format=${format}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
       });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        const msg = errJson.error || `HTTP ${res.status}`;
-        if (showProgress) addLog(msg, 'error');
-        throw new Error(msg);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate report');
       }
 
-      const data = await res.json();
-
-      if (showProgress && data.message) {
-        addLog(data.message, 'success');
-      }
-
-      if (data.status === 'SUCCESS' || data.success === true) {
-        allVariablesData = data || {};
-        hasLoadedOnce = true;
-
-        //updateSummaryCards(data.summary || {});
-        populateEmployeeDropdown();
-        
-        filteredData = (data.records || []).slice();
-        currentPage = 1;
-        renderTable(getPaginatedData());
-
-        if (method === 'POST') {
-          setTimeout(() => {
-            progressModal.classList.add('hidden');
-            showAlert('Success', 'Input variables processed and loaded.', 'success');
-            updateUIVisibility();
-          }, 800);
-        } else {
-          if (showProgress) progressModal.classList.add('hidden');
-          updateUIVisibility();
-        }
-      } else {
-        const message = data.error || data.message || 'Failed to load input variables';
-        if (showProgress) addLog(message, 'error');
-        throw new Error(message);
-      }
-    } catch (err) {
-      if (showProgress) addLog(err.message || 'Unknown error', 'error');
-      setTimeout(() => {
-        progressModal.classList.add('hidden');
-        showAlert('Error', err.message || 'Unknown error', 'error');
-      }, 400);
+      // Handle file download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `variation_input_report.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      loadingModal.classList.add('hidden');
+      
+      // Mark as generated
+      hasGenerated = true;
+      updateUIVisibility();
+      
+      showAlert(
+        'Success', 
+        'Report downloaded successfully!'
+      );
+    } catch (error) {
+      loadingModal.classList.add('hidden');
+      console.error('Error generating report:', error);
+      showAlert('Error', error.message || 'Failed to generate report', true);
     }
   }
-
-  // Update summary cards
-  /*function updateSummaryCards(summary) {
-    document.getElementById('totalRecordsCard').textContent = summary.totalRecords || 0;
-    document.getElementById('allowancesCount').textContent = summary.byElementType?.allowances || 0;
-    document.getElementById('deductionsCount').textContent = summary.byElementType?.deductions || 0;
-    
-    const totalAmt = summary.financialTotals?.totalAmt || 0;
-    document.getElementById('totalAmount').textContent = formatCurrency(totalAmt);
-  }*/
 
   // Event listeners
-  loadBtn.addEventListener('click', () => {
-    if (currentPayrollStage === STAGE_CHANGES_READY) {
-      loadInputVariables(false, true);
-    } else {
-      loadInputVariables(false, false);
-    }
+  generateBtn.addEventListener('click', () => {
+    formatModal.classList.remove('hidden');
   });
-  
-  allToggle.addEventListener('click', () => switchMode('all'));
-  personnelToggle.addEventListener('click', () => switchMode('personnel'));
-  categoryToggle.addEventListener('click', () => switchMode('category'));
-  loanToggle.addEventListener('click', () => switchMode('loan'));
-  closeModal.addEventListener('click', () => detailsModal.classList.add('hidden'));
-  alertCloseBtn.addEventListener('click', () => alertModal.classList.add('hidden'));
 
-  // Payroll status checking
-  async function checkPayrollStatus(attemptAutoLoad = false) {
+  selectPdfBtn.addEventListener('click', () => {
+    generateReport('pdf');
+  });
+
+  selectExcelBtn.addEventListener('click', () => {
+    generateReport('excel');
+  });
+
+  // Check payroll status
+  async function checkPayrollStatus() {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/status-payroll', { 
-        headers: { 'Authorization': `Bearer ${token}` } 
+      const res = await fetch('/status-payroll', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      currentPayrollStage = Number(data?.sun || 0);
-      updateUIVisibility();
-
-      if (attemptAutoLoad && currentPayrollStage >= STAGE_INPUT_VAR_READY && !hasLoadedOnce) {
-        await loadInputVariables(true);
+      currentStage = Number(data?.sun || 0);
+      
+      // If stage >= 777, report has already been generated at least once
+      if (currentStage >= STAGE_PRINTED) {
+        hasGenerated = true;
       }
-
-      return data;
+      
+      updateUIVisibility();
     } catch (err) {
-      console.error('Error checking payroll status:', err);
-      return null;
+      console.error('Error checking status:', err);
     }
   }
 
-  window.addEventListener('payrollStatusChanged', function (event) {
-    if (event.detail && typeof event.detail.stage === 'number') {
-      currentPayrollStage = event.detail.stage;
-      if (currentPayrollStage < STAGE_CHANGES_READY) {
-        hasLoadedOnce = false;
-        allVariablesData = null;
-        allEmployees = [];
-        selectedEmployee = null;
-        selectedCategory = '';
-        filteredData = [];
-        currentPage = 1;
-        filterApplied = false;
-      }
-      updateUIVisibility();
-      if (currentPayrollStage >= STAGE_INPUT_VAR_READY && !hasLoadedOnce) {
-        loadInputVariables(true);
-      }
-    } else {
-      checkPayrollStatus(true);
-    }
-  });
-
-  window.refreshInputVariableUI = function () { 
-    checkPayrollStatus(true); 
-  };
-
+  // Initialize
   function initialize() {
-    switchMode('all');
-    checkPayrollStatus(true);
+    checkPayrollStatus();
   }
-
+  
   document.addEventListener('DOMContentLoaded', initialize);
   if (document.readyState !== 'loading') initialize();
 })();
 </script>
-
-
-

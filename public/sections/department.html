@@ -1,799 +1,1078 @@
 <div class="p-6">
-  <!-- Department Section Header -->
-  <div class="flex flex-wrap gap-2 justify-between mb-6">
-    <h3 class="text-xl font-semibold text-gray-800">Department Management</h3>
-    <div class="flex flex-wrap gap-2">
-      <button id="addNewDeptBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+ Add Department</button>
+
+  <div class="flex flex-wrap gap-2 justify-between mb-4 pb-2 border-b">
+    <!-- Toggle Navigation -->
+    <div class="w-fit flex gap-4 p-2 bg-white/50 rounded-xl border border-amber-50 shadow-sm">
+      <button id="btnLocation" class="px-4 py-2 rounded-md bg-yellow-400 text-gray-900 hover:bg-green-600">Location</button>
+      <button id="btnBranch" class="px-4 py-2 rounded-md text-gray-900 hover:bg-green-600">Branch</button>
+    </div>
+
+    <div class="flex gap-4 p-2">
       <button id="generateReportBtn" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
-       <i class="fas fa-file-alt mr-2"></i>Generate Report</button>
+        <i class="fas fa-file-alt mr-2"></i>Generate Report
+      </button>
     </div>
   </div>
 
-  <!-- Hidden Department Form -->
-  <form id="deptForm" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Factory Code *</label>
-      <input type="text" id="factcode" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Fact Code">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Department Code *</label>
-      <input type="text" id="deptcode" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Dept Code">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Factory Name</label>
-      <input type="text" id="factname" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Fact Name">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Department Name</label>
-      <input type="text" id="deptname" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Department Name">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Coordination code</label>
-      <input id="coordcode" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Coordination code">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Manager</label>
-      <input type="text" id="manager" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Manager">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">HOD</label>
-      <input type="text" id="hod" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter HOD">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Account</label>
-      <input type="text" id="acct" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Account Code">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Misc 1</label>
-      <input type="text" id="misc1" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter misc2">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Misc 2</label>
-      <input type="text" id="misc2" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter misc2">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Misc 3</label>
-      <input type="text" id="misc3" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter misc3">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Address Code</label>
-      <input type="text" id="AddressCode" class="w-full border border-green-500 rounded-md px-3 py-2 bg-white" placeholder="Enter Address Code">
+  <!-- Location Section -->
+  <div id="locationSection">
+    <div class="flex flex-wrap justify-between mb-4">
+      <h2 class="text-xl lg:text-2xl text-green-600 font-bold">Location Management</h2>
+      <div class="flex flex-wrap gap-2">
+        <input type="text" id="locationSearchInput" placeholder="Search code or description..." class="border rounded px-3 py-2">
+        <button id="addNewLocationBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+ Add New Location</button>
+      </div>
     </div>
 
-    <div class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-end gap-2">
-      <button type="button" id="saveDeptBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
-      <button type="button" id="cancelDeptBtn" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
-    </div>
-  </form>
+    <form id="locationForm" class="hidden grid grid-cols-2 gap-4">
+      <label>Location Code</label>
+      <input type="text" maxlength="12" id="locationCode" class="border p-2 rounded">
+      <label>Description</label>
+      <input type="text" id="locationDesc" class="border p-2 rounded">
+      <div class="col-span-2 flex justify-end gap-2">
+        <button type="button" id="saveLocationBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+        <button type="button" id="cancelLocationBtn" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Cancel</button>
+      </div>
+    </form>
 
-  <!-- Department Table -->
-  <div class="overflow-x-auto">
-    <table class="min-w-full border border-gray-200 rounded-lg text-sm">
-      <thead class="bg-green-100 text-green-900">
-        <tr>
-          <th class="border px-2 py-3 text-left">Factory Code</th>
-          <th class="border px-2 py-3 text-left">Factory Name</th>
-          <th class="border px-2 py-3 text-left">Dept Code</th>
-          <th class="border px-2 py-3 text-left">Dept Name</th>
-          <th class="border px-2 py-3 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="deptTableBody"></tbody>
-    </table>
+    <div class="mt-6 overflow-x-auto">
+      <table class="min-w-full border border-gray-200 rounded-lg text-sm">
+        <thead class="bg-green-100 text-green-900">
+          <tr>
+            <th class="border px-2 py-3 text-left">Code</th>
+            <th class="border px-2 py-3 text-left">Description</th>
+            <th class="border px-2 py-3 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="locationTable">
+           <!-- Data will be populated here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-sm text-gray-600">
+        Showing <span id="locationStartRecord">0</span> to <span id="locationEndRecord">0</span> of <span id="locationTotalRecords">0</span> records
+      </div>
+      <div class="flex items-center space-x-2">
+        <select id="locationRecordsPerPage" class="border border-gray-300 rounded px-2 py-1 text-sm">
+          <option value="10">10 per page</option>
+          <option value="25">25 per page</option>
+          <option value="50">50 per page</option>
+          <option value="100">100 per page</option>
+        </select>
+        <button id="locationPrevPage" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50">
+          Previous
+        </button>
+        <span class="text-sm">
+          Page <span id="locationCurrentPage">1</span> of <span id="locationTotalPages">1</span>
+        </span>
+        <button id="locationNextPage" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Branch Section -->
+  <div id="branchSection" class="hidden">
+    <div class="flex flex-wrap justify-between mb-4">
+      <h2 class="text-xl lg:text-2xl text-green-600 font-bold">Branch Management</h2>
+      <div class="flex flex-wrap gap-2">
+        <input type="text" id="branchSearchInput" placeholder="Search code or description..." class="border rounded px-3 py-2">
+        <button id="addNewBranchBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+ Add New Branch</button>
+      </div>
+    </div>
+
+    <form id="branchForm" class="hidden grid grid-cols-2 gap-4">
+      <label>Branch Code</label>
+      <input type="text" maxlength="12" id="branchCode" class="border p-2 rounded">
+      <label>Description</label>
+      <input type="text" id="branchDesc" class="border p-2 rounded">
+      <div class="col-span-2 flex justify-end gap-2">
+        <button type="button" id="saveBranchBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+        <button type="button" id="cancelBranchBtn" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Cancel</button>
+      </div>
+    </form>
+
+    <div class="mt-6 overflow-x-auto">
+      <table class="min-w-full border border-gray-200 rounded-lg text-sm">
+        <thead class="bg-green-100 text-green-900">
+          <tr>
+            <th class="border px-2 py-3 text-left">Code</th>
+            <th class="border px-2 py-3 text-left">Description</th>
+            <th class="border px-2 py-3 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="branchTable">
+           <!-- Data will be populated here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-sm text-gray-600">
+        Showing <span id="branchStartRecord">0</span> to <span id="branchEndRecord">0</span> of <span id="branchTotalRecords">0</span> records
+      </div>
+      <div class="flex items-center space-x-2">
+        <select id="branchRecordsPerPage" class="border border-gray-300 rounded px-2 py-1 text-sm">
+          <option value="10">10 per page</option>
+          <option value="25">25 per page</option>
+          <option value="50">50 per page</option>
+          <option value="100">100 per page</option>
+        </select>
+        <button id="branchPrevPage" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50">
+          Previous
+        </button>
+        <span class="text-sm">
+          Page <span id="branchCurrentPage">1</span> of <span id="branchTotalPages">1</span>
+        </span>
+        <button id="branchNextPage" class="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alertModal" 
+     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 text-center">
+    <h3 id="alertTitle" class="text-lg font-semibold text-gray-800 mb-2">Alert!</h3>
+    <p id="alertMessage" class="text-gray-600 mb-4"></p>
+    <button id="alertOkBtn" 
+      class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+      OK
+    </button>
   </div>
 </div>
 
 <!-- Success Modal -->
-<div id="deptSuccessModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+<div id="successModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
   <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-    <h3 class="text-lg font-semibold text-blue-600 mb-2">Success!</h3>
-    <p id="deptSuccessMessage" class="mb-4 text-gray-700"></p>
-    <div class="flex justify-end">
-      <button id="closeSuccessModal" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- Error Modal -->
-<div id="deptErrorModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-    <h3 class="text-lg font-semibold text-red-600 mb-2">Error</h3>
-    <p id="deptErrorMessage" class="mb-4 text-gray-700"></p>
-    <div class="flex justify-end">
-      <button id="closeErrorModal" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">OK</button>
-    </div>
+    <h3 class="text-lg font-semibold mb-2 text-blue-600">Success!</h3>
+    <p class="mb-4 text-gray-700">Operation completed successfully!</p>
+    <button id="closeModal" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">OK</button>
   </div>
 </div>
 
 <!-- Confirm Delete Modal -->
-<div id="deptConfirmModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+<div id="confirmModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
   <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
     <h3 class="text-lg font-semibold text-yellow-600 mb-2">Confirm Delete</h3>
-    <p id="deptConfirmMessage" class="mb-4 text-gray-700">Are you sure you want to delete this department?</p>
+    <p id="confirmMessage" class="mb-4 text-gray-700">Are you sure you want to delete this record?</p>
     <div class="flex justify-end gap-2">
-      <button id="cancelConfirm" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
-      <button id="deptConfirmAction" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
+      <button id="cancelDelete" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
+      <button id="confirmAction" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
     </div>
-  </div>
-</div>
-
-<!-- View Department Modal -->
-<div id="deptViewModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-semibold text-green-600">Department Details</h3>
-      <button id="closeViewModal" class="text-gray-400 hover:text-gray-600">
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-    <div id="deptViewContent" class="space-y-3 text-sm"></div>
   </div>
 </div>
 
 <script>
-let deptData = [];
-let editingDeptIndex = null;
-let pendingDeleteDeptIndex = null;
-let originaldeptData = null;
+// API Configuration
+const API_BASE_URL = "dept";
 
-const deptForm = document.getElementById("deptForm");
-const addNewDeptBtn = document.getElementById("addNewDeptBtn");
-const saveDeptBtn = document.getElementById("saveDeptBtn");
-const cancelDeptBtn = document.getElementById("cancelDeptBtn");
-const deptTableBody = document.getElementById("deptTableBody");
-//const searchDept = document.getElementById("searchDept");
+// Global variables
+let locations = [];
+let branches = [];
+let editingLocationIndex = null;
+let editingBranchIndex = null;
 
-// Load departments
-async function loadDepartments() {
-  try {
-    const token = localStorage.getItem('token');
+// Pagination state for locations
+let locationCurrentPage = 1;
+let locationRecordsPerPage = 10;
+let locationFilteredData = [];
+let locationCurrentSearchTerm = "";
 
-    const res = await fetch("/dept/department", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+// Pagination state for branches
+let branchCurrentPage = 1;
+let branchRecordsPerPage = 10;
+let branchFilteredData = [];
+let branchCurrentSearchTerm = "";
+
+// Get pagination elements for locations
+const locationPrevBtn = document.getElementById('locationPrevPage');
+const locationNextBtn = document.getElementById('locationNextPage');
+const locationCurrentPageSpan = document.getElementById('locationCurrentPage');
+const locationTotalPagesSpan = document.getElementById('locationTotalPages');
+const locationRecordsSelect = document.getElementById('locationRecordsPerPage');
+const locationStartRecordSpan = document.getElementById('locationStartRecord');
+const locationEndRecordSpan = document.getElementById('locationEndRecord');
+const locationTotalRecordsSpan = document.getElementById('locationTotalRecords');
+
+// Get pagination elements for branches
+const branchPrevBtn = document.getElementById('branchPrevPage');
+const branchNextBtn = document.getElementById('branchNextPage');
+const branchCurrentPageSpan = document.getElementById('branchCurrentPage');
+const branchTotalPagesSpan = document.getElementById('branchTotalPages');
+const branchRecordsSelect = document.getElementById('branchRecordsPerPage');
+const branchStartRecordSpan = document.getElementById('branchStartRecord');
+const branchEndRecordSpan = document.getElementById('branchEndRecord');
+const branchTotalRecordsSpan = document.getElementById('branchTotalRecords');
+
+function showAlert(message, title = "Alert") {
+  const modal = document.getElementById("alertModal");
+  const msg = document.getElementById("alertMessage");
+  const ttl = document.getElementById("alertTitle");
+  const okBtn = document.getElementById("alertOkBtn");
+
+  ttl.textContent = title;
+  msg.textContent = message;
+  modal.classList.remove("hidden");
+
+  okBtn.onclick = () => {
+    modal.classList.add("hidden");
+  };
+}
+
+function showSuccess(message = "Operation completed successfully!") {
+  const modal = document.getElementById("successModal");
+  const msg = modal.querySelector("p");
+  msg.textContent = message;
+  modal.classList.remove("hidden");
+}
+
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("successModal").classList.add("hidden");
+});
+
+document.getElementById("successModal").addEventListener("click", (e) => {
+  if (e.target.id === "successModal") {
+    e.target.classList.add("hidden");
+  }
+});
+
+function showConfirmModal(message = "Are you sure?") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirmModal");
+    const msg = document.getElementById("confirmMessage");
+    const cancelBtn = document.getElementById("cancelDelete");
+    const confirmBtn = document.getElementById("confirmAction");
+
+    msg.textContent = message;
+    modal.classList.remove("hidden");
+
+    cancelBtn.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(false);
+    };
+
+    confirmBtn.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(true);
+    };
+
+    modal.onclick = (e) => {
+      if (e.target.id === "confirmModal") {
+        modal.classList.add("hidden");
+        resolve(false);
       }
+    };
+  });
+}
+
+// API Helper Functions
+class ApiService {
+  static async request(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'API request failed');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API Error:', error);
+      showAlert(`Error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Location API methods
+  static async getAllLocations() {
+    return await this.request('/location');
+  }
+
+  static async getLocation(unitcode) {
+    return await this.request(`/location/${unitcode}`);
+  }
+
+  static async createLocation(locationData) {
+    return await this.request('/post-location', {
+      method: 'POST',
+      body: JSON.stringify(locationData),
     });
+  }
 
-    deptData = await res.json();
-    renderDeptTable();
-  } catch (err) {
-    console.error("Error loading departments:", err);
+  static async updateLocation(unitcode, locationData) {
+    return await this.request(`/location/${unitcode}`, {
+      method: 'PUT',
+      body: JSON.stringify(locationData),
+    });
+  }
+
+  static async deleteLocation(unitcode) {
+    return await this.request(`/location/${unitcode}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Branch API methods
+  static async getAllBranches() {
+    return await this.request('/branch');
+  }
+
+  static async getBranch(busline) {
+    return await this.request(`/branch/${busline}`);
+  }
+
+  static async createBranch(branchData) {
+    return await this.request('/post-branch', {
+      method: 'POST',
+      body: JSON.stringify(branchData),
+    });
+  }
+
+  static async updateBranch(busline, branchData) {
+    return await this.request(`/branch/${busline}`, {
+      method: 'PUT',
+      body: JSON.stringify(branchData),
+    });
+  }
+
+  static async deleteBranch(busline) {
+    return await this.request(`/branch/${busline}`, {
+      method: 'DELETE',
+    });
   }
 }
 
+// LOCATION PAGINATION FUNCTIONS
+function getLocationPaginationData() {
+  const totalRecords = locationFilteredData.length;
+  const totalPages = Math.ceil(totalRecords / locationRecordsPerPage) || 1;
+  const startIndex = (locationCurrentPage - 1) * locationRecordsPerPage;
+  const endIndex = startIndex + locationRecordsPerPage;
+  const currentData = locationFilteredData.slice(startIndex, endIndex);
+  const startRecord = totalRecords === 0 ? 0 : startIndex + 1;
+  const endRecord = Math.min(endIndex, totalRecords);
 
-// Render Table
-function renderDeptTable(data = deptData) {
-  deptTableBody.innerHTML = data.map((d, i) => `
-    <tr class="hover:bg-gray-50">
-      <td class="border px-2 py-3">${d.factcode}</td>
-      <td class="border px-2 py-3">${d.factname}</td>
-      <td class="border px-2 py-3">${d.deptcode}</td>
-      <td class="border px-2 py-3">${d.deptname || ""}</td>
-      <td class="border px-2 py-3">
-        <button onclick="viewDept(${i})" class="text-green-600 mr-2">View</button>
-        <button onclick="editDept(${i})" class="text-blue-600 mr-2">Edit</button>
-        <button onclick="deleteDept(${i})" class="text-red-600">Delete</button>
-      </td>
-    </tr>
-  `).join("");
+  return { totalRecords, totalPages, currentData, startRecord, endRecord };
 }
 
+function updateLocationPaginationUI() {
+  const { totalRecords, totalPages, startRecord, endRecord } = getLocationPaginationData();
+  
+  if (locationCurrentPageSpan) locationCurrentPageSpan.textContent = locationCurrentPage;
+  if (locationTotalPagesSpan) locationTotalPagesSpan.textContent = totalPages;
+  if (locationStartRecordSpan) locationStartRecordSpan.textContent = startRecord;
+  if (locationEndRecordSpan) locationEndRecordSpan.textContent = endRecord;
+  if (locationTotalRecordsSpan) locationTotalRecordsSpan.textContent = totalRecords;
 
-// Add new
-addNewDeptBtn.addEventListener("click", () => {
-  deptForm.classList.remove("hidden");
-  editingDeptIndex = null;
-  document.getElementById("factcode").disabled = false; 
-  document.getElementById("deptcode").disabled = false; 
-  deptForm.reset();
-});
+  if (locationPrevBtn) locationPrevBtn.disabled = locationCurrentPage <= 1;
+  if (locationNextBtn) locationNextBtn.disabled = locationCurrentPage >= totalPages;
+}
 
-//validations
-async function checkDepartmentDuplicate(input, field, excludeDeptCode = null) {
-  const value = input.value.trim();
-  if (!value) {
-    input.setCustomValidity("");
-    input.reportValidity();
-    return;
-  }
+function renderLocationWithPagination() {
+  renderLocationTable();
+  updateLocationPaginationUI();
+}
 
-  // If editing, check if this field value has actually changed
-  if (originaldeptData && originaldeptData[field] === value) {
-    input.setCustomValidity(""); // Clear any existing validation message
-    input.reportValidity();
-    return; // Skip duplicate check if value hasn't changed
-  }
+// BRANCH PAGINATION FUNCTIONS
+function getBranchPaginationData() {
+  const totalRecords = branchFilteredData.length;
+  const totalPages = Math.ceil(totalRecords / branchRecordsPerPage) || 1;
+  const startIndex = (branchCurrentPage - 1) * branchRecordsPerPage;
+  const endIndex = startIndex + branchRecordsPerPage;
+  const currentData = branchFilteredData.slice(startIndex, endIndex);
+  const startRecord = totalRecords === 0 ? 0 : startIndex + 1;
+  const endRecord = Math.min(endIndex, totalRecords);
 
+  return { totalRecords, totalPages, currentData, startRecord, endRecord };
+}
+
+function updateBranchPaginationUI() {
+  const { totalRecords, totalPages, startRecord, endRecord } = getBranchPaginationData();
+  
+  if (branchCurrentPageSpan) branchCurrentPageSpan.textContent = branchCurrentPage;
+  if (branchTotalPagesSpan) branchTotalPagesSpan.textContent = totalPages;
+  if (branchStartRecordSpan) branchStartRecordSpan.textContent = startRecord;
+  if (branchEndRecordSpan) branchEndRecordSpan.textContent = endRecord;
+  if (branchTotalRecordsSpan) branchTotalRecordsSpan.textContent = totalRecords;
+
+  if (branchPrevBtn) branchPrevBtn.disabled = branchCurrentPage <= 1;
+  if (branchNextBtn) branchNextBtn.disabled = branchCurrentPage >= totalPages;
+}
+
+function renderBranchWithPagination() {
+  renderBranchTable();
+  updateBranchPaginationUI();
+}
+
+// Load locations from backend with pagination support
+async function loadLocations(preserveState = false) {
   try {
-    const token = localStorage.getItem("token");
+    const response = await ApiService.getAllLocations();
+    locations = response || [];
     
-    // Build URL with optional excludeDeptCode parameter
-    let url = `/dept/department/check/${field}/${encodeURIComponent(value)}`;
-    if (excludeDeptCode) {
-      url += `?exclude=${excludeDeptCode}`;
-    }
-    
-    const res = await fetch(url, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-
-    if (!res.ok) {
-      console.error(`HTTP ${res.status}: ${res.statusText}`);
-      return;
-    }
-
-    const data = await res.json();
-    if (data.exists) {
-      input.setCustomValidity(`⚠️ This ${field} already exists.`);
+    if (preserveState) {
+      applyLocationSearch(locationCurrentSearchTerm);
+      const totalPages = Math.ceil(locationFilteredData.length / locationRecordsPerPage) || 1;
+      if (locationCurrentPage > totalPages) {
+        locationCurrentPage = totalPages;
+      }
     } else {
-      input.setCustomValidity("");
+      locationFilteredData = [...locations];
+      locationCurrentPage = 1;
+      locationCurrentSearchTerm = "";
     }
-    input.reportValidity();
-  } catch (err) {
-    console.error(`Error checking ${field}:`, err);
-    input.setCustomValidity("");
-    input.reportValidity();
+    
+    renderLocationWithPagination();
+  } catch (error) {
+    console.error('Failed to load locations:', error);
+    locations = [];
+    locationFilteredData = [];
   }
 }
 
-// Add blur event listeners for the first 5 fields + acct
-document.getElementById("factcode")?.addEventListener("blur", function () {
-  const currentDeptCode = editingDeptIndex !== null ? deptData[editingDeptIndex].deptcode : null;
-  checkDepartmentDuplicate(this, "factcode", currentDeptCode);
+function applyLocationSearch(term) {
+  locationCurrentSearchTerm = term;
+  if (term) {
+    locationFilteredData = locations.filter(l =>
+      (l.unitcode && l.unitcode.toLowerCase().includes(term)) || 
+      (l.unitdesc && l.unitdesc.toLowerCase().includes(term))
+    );
+  } else {
+    locationFilteredData = [...locations];
+  }
+}
+
+async function loadBranches(preserveState = false) {
+  try {
+    const response = await ApiService.getAllBranches();
+    branches = response || [];
+    
+    if (preserveState) {
+      applyBranchSearch(branchCurrentSearchTerm);
+      const totalPages = Math.ceil(branchFilteredData.length / branchRecordsPerPage) || 1;
+      if (branchCurrentPage > totalPages) {
+        branchCurrentPage = totalPages;
+      }
+    } else {
+      branchFilteredData = [...branches];
+      branchCurrentPage = 1;
+      branchCurrentSearchTerm = "";
+    }
+    
+    renderBranchWithPagination();
+  } catch (error) {
+    console.error('Failed to load branches:', error);
+    branches = [];
+    branchFilteredData = [];
+  }
+}
+
+function applyBranchSearch(term) {
+  branchCurrentSearchTerm = term;
+  if (term) {
+    branchFilteredData = branches.filter(b =>
+      (b.busline && b.busline.toLowerCase().includes(term)) || 
+      (b.busdesc && b.busdesc.toLowerCase().includes(term))
+    );
+  } else {
+    branchFilteredData = [...branches];
+  }
+}
+
+window.editLocation = function(index) {
+  const l = locations[index];
+  document.getElementById("locationCode").value = l.unitcode;
+  document.getElementById("locationDesc").value = l.unitdesc;
+  
+  editingLocationIndex = index;
+  document.getElementById("locationCode").disabled = true;
+  document.getElementById("locationForm").classList.remove("hidden");
+};
+
+window.deleteLocation = async function(index) {
+  const confirmed = await showConfirmModal("Are you sure you want to delete this location?");
+
+  if(confirmed) {
+    const l = locations[index];
+    try {
+      await ApiService.deleteLocation(l.unitcode);
+      await loadLocations(true);
+      showSuccess('Location deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete location:', error);
+      showAlert("Error deleting record.");
+    }
+  }
+};
+
+window.editBranch = function(index) {
+  const b = branches[index];
+  document.getElementById("branchCode").value = b.busline;
+  document.getElementById("branchDesc").value = b.busdesc;
+  
+  editingBranchIndex = index;
+  document.getElementById("branchCode").disabled = true;
+  document.getElementById("branchForm").classList.remove("hidden");
+};
+
+window.deleteBranch = async function(index) {
+  const confirmed = await showConfirmModal("Are you sure you want to delete this branch?");
+
+  if(confirmed) {
+    const b = branches[index];
+    try {
+      await ApiService.deleteBranch(b.busline);
+      await loadBranches(true);
+      showSuccess('Branch deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete branch:', error);
+      showAlert("Error deleting record.");
+    }
+  }
+};
+
+// Location Form Handlers
+document.getElementById("addNewLocationBtn").addEventListener("click", () => {
+  document.getElementById("locationForm").classList.remove("hidden");
+  editingLocationIndex = null;
+  document.getElementById("locationCode").disabled = false;
+  document.getElementById("locationForm").reset();
 });
 
-document.getElementById("deptcode")?.addEventListener("blur", function () {
-  const currentDeptCode = editingDeptIndex !== null ? deptData[editingDeptIndex].deptcode : null;
-  checkDepartmentDuplicate(this, "deptcode", currentDeptCode);
+document.getElementById("cancelLocationBtn").addEventListener("click", () => {
+  document.getElementById("locationForm").classList.add("hidden");
+  document.getElementById("locationForm").reset();
+  editingLocationIndex = null;
 });
 
-document.getElementById("factname")?.addEventListener("blur", function () {
-  const currentDeptCode = editingDeptIndex !== null ? deptData[editingDeptIndex].deptcode : null;
-  checkDepartmentDuplicate(this, "factname", currentDeptCode);
-});
-
-document.getElementById("deptname")?.addEventListener("blur", function () {
-  const currentDeptCode = editingDeptIndex !== null ? deptData[editingDeptIndex].deptcode : null;
-  checkDepartmentDuplicate(this, "deptname", currentDeptCode);
-});
-
-document.getElementById("coordcode")?.addEventListener("blur", function () {
-  const currentDeptCode = editingDeptIndex !== null ? deptData[editingDeptIndex].deptcode : null;
-  checkDepartmentDuplicate(this, "coordcode", currentDeptCode);
-});
-
-document.getElementById("acct")?.addEventListener("blur", function () {
-  const currentDeptCode = editingDeptIndex !== null ? deptData[editingDeptIndex].deptcode : null;
-  checkDepartmentDuplicate(this, "acct", currentDeptCode);
-});
-
-
-// Save
-saveDeptBtn.addEventListener("click", async () => {
-  const item = {
-    factcode: document.getElementById("factcode").value.trim(),
-    deptcode: document.getElementById("deptcode").value.trim(),
-    factname: document.getElementById("factname").value.trim(),
-    deptname: document.getElementById("deptname").value.trim(),
-    coordcode: document.getElementById("coordcode").value.trim(),
-    manager: document.getElementById("manager").value.trim(),
-    hod: document.getElementById("hod").value.trim(),
-    acct: document.getElementById("acct").value.trim(),
-    misc1: document.getElementById("misc1").value.trim(),
-    misc2: document.getElementById("misc2").value.trim(),
-    misc3: document.getElementById("misc3").value.trim(),
-    AddressCode: document.getElementById("AddressCode").value.trim(),
+document.getElementById("saveLocationBtn").addEventListener("click", async () => {
+  const locationData = {
+    unitcode: document.getElementById("locationCode").value,
+    unitdesc: document.getElementById("locationDesc").value
   };
 
-  const requiredFields = ["factcode", "deptcode", "factname", "deptname", "coordcode", "acct"];
-
-  let missingFields = requiredFields.filter(field => !item[field] && item[field] !== 0);
+  const requiredFields = ['unitcode', 'unitdesc'];
+  let missingFields = requiredFields.filter(field => !locationData[field]);
 
   if (missingFields.length > 0) {
-    showErrorModal(`Please fill in all required fields: ${missingFields.join(', ')}`);
+    showAlert(`Please fill in all required fields: ${missingFields.join(', ')}`);
     return;
   }
 
-  // Check for duplicates before saving
-  const factcodeInput = document.getElementById("factcode");
-  const deptcodeInput = document.getElementById("deptcode");
-  const factnameInput = document.getElementById("factname");
-  const deptnameInput = document.getElementById("deptname");
-  const coordcodeInput = document.getElementById("coordcode");
-  const acctInput = document.getElementById("acct");
-
-  // Get the current deptcode for editing
-  const currentDeptCode = editingDeptIndex !== null ? deptData[editingDeptIndex].deptcode : null;
-
-  // Perform duplicate checks only for changed fields
-  await checkDepartmentDuplicate(factcodeInput, 'factcode', currentDeptCode);
-  await checkDepartmentDuplicate(deptcodeInput, 'deptcode', currentDeptCode);
-  await checkDepartmentDuplicate(factnameInput, 'factname', currentDeptCode);
-  await checkDepartmentDuplicate(deptnameInput, 'deptname', currentDeptCode);
-  await checkDepartmentDuplicate(coordcodeInput, 'coordcode', currentDeptCode);
-  await checkDepartmentDuplicate(acctInput, 'acct', currentDeptCode);
-
-  // Check if any validation errors exist
-  if (!factcodeInput.checkValidity() || !deptcodeInput.checkValidity() || 
-      !factnameInput.checkValidity() || !deptnameInput.checkValidity() || 
-      !coordcodeInput.checkValidity() || !acctInput.checkValidity()) {
-    showErrorModal("Please fix the validation errors before saving.");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem('token');
-
-    if (editingDeptIndex !== null) {
-      await fetch(`/dept/${deptData[editingDeptIndex].factcode}/${deptData[editingDeptIndex].deptcode}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(item),
-      });
-      showSuccessModal("Department updated successfully!");
-    } else {
-      const token = localStorage.getItem("token");
-
-      await fetch("/dept/post-department", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(item),
-      });
-      showSuccessModal("Department created successfully!");
+  if(locationData.unitcode && locationData.unitdesc) {
+    try {
+      if(editingLocationIndex !== null) {
+        await ApiService.updateLocation(locationData.unitcode, locationData);
+        showSuccess('Location updated successfully!');
+      } else {
+        await ApiService.createLocation(locationData);
+        showSuccess('Location created successfully!');
+      }
+      
+      document.getElementById("locationForm").reset();
+      document.getElementById("locationForm").classList.add("hidden");
+      editingLocationIndex = null;
+      
+      await loadLocations(true);
+    } catch (error) {
+      console.error('Failed to save location:', error);
     }
-
-    await loadDepartments();
-    deptForm.classList.add("hidden");
-    deptForm.reset();
-    editingDeptIndex = null;
-    originaldeptData = null;
-
-  } catch (err) {
-    showErrorModal("Error saving department:", err);
+  } else {
+    showAlert("Please fill in all required fields");
   }
 });
 
-// Cancel
-cancelDeptBtn.addEventListener("click", () => {
-  deptForm.classList.add("hidden");
-  deptForm.reset();
+// Branch Form Handlers
+document.getElementById("addNewBranchBtn").addEventListener("click", () => {
+  document.getElementById("branchForm").classList.remove("hidden");
+  editingBranchIndex = null;
+  document.getElementById("branchCode").disabled = false;
+  document.getElementById("branchForm").reset();
 });
 
-// View
-window.viewDept = function(index) {
-  const item = deptData[index];
+document.getElementById("cancelBranchBtn").addEventListener("click", () => {
+  document.getElementById("branchForm").classList.add("hidden");
+  document.getElementById("branchForm").reset();
+  editingBranchIndex = null;
+});
 
-  // Format date if present
-  let formattedDate = "";
-  if (item.datecreated) {
-    const dateObj = new Date(item.datecreated);
-    formattedDate = dateObj.toLocaleString('en-US', {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-    });
-  }
-
-  let html = `
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Fact Code:</dt><dd class="col-span-2">${item.factcode}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Dept Code:</dt><dd class="col-span-2">${item.deptcode}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Fact Name:</dt><dd class="col-span-2">${item.factname || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Dept Name:</dt><dd class="col-span-2">${item.deptname || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Coordination Code:</dt><dd class="col-span-2">${item.coordcode || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Manager:</dt><dd class="col-span-2">${item.manager || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">HOD:</dt><dd class="col-span-2">${item.hod || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Account:</dt><dd class="col-span-2">${item.acct || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Misc:</dt><dd class="col-span-2">${item.misc1 || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Misc 2:</dt><dd class="col-span-2">${item.misc2 || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Misc 3:</dt><dd class="col-span-2">${item.misc3 || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Address Code:</dt><dd class="col-span-2">${item.AddressCode || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Created By:</dt><dd class="col-span-2">${item.createdby || ""}</dd>
-    </div>
-    <div class="grid grid-cols-3 gap-2 py-2 border-b">
-      <dt class="font-medium">Date Created:</dt><dd class="col-span-2">${formattedDate}</dd>
-    </div>
-  `;
-  document.getElementById("deptViewContent").innerHTML = html;
-  showModal("deptViewModal");
-};
-
-// Edit
-window.editDept = function(index) {
-
-  const item = deptData[index];
-
-  // Store original values for comparison
-  originaldeptData = {
-    factcode: item.factcode,
-    deptcode: item.deptcode,
-    factname: item.factname,
-    deptname: item.deptname,
-    coordcode: item.coordcode,
-    acct: item.acct
+document.getElementById("saveBranchBtn").addEventListener("click", async () => {
+  const branchData = {
+    busline: document.getElementById("branchCode").value,
+    busdesc: document.getElementById("branchDesc").value
   };
 
-  document.getElementById("factcode").value = item.factcode;
-  document.getElementById("deptcode").value = item.deptcode;
-  document.getElementById("factname").value = item.factname || "";
-  document.getElementById("deptname").value = item.deptname || "";
-  document.getElementById("coordcode").value = item.coordcode || "";
-  document.getElementById("manager").value = item.manager || "";
-  document.getElementById("hod").value = item.hod || "";
-  document.getElementById("acct").value = item.acct || "";
-  document.getElementById("misc1").value = item.misc1 || "";
-  document.getElementById("misc2").value = item.misc2 || "";
-  document.getElementById("misc3").value = item.misc3 || "";
-  document.getElementById("AddressCode").value = item.AddressCode || "";
+  const requiredFields = ['busline', 'busdesc'];
+  let missingFields = requiredFields.filter(field => !branchData[field]);
 
-  // Clear any existing validation messages
-  ["factcode", "deptcode", "factname", "deptname", "coordcode", "acct"].forEach(field => {
-    document.getElementById(field).setCustomValidity("");
-  });
-
-  editingDeptIndex = index;
-  document.getElementById("factcode").disabled = true; 
-  document.getElementById("deptcode").disabled = true; 
-  deptForm.classList.remove("hidden");
-};
-
-// Delete
-window.deleteDept = function(index) {
-  pendingDeleteDeptIndex = index;
-  showConfirmModal("Are you sure you want to delete this department?");
-};
-
-document.getElementById("deptConfirmAction").addEventListener("click", async () => {
-  if (pendingDeleteDeptIndex !== null) {
-    try {
-      const token = localStorage.getItem("token");
-
-      await fetch(`/dept/${deptData[pendingDeleteDeptIndex].factcode}/${deptData[pendingDeleteDeptIndex].deptcode}`, {
-        method: "DELETE",
-        headers:{ 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }        
-      });
-      showSuccessModal("Department deleted successfully!");
-      await loadDepartments();
-    } catch (err) {
-      showErrorModal("Error deleting department:", err);
-    }
-    pendingDeleteDeptIndex = null;
+  if (missingFields.length > 0) {
+    showAlert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+    return;
   }
-  closeModal("deptConfirmModal");
+
+  if(branchData.busline && branchData.busdesc) {
+    try {
+      if(editingBranchIndex !== null) {
+        await ApiService.updateBranch(branchData.busline, branchData);
+        showSuccess('Branch updated successfully!');
+      } else {
+        await ApiService.createBranch(branchData);
+        showSuccess('Branch created successfully!');
+      }
+      
+      document.getElementById("branchForm").reset();
+      document.getElementById("branchForm").classList.add("hidden");
+      editingBranchIndex = null;
+      
+      await loadBranches(true);
+    } catch (error) {
+      console.error('Failed to save branch:', error);
+    }
+  } else {
+    showAlert("Please fill in all required fields");
+  }
 });
 
-
-  function showModal(modalId) {
-    document.getElementById(modalId).classList.remove("hidden");
-  }
-  function closeModal(modalId) {
-    document.getElementById(modalId).classList.add("hidden");
-  }
-  function showSuccessModal(msg) {
-    document.getElementById("deptSuccessMessage").textContent = msg;
-    showModal("deptSuccessModal");
-  }
-  function showErrorModal(msg) {
-    document.getElementById("deptErrorMessage").textContent = msg;
-    showModal("deptErrorModal");
-  }
-
-  function showConfirmModal(message) {
-    document.getElementById("deptConfirmMessage").textContent = message;
-    showModal("deptConfirmModal");
-  }
-
-    // Modal event listeners
-  document.getElementById("closeSuccessModal").addEventListener("click", () => closeModal("deptSuccessModal"));
-  document.getElementById("closeErrorModal").addEventListener("click", () => closeModal("deptErrorModal"));
-  document.getElementById("closeViewModal").addEventListener("click", () => closeModal("deptViewModal"));
-  document.getElementById("cancelConfirm").addEventListener("click", () => {
-    closeModal("deptConfirmModal");
-    pendingDeleteDeptIndex = null;
+function showSection(sectionId, btnId) {
+  ["locationSection","branchSection"].forEach(id => {
+    document.getElementById(id).classList.add("hidden");
   });
-
-  /*searchDept.addEventListener("input", () => {
-    const query = searchDept.value.toLowerCase();
-    const filtered = deptData.filter(item =>
-      item.id.toLowerCase().includes(query) || item.name.toLowerCase().includes(query)
-    );
-    renderDeptTable(filtered);
-  });*/
-
-  // Close modals when clicking outside
-  const modals = ['deptSuccessModal', 'deptErrorModal', 'deptConfirmModal', 'deptViewModal'];
-  modals.forEach(modalId => {
-    document.getElementById(modalId).addEventListener("click", (e) => {
-      if (e.target === e.currentTarget) closeModal(modalId);
-    });
+  ["btnLocation","btnBranch"].forEach(id => {
+    document.getElementById(id).classList.remove("bg-green-600","text-white");
+    document.getElementById(id).classList.add("bg-yellow-400","text-gray-900");
   });
+  document.getElementById(sectionId).classList.remove("hidden");
+  const btn = document.getElementById(btnId);
+  btn.classList.remove("bg-yellow-400","text-gray-900");
+  btn.classList.add("bg-green-600","text-white");
 
-  function generateReport() {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-GB', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-    const timeStr = now.toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
+  // Change generate button text based on active section
+  const generateBtn = document.getElementById("generateReportBtn");
+  if (sectionId === "branchSection") {
+    generateBtn.innerHTML = `<i class="fas fa-file-alt mr-2"></i>Generate Branch Report`;
+  } else {
+    generateBtn.innerHTML = `<i class="fas fa-file-alt mr-2"></i>Generate Location Report`;
+  }
+}
+
+document.getElementById("btnLocation").addEventListener("click", () => showSection("locationSection","btnLocation"));
+document.getElementById("btnBranch").addEventListener("click", () => {
+  showSection("branchSection","btnBranch");
+  loadBranches();
+});
+
+showSection("locationSection","btnLocation");
+
+function renderLocationTable() {
+  const { currentData } = getLocationPaginationData();
+  const table = document.getElementById("locationTable");
+  
+  table.innerHTML = currentData.map((l) => {
+    const realIndex = locations.findIndex(location => location.unitcode === l.unitcode);
     
-    const generatedBy = localStorage.getItem('full_name') || 'System User';
-    
-    const printWindow = window.open('', '_blank');
-
-    const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <title>Department Report</title>
-            <style>
-                @page { 
-                    size: A4 landscape; 
-                    margin: 0.5mm; 
-                    background-color: #f8fbff;
-                }
-                
-                body { 
-                    font-family: Helvetica, Arial, sans-serif; 
-                    font-size: 8pt;
-                    margin: 0;
-                    padding: 0;
-                    position: relative;
-                    color: #333;
-                }
-
-                /* Faint logo overlay */
-                body::before {
-                    content: "";
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background-image: url('photos/logo.png');
-                    background-size: auto 100%;
-                    background-repeat: no-repeat;
-                    background-position: center center;
-                    opacity: 0.02;
-                    z-index: -1;
-                    pointer-events: none;
-                }
-
-                .header-wrapper {
-                    display: flex;
-                    align-items: flex-start;
-                    margin-bottom: 8px;
-                    border-bottom: 2px solid #1a1a1a;
-                    padding-bottom: 5px;
-                }
-
-                .header {
-                    flex-grow: 1;
-                    text-align: center;
-                }
-                
-                .header h1 {
-                    font-size: 13pt;
-                    font-weight: bold;
-                    margin-bottom: 2px;
-                    letter-spacing: 1.5px;
-                    color: #15803d;
-                    font-family: 'Libre Baskerville', Georgia, serif;
-                }
-                
-                .header h2 {
-                    font-size: 10pt;
-                    font-weight: normal;
-                    margin-top: 2px;
-                    color: #4a4a4a;
-                    font-family: 'Libre Baskerville', Georgia, serif;
-                }
-
-                .header-info {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin: 10px 0;
-                    font-size: 9pt;
-                }
-
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 20px;
-                    font-size: 7.5px;
-                }
-
-                th {
-                    color: #15803d;
-                    padding: 8px 4px;
-                    text-align: left;
-                    font-weight: bold;
-                    font-size: 7.5px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.3px;
-                    border-bottom: 1px solid #0056A0;
-                }
-
-                td {
-                    padding: 6px 4px;
-                    border: none;
-                    vertical-align: middle;
-                }
-
-                .text-center {
-                    text-align: center;
-                }
-
-                .footer {
-                    padding-top: 10px;
-                    border-top: 0.5px solid #1a1a1a;
-                    text-align: center;
-                    font-size: 8pt;
-                    color: #64748b;
-                    margin-top: 20px;
-                }
-
-                @media print {
-                    body {
-                        print-color-adjust: exact;
-                        -webkit-print-color-adjust: exact;
-                    }
-                    
-                    body::before {
-                        position: fixed;
-                        display: block;
-                        content: "";
-                        width: 100%;
-                        height: 100%;
-                        top: 0;
-                        left: 0;
-                        background-image: url('photos/logo.png');
-                        background-size: auto 100%;
-                        background-repeat: no-repeat;
-                        background-position: center center;
-                        opacity: 0.02;
-                        z-index: -1;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header-wrapper">
-                <div class="header">
-                    <h1>DEFENCE INTELLIGENCE AGENCY</h1>
-                    <h2>ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY</h2>
-                </div>
-            </div>
-
-            <div class="header-info">
-                <div class="left">
-                    <strong>DEPARTMENT REPORT</strong>
-                </div>
-                <div class="center">
-                    <span>PRODUCED ON</span> 
-                    <strong>${dateStr}</strong> 
-                    <span>AT</span> 
-                    <strong>${timeStr}</strong>
-                </div>
-                <div class="right">
-                    <strong>${deptData.length}</strong>
-                    <span>DEPARTMENTS</span>
-                </div>
-            </div>
-
-            <!-- Single Data Table -->
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 3%;">No.</th>
-                        <th style="width: 8%;">Factory Code</th>
-                        <th style="width: 10%;">Factory Name</th>
-                        <th style="width: 8%;">Dept Code</th>
-                        <th style="width: 12%;">Dept Name</th>
-                        <th style="width: 8%;">Coord Code</th>
-                        <th style="width: 10%;">Manager</th>
-                        <th style="width: 10%;">HOD</th>
-                        <th style="width: 8%;">Account</th>
-                        <th style="width: 7%;">Misc 1</th>
-                        <th style="width: 7%;">Misc 2</th>
-                        <th style="width: 7%;">Misc 3</th>
-                        <th style="width: 8%;">Address Code</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${deptData.map((item, index) => `
-                        <tr>
-                            <td class="text-center"><strong>${index + 1}</strong></td>
-                            <td><strong>${item.factcode || '-'}</strong></td>
-                            <td>${item.factname || '-'}</td>
-                            <td><strong>${item.deptcode || '-'}</strong></td>
-                            <td>${item.deptname || '-'}</td>
-                            <td>${item.coordcode || '-'}</td>
-                            <td>${item.manager || '-'}</td>
-                            <td>${item.hod || '-'}</td>
-                            <td>${item.acct || '-'}</td>
-                            <td>${item.misc1 || '-'}</td>
-                            <td>${item.misc2 || '-'}</td>
-                            <td>${item.misc3 || '-'}</td>
-                            <td>${item.AddressCode || '-'}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-
-            <div class="footer">
-                <p>Generated by: <strong>${generatedBy}</strong></p>
-                <p>All rights reserved &#xA9; Hicad Systems Limited.</p>
-            </div>
-        </body>
-        </html>
+    return `
+    <tr>
+      <td class="border px-2 py-3 text-left">${l.unitcode || ''}</td>
+      <td class="border px-2 py-3 text-left">${l.unitdesc || ''}</td>
+      <td class="border px-2 py-3 text-left">
+        <button class="text-blue-600 hover:underline mr-2" onclick="editLocation(${realIndex})">Edit</button>
+        <button class="text-red-600 hover:underline" onclick="deleteLocation(${realIndex})">Delete</button>
+      </td>
+    </tr>`;
+  }).join("");
+  
+  if (currentData.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="3" class="border px-2 py-8 text-center text-gray-500">No records found</td>
+      </tr>
     `;
-
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-
-    printWindow.onload = function() {
-        printWindow.print();
-    };
   }
+}
 
-  // Add event listener to generate report button
-  document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+function renderBranchTable() {
+  const { currentData } = getBranchPaginationData();
+  const table = document.getElementById("branchTable");
+  
+  table.innerHTML = currentData.map((b) => {
+    const realIndex = branches.findIndex(branch => branch.busline === b.busline);
+    
+    return `
+    <tr>
+      <td class="border px-2 py-3 text-left">${b.busline || ''}</td>
+      <td class="border px-2 py-3 text-left">${b.busdesc || ''}</td>
+      <td class="border px-2 py-3 text-left">
+        <button class="text-blue-600 hover:underline mr-2" onclick="editBranch(${realIndex})">Edit</button>
+        <button class="text-red-600 hover:underline" onclick="deleteBranch(${realIndex})">Delete</button>
+      </td>
+    </tr>`;
+  }).join("");
+  
+  if (currentData.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="3" class="border px-2 py-8 text-center text-gray-500">No records found</td>
+      </tr>
+    `;
+  }
+}
+
+// Search handlers
+if (document.getElementById('locationSearchInput')) {
+  document.getElementById('locationSearchInput').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    applyLocationSearch(term);
+    locationCurrentPage = 1;
+    renderLocationWithPagination();
+  });
+}
+
+if (document.getElementById('branchSearchInput')) {
+  document.getElementById('branchSearchInput').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    applyBranchSearch(term);
+    branchCurrentPage = 1;
+    renderBranchWithPagination();
+  });
+}
+
+// LOCATION PAGINATION EVENT LISTENERS
+if (locationPrevBtn) {
+  locationPrevBtn.addEventListener('click', () => {
+    if (locationCurrentPage > 1) {
+      locationCurrentPage--;
+      renderLocationWithPagination();
+    }
+  });
+}
+
+if (locationNextBtn) {
+  locationNextBtn.addEventListener('click', () => {
+    const { totalPages } = getLocationPaginationData();
+    if (locationCurrentPage < totalPages) {
+      locationCurrentPage++;
+      renderLocationWithPagination();
+    }
+  });
+}
+
+if (locationRecordsSelect) {
+  locationRecordsSelect.addEventListener('change', (e) => {
+    locationRecordsPerPage = parseInt(e.target.value);
+    locationCurrentPage = 1;
+    renderLocationWithPagination();
+  });
+}
+
+// BRANCH PAGINATION EVENT LISTENERS
+if (branchPrevBtn) {
+  branchPrevBtn.addEventListener('click', () => {
+    if (branchCurrentPage > 1) {
+      branchCurrentPage--;
+      renderBranchWithPagination();
+    }
+  });
+}
+
+if (branchNextBtn) {
+  branchNextBtn.addEventListener('click', () => {
+    const { totalPages } = getBranchPaginationData();
+    if (branchCurrentPage < totalPages) {
+      branchCurrentPage++;
+      renderBranchWithPagination();
+    }
+  });
+}
+
+if (branchRecordsSelect) {
+  branchRecordsSelect.addEventListener('change', (e) => {
+    branchRecordsPerPage = parseInt(e.target.value);
+    branchCurrentPage = 1;
+    renderBranchWithPagination();
+  });
+}
 
 
-  renderDeptTable();
-  // Initial load
-  loadDepartments();
+["locationCode", "branchCode", "locationDesc", "branchDesc"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener("input", () => {
+      el.value = el.value.toUpperCase();
+    });
+  }
+});
+
+function generateReport() {
+  const activeSection = document.getElementById('locationSection').classList.contains('hidden') ? 'branch' : 'location';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const timeStr = now.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+  
+  const generatedBy = localStorage.getItem('full_name') || 'System User';
+  
+  const printWindow = window.open('', '_blank');
+  
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${activeSection === 'branch' ? 'Branch' : 'Location'} Report</title>
+      <style>
+        @page { 
+          size: A4; 
+          margin: 10mm; 
+          background-color: #f8fbff;
+        }
+        
+        body { 
+          font-family: Helvetica, Arial, sans-serif; 
+          font-size: 7pt;
+          margin: 0;
+          padding: 0;
+          position: relative;
+          color: #333;
+          opacity: 1;
+        }
+
+        body::before {
+          content: "";
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: url('photos/logo.png');
+          background-size: auto 100%;
+          background-repeat: no-repeat;
+          background-position: center center;
+          opacity: 0.02;
+          z-index: -1;
+          pointer-events: none;
+        }
+
+        .header-wrapper {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 5px;
+          border-bottom: 2px solid #1a1a1a;
+          padding-bottom: 3px;
+        }
+
+        .header {
+          flex-grow: 1;
+          text-align: center;
+        }
+        
+        .header h1 {
+          font-size: 12pt;
+          font-weight: bold;
+          margin: 0 0 2px 0;
+          letter-spacing: 1.5px;
+          color: #15803d;
+          font-family: 'Libre Baskerville', Georgia, serif;
+        }
+        
+        .header h2 {
+          font-size: 9pt;
+          font-weight: normal;
+          margin: 0;
+          color: #4a4a4a;
+          font-family: 'Libre Baskerville', Georgia, serif;
+        }
+
+        .header-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 5px 0 10px 0;
+          font-size: 8pt;
+        }
+
+        table.report-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 3px;
+          font-size: 6.5pt;
+        }
+
+        .report-table th {
+          color: #15803d;
+          padding: 4px 2px;
+          text-align: left;
+          font-weight: bold;
+          font-size: 6.5pt;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          border-bottom: 1px solid #0056A0;
+          background-color: transparent;
+        }
+
+        .report-table td {
+          padding: 3px 2px;
+          border: none;
+          vertical-align: middle;
+          border-bottom: 0.5px solid #e5e7eb;
+        }
+
+        .text-center {
+          text-align: center;
+        }
+
+        .print-footer {
+          padding-top: 8px;
+          border-top: 0.5px solid #1a1a1a;
+          text-align: center;
+          font-size: 7pt;
+          color: #64748b;
+          margin-top: 15px;
+        }
+
+        .print-footer p {
+          margin: 2px 0;
+        }
+
+        @media print {
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          
+          body::before {
+            position: fixed;
+            display: block;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header-wrapper">
+        <div class="header">
+          <h1>DEFENCE INTELLIGENCE AGENCY</h1>
+          <h2>ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY</h2>
+        </div>
+      </div>
+
+      <div class="header-info">
+        <div class="left">
+          <strong>${activeSection === 'branch' ? 'BRANCH' : 'LOCATION'} CONFIGURATION REPORT</strong>
+        </div>
+        <div class="center">
+          <span>PRODUCED ON</span> 
+          <strong>${dateStr}</strong> 
+          <span>AT</span> 
+          <strong>${timeStr}</strong>
+        </div>
+        <div class="right">
+          <strong>${activeSection === 'branch' ? branches.length : locations.length}</strong>
+          <span>${activeSection === 'branch' ? 'BRANCHES' : 'LOCATIONS'}</span>
+        </div>
+      </div>
+      
+      ${activeSection === 'branch' ? generateBranchReport() : generateLocationReport()}
+      
+      <div class="print-footer">
+        <p><strong>Total Records: ${activeSection === 'branch' ? branches.length : locations.length}</strong></p>
+        <p>Generated by: ${generatedBy}</p>
+        <p>All rights reserved &#xA9; Hicad Systems Limited.</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+  
+  printWindow.onload = function() {
+    printWindow.print();
+  };
+}
+
+function generateLocationReport() {
+  return `
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th style="width: 10%;" class="text-center">S/N</th>
+          <th style="width: 30%;">Location Code</th>
+          <th style="width: 60%;">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${locations.map((location, index) => `
+          <tr>
+            <td class="text-center"><strong>${index + 1}</strong></td>
+            <td><strong>${location.unitcode || ''}</strong></td>
+            <td>${location.unitdesc || ''}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function generateBranchReport() {
+  return `
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th style="width: 10%;" class="text-center">S/N</th>
+          <th style="width: 30%;">Branch Code</th>
+          <th style="width: 60%;">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${branches.map((branch, index) => `
+          <tr>
+            <td class="text-center"><strong>${index + 1}</strong></td>
+            <td><strong>${branch.busline || ''}</strong></td>
+            <td>${branch.busdesc || ''}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+
+async function initializeData() {
+  try {
+    await loadLocations();
+  } catch (error) {
+    console.error('Failed to initialize data:', error);
+  }
+}
+
+initializeData();
+renderLocationTable();
 </script>
-
-
-
-

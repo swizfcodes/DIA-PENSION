@@ -11,6 +11,48 @@ class TaxReportService {
     // Convert summaryOnly to boolean if it's a string
     const isSummary = summaryOnly === true || summaryOnly === '1' || summaryOnly === 'true';
     
+    // Helper function to convert month number to name
+    const getMonthName = (monthNum) => {
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+      return months[monthNum - 1] || monthNum;
+    };
+    
+    // IMPORTANT: Check if calculation is complete for the requested month
+    if (month) {
+      console.log(`Checking calculation status for month=${month}, year=${year || 'latest'}`); // DEBUG
+      
+      const checkQuery = `
+        SELECT ord as year, mth as month, sun 
+        FROM py_stdrate 
+        WHERE type = 'BT05' 
+          AND mth = ?
+          ${year ? 'AND ord = ?' : ''}
+        ORDER BY ord DESC
+        LIMIT 1
+      `;
+      
+      const params = year ? [month, year] : [month];
+      const [checkRows] = await pool.query(checkQuery, params);
+      console.log('Calculation check result:', checkRows); // DEBUG
+      
+      if (!checkRows || checkRows.length === 0) {
+        const monthName = getMonthName(month);
+        throw new Error(`No tax collected in ${monthName}${year ? `, ${year}` : ''}.`);
+      }
+      
+      const checkResult = checkRows[0];
+      console.log('Sun value:', checkResult.sun, 'Type:', typeof checkResult.sun); // DEBUG
+      
+      // Check if sun is not 999 (calculation incomplete)
+      if (checkResult.sun != 999) {  // Using != to handle both string and number
+        const monthName = getMonthName(month);
+        throw new Error(`Calculation not completed for ${monthName}, ${checkResult.year}. Please complete payroll calculation before generating reports for ${monthName}, ${checkResult.year}.`);
+      }
+      
+      console.log('Calculation check passed - proceeding with report generation'); // DEBUG
+    }
+    
     if (isSummary) {
       // Summary query - aggregated by tax state
       const query = `

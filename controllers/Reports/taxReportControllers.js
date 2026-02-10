@@ -28,6 +28,7 @@ class TaxReportController extends BaseReportController {
       
       console.log('Tax Report Filters:', filters); // DEBUG
       
+      // This will now throw an error if calculation is not complete
       const data = await taxReportService.getTaxReport(filters);
       
       console.log('Tax Report Data rows:', data.length); // DEBUG
@@ -49,7 +50,30 @@ class TaxReportController extends BaseReportController {
       });
     } catch (error) {
       console.error('Error generating tax report:', error);
-      res.status(500).json({ success: false, error: error.message });
+      
+      // Check if it's a calculation incomplete error
+      if (error.message && error.message.includes('Calculation not completed')) {
+        return res.status(400).json({ 
+          success: false, 
+          error: error.message,
+          errorType: 'CALCULATION_INCOMPLETE'
+        });
+      }
+      
+      // Check if it's a no data error
+      if (error.message && error.message.includes('No payroll data found')) {
+        return res.status(404).json({ 
+          success: false, 
+          error: error.message,
+          errorType: 'NO_DATA'
+        });
+      }
+      
+      // Generic error
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
     }
   }
 

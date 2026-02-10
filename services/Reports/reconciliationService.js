@@ -3,6 +3,15 @@ const pool = require('../../config/db');
 class ReconciliationService {
   
   /**
+   * Helper function to convert month number to name
+   */
+  getMonthName(monthNum) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[parseInt(monthNum) - 1] || monthNum;
+  }
+  
+  /**
    * Get overall salary reconciliation summary
    */
   async getSalaryReconciliationSummary(filters = {}) {
@@ -19,6 +28,41 @@ class ReconciliationService {
     }
     
     console.log(`📊 Summary for year: ${year}, month: ${monthOnly} in database: ${useDb}`);
+    
+    // IMPORTANT: Check if calculation is complete for the requested month
+    if (monthOnly) {
+      console.log(`Checking calculation status for month=${monthOnly}, year=${year || 'latest'}`); // DEBUG
+      
+      const checkQuery = `
+        SELECT ord as year, mth as month, sun 
+        FROM \`${useDb}\`.py_stdrate 
+        WHERE type = 'BT05' 
+          AND mth = ?
+          ${year ? 'AND ord = ?' : ''}
+        ORDER BY ord DESC
+        LIMIT 1
+      `;
+      
+      const params = year ? [monthOnly, year] : [monthOnly];
+      const [checkRows] = await pool.query(checkQuery, params);
+      console.log('Calculation check result:', checkRows); // DEBUG
+      
+      if (!checkRows || checkRows.length === 0) {
+        const monthName = this.getMonthName(monthOnly);
+        throw new Error(`No payroll data found for ${monthName}${year ? `, ${year}` : ''}.`);
+      }
+      
+      const checkResult = checkRows[0];
+      console.log('Sun value:', checkResult.sun, 'Type:', typeof checkResult.sun); // DEBUG
+      
+      // Check if sun is not 999 (calculation incomplete)
+      if (checkResult.sun != 999) {  // Using != to handle both string and number
+        const monthName = this.getMonthName(monthOnly);
+        throw new Error(`Calculation not completed for ${monthName}, ${checkResult.year}. Please complete payroll calculation before generating reports for ${monthName}, ${checkResult.year}.`);
+      }
+      
+      console.log('Calculation check passed - proceeding with reconciliation'); // DEBUG
+    }
     
     const query = `
       SELECT 
@@ -263,7 +307,7 @@ class ReconciliationService {
   async getReconciliationReport(filters = {}) {
     console.log('🚀 Starting optimized reconciliation report...');
     
-    // Step 1: Check summary first
+    // Step 1: Check summary first (this will throw error if calculation incomplete)
     const summary = await this.getSalaryReconciliationSummary(filters);
     const summaryData = summary[0] || null;
     
@@ -284,10 +328,11 @@ class ReconciliationService {
     
     if (!hasVariance) {
       console.log('✅ No variance detected at summary level - BALANCED!');
+      const monthName = this.getMonthName(summaryData.month);
       return {
         summary: summaryData,
         status: 'BALANCED',
-        message: 'All salaries are reconciled. No variance detected.',
+        message: `No variance detected for ${monthName}, ${summaryData.year}. Payroll balanced - employee checking skipped.`,
         total_employees_checked: summaryData.total_employees,
         employees_with_errors: 0,
         total_error_amount: 0,
@@ -318,6 +363,7 @@ class ReconciliationService {
    * ENHANCED: Quick check - just returns status without full details
    */
   async quickReconciliationCheck(filters = {}) {
+    // This will throw error if calculation incomplete
     const summary = await this.getSalaryReconciliationSummary(filters);
     const summaryData = summary[0] || null;
     
@@ -329,14 +375,16 @@ class ReconciliationService {
       };
     }
     
+    const monthName = this.getMonthName(summaryData.month);
+    
     return {
       status: summaryData.status,
       has_variance: summaryData.has_variance,
       variance_amount: summaryData.calculated_variance,
       total_employees: summaryData.total_employees,
       message: summaryData.has_variance 
-        ? `Variance of ${summaryData.calculated_variance} detected`
-        : 'Balanced - no variance detected'
+        ? `Variance of ${summaryData.calculated_variance} detected for ${monthName}, ${summaryData.year}`
+        : `Balanced - no variance detected for ${monthName}, ${summaryData.year}`
     };
   }
 
@@ -463,5 +511,3 @@ class ReconciliationService {
 }
 
 module.exports = new ReconciliationService();
-
-

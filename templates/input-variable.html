@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <style>
-    @page { size: A4 landscape; margin: 0.5mm; background-color: #f8fbff; }
+    @page { size: A4 landscape; margin: 0.2mm; background-color: #f8fbff; }
     body { font-family: Helvetica, Arial, sans-serif; font-size: 8pt; }
 
     body::before {
@@ -14,7 +14,7 @@
       width: 100%;
       height: 100%;
       background-image: url('{{{logoDataUrl}}}');
-      background-size: auto 100%;
+      background-size: auto 100%;    /* 80% of height */
       background-repeat: no-repeat;
       background-position: center center;
       opacity: 0.02;
@@ -113,7 +113,7 @@
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 20px;
-      font-size: 7.5px;
+      font-size: 8px;
     }
 
     th {
@@ -121,7 +121,7 @@
       padding: 8px 4px;
       text-align: left;
       font-weight: bold;
-      font-size: 7.5px;
+      font-size: 8px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
       border-bottom: 1px solid #0056A0;
@@ -141,6 +141,13 @@
       text-align: center;
     }
 
+    .currency {
+      font-family: 'Courier New', monospace;
+      text-align: right;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
     .footer {
       padding-top: 10px;
       border-top: 0.5px solid #1a1a1a;
@@ -150,18 +157,8 @@
       margin-top: 20px;
     }
 
-    .highlight-age {
-      color: #DC2626;
-      font-weight: bold;
-    }
-
-    .highlight-service {
+    .high-amount {
       color: #006100;
-      font-weight: bold;
-    }
-
-    .highlight-exit {
-      color: #FF8C00;
       font-weight: bold;
     }
 
@@ -183,7 +180,7 @@
         width: 100%;
         height: 100%;
         background-image: url('{{{logoDataUrl}}}');
-        background-size: auto 100%;
+        background-size: auto 100%;    /* 80% of height */
         background-repeat: no-repeat;
         background-position: center center;
         opacity: 0.02;
@@ -206,7 +203,7 @@
 
   <div class="header-info">
     <div class="left">
-      <strong>PERSONNEL REPORT {{#if showingExitedEmployees}}(EXITED){{/if}}</strong>
+      <strong>VARIATION INPUT LISTINGS</strong>
     </div>
     <div class="center">
       <span>PRODUCED ON</span> 
@@ -215,67 +212,71 @@
       <strong>{{formatTime reportDate}}</strong>
     </div>
     <div class="right">
-      <strong>{{statistics.total_employees}}</strong>
-      <span>PERSONNEL</span>
+      <span>FOR</span> 
+      <strong>{{formatPeriod this.year this.month}}</strong>
     </div>
   </div>
 
-  <!-- Filter Information -->
+  <!-- Filter Information
   {{#if filters}}
   <div style="margin-bottom: 10px; font-size: 8pt; color: #4a4a4a; font-style: italic;">
-    <strong></strong> {{filters}}
-  </div>
+    <strong>Filters Applied:</strong> {{filters}}
+  </div>-->
   {{/if}}
 
   <!-- Data Table -->
   <table>
     <thead>
       <tr>
-        <th style="width: 7%;">Svc No.</th>
-        <th style="width: 4%;">Rank</th>
-        <th>Full Name</th>
-        <th>Location</th>
-        <th style="width: 5%;">G/Level</th>
-        <th>Grade Type</th>
-        <th style="width: 8%;">PFA</th>
-        <th style="width: 8%;">RSA(PEN) Code</th>
-        <th style="width: 4%;" class="text-center">Age</th>
-        <th style="width: 5%;" class="text-center">Yrs Served</th>
-        <th style="width: 8%;">Date Of 1st Appointment</th>
-        <th style="width: 8%;">Date Left</th>
-        <th style="width: 6%;" class="text-center">Exit Reason</th>
-        <th style="width: 5%;" class="text-center">Yrs Since Exit</th>
-        <th style="width: 8%;">State</th>
+        <th style="width: 8%; text-align: left;">Svc No.</th>
+        <th style="width: 5%; text-align: left;">Rank</th>
+        <th style="width: 15%; text-align: left; white-space: nowrap;">Full Name</th>
+        <th style="width: 6%; text-align: center;">Pay Code</th>
+        <th style="width: 18%; text-align: left;">Description</th>
+        <th style="width: 5%; text-align: center;">MAK1</th>
+        <th style="width: 10%; text-align: center;">Amt Payable</th>
+        <th style="width: 5%; text-align: center;">MAK2</th>
+        <th style="width: 10%; text-align: center;">Amt ToDate</th>
+        <th style="width: 6%; text-align: center;">Pay Ind</th>
+        <th style="width: 4%; text-align: center;">Tenor</th>
+        <th style="width: 8%; text-align: left;">Created By</th>
       </tr>
     </thead>
     <tbody>
       {{#each data}}
         <tr>
           <td>{{this.employee_id}}</td>
-          <td>{{this.title_code}}</td>
-          <td style="white-space: nowrap;"><strong>{{this.full_name}}</strong></td>
-          <td style="white-space: nowrap;">{{this.location}}</td>
-          <td class="text-center">{{this.gradelevel}}</td>
-          <td style="white-space: nowrap;">{{this.gradetype_code}}</td>
-          <td>{{this.pfa}}</td>
-          <td>{{this.nsitf_code}}</td>
-          <td class="text-center {{#if (gt this.age 55)}}highlight-age{{/if}}">
-            {{this.age}}yrs
-          </td>
-          <td class="text-center {{#if (gte this.years_of_service 30)}}highlight-service{{/if}}">
-            {{this.years_served_formatted}}
-          </td>
-          <td style="font-size: 7px;">{{this.date_employed_formatted}}</td>
-          <td style="font-size: 7px; white-space: nowrap;">{{this.date_left_formatted}}</td>
-          <td class="text-center">{{this.exittype}}</td>
-          <td class="text-center {{#if (lt this.years_since_exit 2)}}highlight-exit{{/if}}">
-            {{this.years_since_exit}}yrs
-          </td>
-          <td>{{this.state_of_origin}}</td>
+          <td>{{this.title}} {{this.title_code}}</td>
+          <td style="white-space: nowrap;">{{this.full_name}}</td>
+          <td style="text-align: center;">{{this.pay_element_type}}</td>
+          <td style="white-space: nowrap;">{{this.pay_element_description}}</td>
+          <td style="text-align: center;">{{this.mak1}}</td>
+          <td style="text-align: center;">₦{{formatCurrency this.amount_primary}}</td>
+          <td style="text-align: center;">{{this.mak2}}</td>
+          <td style="text-align: center;">₦{{formatCurrency this.amount_to_date}}</td>
+          <td style="text-align: center;">{{this.payment_indicator}}</td>
+          <td style="text-align: center;">{{this.number_of_months}}</td>
+          <td style="white-space: nowrap;">{{this.created_by}}</td>
         </tr>
       {{/each}}
     </tbody>
   </table>
+
+    <!-- Statistics Summary Box -->
+  <div class="summary-box">
+    <div class="summary-item">
+      <div class="label">Total Records</div>
+      <div class="value">{{statistics.total_records}}</div>
+    </div>
+    <div class="summary-item">
+      <div class="label">Employees</div>
+      <div class="value">{{statistics.total_employees}}</div>
+    </div>
+    <div class="summary-item">
+      <div class="label">Pay Elements</div>
+      <div class="value">{{statistics.total_pay_elements}}</div>
+    </div>
+  </div>
 
   <div class="footer">
     <p>All rights reserved &#xA9; Hicad Systems Limited.</p>
@@ -287,24 +288,8 @@
       return parseFloat(a) > parseFloat(b);
     });
 
-    Handlebars.registerHelper('gte', function(a, b) {
-      return parseFloat(a) >= parseFloat(b);
-    });
-
-    Handlebars.registerHelper('lt', function(a, b) {
-      return parseFloat(a) < parseFloat(b);
-    });
-
     Handlebars.registerHelper('eq', function(a, b) {
       return a === b;
-    });
-
-    Handlebars.registerHelper('formatTime', function(date) {
-      return new Date(date).toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
     });
   </script>
 </body>

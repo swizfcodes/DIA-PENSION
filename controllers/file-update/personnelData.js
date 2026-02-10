@@ -32,24 +32,30 @@ class EmployeeChangeHistoryController extends BaseReportController {
       const { year, month, sun } = bt05Rows[0];
       
       // Validation: Ensure previous stage completed (personnel changes must be ready)
-      if (sun < 775) {
+      if (sun < 666) {
         return res.status(400).json({ 
           status: 'FAILED',
-          error: 'Personnel changes must be processed first.',
+          error: 'You must first Save Payroll Files.',
           currentStage: sun,
-          requiredStage: 775
+          requiredStage: 666
         });
       }
       
-      // First print: update stage from 775 to 776
+      // First print: update stage from 666 to 776
       // Subsequent reprints: sun >= 776, skip the update
-      if (sun === 775) {
+      if (sun === 666) {
         const user = req.user?.fullname || req.user_fullname || 'System Auto';
-        await pool.query(
-          "UPDATE py_stdrate SET sun = 776, createdby = ? WHERE type = 'BT05'", 
+        console.log('🔄 BT05 Update - Database:', pool.getCurrentDatabase(req.user_id.toString()));
+        console.log('   └─ User:', user);
+        console.log('   └─ Current sun:', sun);
+        
+        const [result] = await pool.query(
+          "UPDATE py_stdrate SET sun = 775, createdby = ? WHERE type = 'BT05'", 
           [user]
         );
-        console.log('✅ BT05 stage updated: 775 → 776 (Change History first print)');
+        
+        console.log('✅ BT05 stage updated: 666 → 775');
+        console.log('   └─ Affected rows:', result.affectedRows);
       }
       // ========== END STDRATE STAGE CHECKER ==========
 

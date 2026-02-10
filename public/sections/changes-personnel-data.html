@@ -26,448 +26,165 @@
     </div>
   </div>
 
-  <!-- Report Type Tabs (Shown after first generation) -->
-  <div id="reportTypeTabs" class="hidden bg-green-50/25 border-2 border-green-200 flex flex-wrap gap-2 p-3 mb-6 rounded-xl shadow-sm no-print">
-    <button id="previousReportTab" class="flex-1 px-4 py-3 text-sm lg:text-base font-semibold rounded-lg bg-yellow-50/25 text-green-900 shadow-md border-2 border-green-500 transition-all duration-200">
-      <i class="fas fa-history mr-2"></i>Previous Details
-    </button>
-    <button id="currentReportTab" class="flex-1 px-4 py-3 text-sm lg:text-base font-semibold rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-      <i class="fas fa-file-alt mr-2"></i>Current Details
-    </button>
-    <button id="comparisonReportTab" class="flex-1 px-4 py-3 text-sm lg:text-base font-semibold rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-      <i class="fas fa-exchange-alt mr-2"></i>Compare (Max 5)
-    </button>
-    <button id="analysisReportTab" class="flex-1 px-4 py-3 text-sm lg:text-base font-semibold rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200">
-      <i class="fas fa-chart-line mr-2"></i>Analysis
-    </button>
-    <button id="regenerateBtn" class="px-6 py-3 text-sm lg:text-base font-semibold rounded-lg text-gray-600 hover:text-gray-900 hover:bg-blue-500 transition-all duration-200">
-      <i class="fas fa-plus-circle mr-2"></i> New Report
-    </button>
-  </div>
 
-  <!-- Main Form (Hidden after first generation) -->
-  <form id="mainForm" class="space-y-6 p-6 rounded-lg border border-green-200 no-print">
-    <div class="flex items-center space-x-3 mb-4">
-      <div class="bg-green-600 text-white p-3 rounded-full shadow">
-        <i class="fas fa-users text-2xl"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-900">Personnel Details Comparison</h2>
+  <!-- Main Form -->
+  <section id="mainForm" class="hidden items m-6 max-w-lg mr-auto mx-auto">
+    <!-- Show Filter Button (for reprints) -->
+    <div class="flex justify-end mb-4">
+      <button id="showFilterBtn" class="hidden px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+        <i class="fas fa-filter mr-2"></i>Show Filter
+      </button>
     </div>
-    <p class="text-gray-700 border-b pb-4 font-medium">
-      Compare historical personnel records with current data. Select period range and generate reports.
-    </p>
 
-  <!-- Filter Options -->
-    <!--<h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-      <i class="fas fa-filter mr-2 text-green-600"></i>Filter Options
-    </h4>-->
+    <!-- Form Content (collapsible) -->
+    <div id="formContent">
+      <!-- Radio Selection -->
+      <div class="mb-2 pb-2 border-b">
+        <span class="text-green-600 font-semibold text-lg block mb-3">Select Report Scope:</span>
+        <div class="flex gap-6">
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" name="changeScope" value="all" class="text-green-600 w-4 h-4" checked>
+            <span class="ml-2 font-medium">All Personnel</span>
+          </label>
 
-    <!-- Period Range -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <div>
-        <label for="startDate" class="block text-sm font-medium text-gray-700 mb-2">
-          <i class="fas fa-calendar-alt mr-1"></i>Start Date <span class="text-red-500">*</span>
-        </label>
-        <input 
-          type="month" 
-          id="startDate" 
-          class="w-full border-2 border-gray-300 rounded-lg shadow-sm px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        />
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" name="changeScope" value="personnel" class="text-green-600 w-4 h-4">
+            <span class="ml-2 font-medium">Specific Personnel</span>
+          </label>
+        </div>
       </div>
+
+    <!-- Dynamic Form Fields -->
+    <div id="changeForm" class="space-y-5">
       
-      <div>
-        <label for="endDate" class="block text-sm font-medium text-gray-700 mb-2">
-          <i class="fas fa-calendar-check mr-1"></i>End Date <span class="text-red-500">*</span>
-        </label>
-        <input 
-          type="month" 
-          id="endDate" 
-          class="w-full border-2 border-gray-300 rounded-lg shadow-sm px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-        />
-      </div>
-    </div>
-
-    <!-- Personnel Filter Toggle -->
-    <div class="mb-4">
-      <div class="flex items-center space-x-2">
-        <input type="checkbox" id="filterByPersonnel" class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
-        <label for="filterByPersonnel" class="text-sm font-medium text-gray-700">
-          Filter by specific personnel
-        </label>
-      </div>
-    </div>
-
-    <!-- Personnel Selection (Hidden by default) -->
-    <div id="personnelWrapper" class="hidden mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        <i class="fas fa-search mr-1"></i>Select Personnel
-      </label>
-      <div class="relative">
-        <input 
-          type="text" 
-          id="searchInput"
-          class="w-full border-2 border-green-400 focus:border-yellow-500 bg-transparent rounded-lg px-4 py-3 pr-10"
-          placeholder="Search by Name or Service Number..."
-          autocomplete="off">
-        <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400"></i>
-      </div>
-      <div id="dropdownList" class="absolute z-10 w-full mt-1 bg-slate-100 border-2 border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto hidden">
-        <div class="py-1" id="employeeDropdown"></div>
-      </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="flex justify-end gap-3 pt-4 border-t">
-      <button type="button" id="clearBtn" class="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-all shadow">
-        <i class="fas fa-eraser mr-2"></i>Clear
-      </button>
-      <button type="button" id="generateBtn" class="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-all shadow-lg">
-        <i class="fas fa-file-alt mr-2"></i>Generate Reports
-      </button>
-    </div>
-  </form>
-
-  <!-- Report Sections Container -->
-  <div id="reportsContainer" class="hidden">
-    <!-- Previous Report Section -->
-    <div id="previousReportSection" class="hidden">
-      <div class="rounded-lg mb-6">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-bold text-green-900">
-            <i class="fas fa-history mr-2"></i>Previous Period Personnel Data
-            <span id="prevRecordCount" class="text-sm text-gray-600"></span>
-          </h3>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="prevSearchInput"
-              class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 pl-10"
-              placeholder="Search by Service No, Name, Location..."
-            />
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-            <button id="prevClearSearch" class="hidden absolute right-3 top-2 text-gray-500 hover:text-gray-700">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <div class="flex gap-2 no-print">
-            <button id="prevExportExcel" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-              <i class="fas fa-file-excel mr-2"></i>Excel
-            </button>
-            <button id="prevExportPdf" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition">
-              <i class="fas fa-file-pdf mr-2"></i>PDF
-            </button>
-            <!--<button id="prevPrint" class="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 transition">
-              <i class="fas fa-print mr-2"></i>Print
-            </button>-->
+      <!-- Period Range Section -->
+      <div class="">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">📅 Period Range (Required)</h3>
+        
+        <!-- From Period -->
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-900 mb-1">From Period</label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-gray-600 mb-1">Year</label>
+              <select id="fromYear" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <option value="">-- Year --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-1">Month</label>
+              <select id="fromMonth" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <option value="">-- Month --</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="min-w-full border border-gray-200 text-sm">
-            <thead class="bg-green-100 text-green-900">
-              <tr>
-                <th class="border px-3 py-2 text-left">Period</th>
-                <th class="border px-3 py-2 text-left">Service No.</th>
-                <th class="border px-3 py-2 text-left">Full Name</th>
-                <th class="border px-3 py-2 text-left">Rank</th>
-                <th class="border px-3 py-2 text-left">Location</th>
-                <th class="border px-3 py-2 text-left">Grade Level</th>               
-                <th class="border px-3 py-2 text-left no-print">Action</th>
-              </tr>
-            </thead>
-            <tbody id="prevTableBody"></tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex justify-between items-center mt-4 no-print">
-          <div class="text-sm text-gray-600">
-            Showing <span id="prevShowingStart">0</span> to <span id="prevShowingEnd">0</span> of <span id="prevTotalRecords">0</span> records
-          </div>
-          <div class="flex gap-2">
-            <button id="prevFirstPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-double-left"></i>
-            </button>
-            <button id="prevPrevPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-left"></i>
-            </button>
-            <span id="prevPageInfo" class="px-4 py-2 bg-green-50 text-green-900 rounded-lg font-medium">Page 1 of 1</span>
-            <button id="prevNextPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-right"></i>
-            </button>
-            <button id="prevLastPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-double-right"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Success Banner -->
-        <div id="nextStepBanner" class="mt-6 no-print">
-          <div class="flex items-start">
-            <i class="fas fa-check-circle text-blue-500 text-3xl mr-4"></i>
-            <div class="flex-1">
-              <h4 class="text-blue-800 font-bold text-lg mb-2">Personnel Changes Loaded Successfully!</h4>
-              <p class="text-blue-700 mb-4">Review the Results above, filter as needed, and export reports. Ready to proceed?</p>
-              <button onclick="window.navigation && window.navigation.navigateToSection && window.navigation.navigateToSection('input-variable-report', 'Input Variable Report')" 
-                      class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-                <i class="fas fa-file-alt mr-2"></i>Input Variable Report
-              </button>
+        <!-- To Period -->
+        <div>
+          <label class="block text-sm font-medium text-gray-900 mb-1">To Period</label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-gray-600 mb-1">Year</label>
+              <select id="toYear" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <option value="">-- Year --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-600 mb-1">Month</label>
+              <select id="toMonth" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                <option value="">-- Month --</option>
+              </select>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Current Report Section -->
-    <div id="currentReportSection" class="hidden">
-      <div class="rounded-lg mb-6">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-bold text-blue-900">
-            <i class="fas fa-calendar-day mr-2"></i>Current Period Personnel Data
-            <span id="currRecordCount" class="text-sm text-gray-600"></span>
-          </h3>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="currSearchInput"
-              class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 pl-10"
-              placeholder="Search by Service No, Name, Location..."
-            />
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-            <button id="currClearSearch" class="hidden absolute right-3 top-2 text-gray-500 hover:text-gray-700">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>         
-          <div class="flex gap-2 no-print">
-            <button id="currExportExcel" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-              <i class="fas fa-file-excel mr-2"></i>Excel
-            </button>
-            <button id="currExportPdf" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition">
-              <i class="fas fa-file-pdf mr-2"></i>PDF
-            </button>
-            <!--<button id="currPrint" class="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 transition">
-              <i class="fas fa-print mr-2"></i>Print
-            </button>-->
-          </div>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="min-w-full border border-gray-200 text-sm">
-            <thead class="bg-blue-100 text-blue-900">
-              <tr>
-                <th class="border px-3 py-2 text-left">Service No.</th>
-                <th class="border px-3 py-2 text-left">Full Name</th>
-                <th class="border px-3 py-2 text-left">Rank</th>
-                <th class="border px-3 py-2 text-left">Location</th>
-                <th class="border px-3 py-2 text-left">Grade Level</th>
-                <th class="border px-3 py-2 text-left no-print">Action</th>
-              </tr>
-            </thead>
-            <tbody id="currTableBody"></tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex justify-between items-center mt-4 no-print">
-          <div class="text-sm text-gray-600">
-            Showing <span id="currShowingStart">0</span> to <span id="currShowingEnd">0</span> of <span id="currTotalRecords">0</span> records
-          </div>
-          <div class="flex gap-2">
-            <button id="currFirstPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-double-left"></i>
-            </button>
-            <button id="currPrevPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-left"></i>
-            </button>
-            <span id="currPageInfo" class="px-4 py-2 bg-blue-50 text-blue-900 rounded-lg font-medium">Page 1 of 1</span>
-            <button id="currNextPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-right"></i>
-            </button>
-            <button id="currLastPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-              <i class="fas fa-angle-double-right"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Comparison Section -->
-    <div id="comparisonReportSection" class="hidden">
-      <div class="rounded-lg mb-6">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-bold text-yellow-900">
-            <i class="fas fa-exchange-alt mr-2"></i>Personnel Comparison Analysis
-            <span id="compSelectedCount" class="text-sm text-gray-600"></span>
-          </h3>
-          <!--<button id="compPrint" class="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 transition no-print">
-            <i class="fas fa-print mr-2"></i>Print
-          </button>-->
-        </div>
-        <div id="comparisonContent"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Analysis Section -->
-  <div id="analysisReportSection" class="hidden">
-    <div class="rounded-lg mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-purple-900">
-          <i class="fas fa-chart-line mr-2"></i>Personnel Analysis
-          <span id="analysisRecordCount" class="text-sm text-gray-600"></span>
-        </h3>
-        
-        <!-- Filter Dropdown -->
-        <div class="flex gap-2 items-center no-print">
-          <div class="relative">
-            <input 
-              type="text" 
-              id="analysisSearchInput"
-              class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 pl-10 pr-10"
-              placeholder="Search by Service No, Name..."
-            />
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-            <button id="analysisClearSearch" class="hidden absolute right-3 top-2 text-gray-500 hover:text-gray-700">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-
-          <label class="text-sm font-medium text-gray-700">Filter by:</label>
-          <select id="analysisFilter" class="border-2 border-purple-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500">
-            <option value="all">All Personnel</option>
-            <option value="new">New Employees</option>
-            <option value="changes">Personnel with Changes</option>
-            <option value="old">Old Employees (Left)</option>
-          </select>
-          
-          <button id="analysisExportExcel" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-            <i class="fas fa-file-excel mr-2"></i>Excel
-          </button>
-          <!--<button id="analysisPrint" class="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800 transition">
-            <i class="fas fa-print mr-2"></i>Print
-          </button>-->
+      <!-- Personnel Select (Hidden by default) -->
+      <div id="personnelSelectWrapper" class="hidden bg-blue-50 p-2 rounded-lg">
+        <label class="block text-sm font-medium text-gray-900 mb-2">
+          <i class="fas fa-user text-blue-600 mr-2"></i>Select Personnel
+        </label>
+        <select id="personnelSelect" class="w-full border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">-- Choose Personnel --</option>
+        </select>
+        <div id="personnelLoading" class="hidden mt-2 text-sm text-gray-600">
+          <i class="fas fa-spinner fa-spin mr-2"></i>Loading personnel...
         </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-200 text-sm">
-          <thead class="bg-purple-100 text-purple-900">
-            <tr>
-              <th class="border px-3 py-2 text-left">Service No.</th>
-              <th class="border px-3 py-2 text-left">Full Name</th>
-              <th class="border px-3 py-2 text-left">Rank</th>
-              <th class="border px-3 py-2 text-left">Location</th>
-              <th class="border px-3 py-2 text-left">Grade Level</th>            
-              <th class="border px-3 py-2 text-left">Category</th>
-              <th class="border px-3 py-2 text-left" id="analysisChangesHeader">Changes</th>
-              <th class="border px-3 py-2 text-left no-print">Action</th>
-            </tr>
-          </thead>
-          <tbody id="analysisTableBody"></tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex justify-between items-center mt-4 no-print">
-        <div class="text-sm text-gray-600">
-          Showing <span id="analysisShowingStart">0</span> to <span id="analysisShowingEnd">0</span> of <span id="analysisTotalRecords">0</span> records
-        </div>
-        <div class="flex gap-2">
-          <button id="analysisFirstPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-            <i class="fas fa-angle-double-left"></i>
-          </button>
-          <button id="analysisPrevPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-            <i class="fas fa-angle-left"></i>
-          </button>
-          <span id="analysisPageInfo" class="px-4 py-2 bg-purple-50 text-purple-900 rounded-lg font-medium">Page 1 of 1</span>
-          <button id="analysisNextPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-            <i class="fas fa-angle-right"></i>
-          </button>
-          <button id="analysisLastPage" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50">
-            <i class="fas fa-angle-double-right"></i>
-          </button>
+      <!-- Export Format Selection -->
+      <div class="mt-2">
+        <label class="block text-sm font-medium text-gray-900 mb-2">
+          <i class="fas fa-file-export text-gray-600 mr-2"></i>Export Format
+        </label>
+        <div class="flex gap-4">
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" name="exportFormat" value="pdf" class="text-green-600 w-4 h-4" checked>
+            <span class="ml-2">PDF</span>
+          </label>
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" name="exportFormat" value="excel" class="text-green-600 w-4 h-4">
+            <span class="ml-2">Excel (.xlsx)</span>
+          </label>
         </div>
       </div>
 
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-3 pt-4 border-t">
+        <button id="cancelChange" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-6 rounded-lg transition-colors">
+          <i class="fas fa-times mr-2"></i>Clear
+        </button>
 
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-        <div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-          <div class="text-green-600 text-sm font-semibold mb-1">Total Personnel</div>
-          <div id="statTotal" class="text-2xl font-bold text-green-900">0</div>
-        </div>
-        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-          <div class="text-blue-600 text-sm font-semibold mb-1">New Employees</div>
-          <div id="statNew" class="text-2xl font-bold text-blue-900">0</div>
-        </div>
-        <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
-          <div class="text-yellow-600 text-sm font-semibold mb-1">With Changes</div>
-          <div id="statChanges" class="text-2xl font-bold text-yellow-900">0</div>
-        </div>
-        <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-          <div class="text-red-600 text-sm font-semibold mb-1">Old Employees</div>
-          <div id="statOld" class="text-2xl font-bold text-red-900">0</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Details Modal -->
-  <div id="detailsModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-    <div class="bg-slate-100 rounded-xl shadow-2xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-      <div class="p-6 sticky top-0 z-20 bg-navy text-white rounded-t-xl">
-        <div class="flex justify-between items-center">
-          <h3 class="text-2xl font-bold"><i class="fas fa-user-circle mr-2"></i>Personnel Details</h3>
-          <button id="closeModal" class="text-white hover:text-gray-200 transition">
-            <i class="fas fa-times text-2xl"></i>
-          </button>
-        </div>
-      </div>
-      <div id="modalContent" class="p-6"></div>
-    </div>
-  </div>
-
-  <!-- Comparison Modal -->
-  <div id="comparisonModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-    <div class="bg-slate-100 rounded-xl shadow-2xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-      <div class="p-6 sticky top-0 z-20 bg-yellow-600 text-white">
-        <div class="flex justify-between items-center">
-          <h3 class="text-2xl font-bold"><i class="fas fa-exchange-alt mr-2"></i>Full Comparison Details</h3>
-          <button id="closeComparisonModal" class="text-white hover:text-gray-200 transition">
-            <i class="fas fa-times text-2xl"></i>
-          </button>
-        </div>
-      </div>
-      <div id="comparisonModalContent" class="p-6"></div>
-    </div>
-  </div>
-
-  <!-- Alert Modal -->
-  <div id="alertModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-    <div class="bg-slate-100 rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
-      <div class="text-center">
-        <div id="alertIcon" class="flex justify-center mb-4">
-          <i class="fas fa-exclamation-circle text-red-500 text-6xl"></i>
-        </div>
-        <h3 id="alertTitle" class="text-xl font-semibold text-gray-900 mb-2">Error</h3>
-        <p id="alertMessage" class="text-gray-600 mb-6">An error occurred</p>
-        <button id="alertCloseBtn" class="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-all shadow-lg">
-          OK
+        <button id="generateChange" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl">
+          <i class="fas fa-file-alt mr-2"></i>Generate Report
         </button>
       </div>
     </div>
-  </div>
+    </div>
+  </section>
 
-  <!-- Loading Modal -->
-  <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-    <div class="bg-slate-100 rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
-      <div class="text-center">
-        <div class="flex justify-center mb-4">
-          <div class="w-16 h-16 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+  <!-- Success Banner -->
+  <div id="nextStepBanner" class="hidden mt-6 no-print">
+    <div class="border-2 border-blue-200 rounded-lg p-6 bg-blue-50">
+      <div class="flex items-start">
+        <i class="fas fa-check-circle text-blue-500 text-3xl mr-4"></i>
+        <div class="flex-1">
+          <h4 class="text-blue-800 font-bold text-lg mb-2">Employee Change History Generated Successfully!</h4>
+          <p class="text-blue-700 mb-4">Your report has been downloaded. Ready to proceed to the next step?</p>
+          <button onclick="window.navigation && window.navigation.navigateToSection && window.navigation.navigateToSection('input-variable-report', 'Input Variable Report')" 
+                  class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+            <i class="fas fa-file-alt mr-2"></i>Input Variable Report
+          </button>
         </div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">Generating Reports...</h3>
-        <p id="loadingMessage" class="text-gray-600">Please wait...</p>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+    <div class="mb-4">
+      <i class="fas fa-spinner fa-spin text-4xl text-green-600"></i>
+    </div>
+    <h3 class="text-lg font-semibold mb-2">Generating Report...</h3>
+    <p class="text-gray-600">Please wait while we analyze employee changes.</p>
+  </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="changeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+    <div class="flex items-start mb-4">
+      <div id="changeModalIcon" class="mr-3 text-2xl"></div>
+      <div class="flex-1">
+        <h3 id="changeModalTitle" class="text-lg font-semibold mb-2"></h3>
+        <p id="changeModalMessage" class="text-gray-700"></p>
+      </div>
+    </div>
+    <div class="flex justify-end">
+      <button id="changeModalCloseBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">OK</button>
     </div>
   </div>
 </div>
@@ -476,1768 +193,273 @@
 <script>
 (function() {
   const API_BASE = '/personneldata';
-  const RECORDS_PER_PAGE = 5;
-  const MAX_COMPARISON = 5;
   
   // BT05 Stages
-  const STAGE_CLOSED = 666;
-  const STAGE_READY = 775;
+  const STAGE_READY = 666;
+  const STAGE_PRINTED = 775;
   
   // State
   let currentStage = 0;
   let hasGenerated = false;
-  let selectedEmployeeId = null;
-  let comparisonSet = new Set();
-
-  // Employee dropdown state
-  let employeePage = 1;
-  let employeeHasMore = true;
-  let isLoadingEmployees = false;
-  let allEmployees = [];
-
-
-  // Search State
-  let searchQuery = '';
-  let isSearchActive = false;
-  let prevSearchTimeout = null;
-  let currSearchTimeout = null;
-
   
-  // Previous Report State
-  let prevData = [];
-  let prevPage = 1;
-  let prevTotalPages = 1;
-  let prevTotalRecords = 0;
-  let prevSearchQuery = '';
-  let prevAllData = [];
-  let fullPrevData = {}; // Store all previous records by Empl_ID
-  
-  // Current Report State  
-  let currData = [];
-  let currPage = 1;
-  let currTotalPages = 1;
-  let currTotalRecords = 0;
-  let currSearchQuery = '';
-  let currAllData = [];
-  let fullCurrData = {}; // Store all current records by Empl_ID
-
-  // Analysis Report State
-  let analysisData = [];
-  let analysisPage = 1;
-  let analysisTotalPages = 1;
-  let analysisTotalRecords = 0;
-  let analysisFilter = 'all';
-  let analysisSearchQuery = '';
-  let analysisSearchTimeout = null;
-  let analysisStats = { total: 0, new: 0, changes: 0, old: 0 };
-
-  
-  // Active tab
-  let activeTab = 'previous';
-  
-  // Current filters
-  let currentFilters = {};
-
-  // DOM Search
-  const prevSearchInput = document.getElementById('prevSearchInput');
-  const prevClearSearch = document.getElementById('prevClearSearch');
-  const currSearchInput = document.getElementById('currSearchInput');
-  const currClearSearch = document.getElementById('currClearSearch');
-  const analysisSearchInput = document.getElementById('analysisSearchInput');
-  const analysisClearSearch = document.getElementById('analysisClearSearch');
-
-  
-  // DOM - Main Form
+  // DOM Elements
   const topActionBar = document.getElementById('topActionBar');
-  const mainForm = document.getElementById('mainForm');
-  const startDate = document.getElementById('startDate');
-  const endDate = document.getElementById('endDate');
-  const filterByPersonnel = document.getElementById('filterByPersonnel');
-  const personnelWrapper = document.getElementById('personnelWrapper');
-  const searchInput = document.getElementById('searchInput');
-  const dropdownList = document.getElementById('dropdownList');
-  const employeeDropdown = document.getElementById('employeeDropdown');
-  const clearBtn = document.getElementById('clearBtn');
-  const generateBtn = document.getElementById('generateBtn');
   const notReadyMessage = document.getElementById('notReadyMessage');
+  const mainForm = document.getElementById('mainForm');
+  const formContent = document.getElementById('formContent');
+  const showFilterBtn = document.getElementById('showFilterBtn');
   const nextStepBanner = document.getElementById('nextStepBanner');
   
-  // DOM - Report Tabs
-  const reportTypeTabs = document.getElementById('reportTypeTabs');
-  const previousReportTab = document.getElementById('previousReportTab');
-  const currentReportTab = document.getElementById('currentReportTab');
-  const comparisonReportTab = document.getElementById('comparisonReportTab');
-  const analysisReportTab = document.getElementById('analysisReportTab');
+  const changeRadios = document.querySelectorAll('input[name="changeScope"]');
+  const personnelSelectWrapper = document.getElementById("personnelSelectWrapper");
+  const personnelSelect = document.getElementById("personnelSelect");
+  const personnelLoading = document.getElementById("personnelLoading");
   
-  // DOM - Reports Container
-  const reportsContainer = document.getElementById('reportsContainer');
-  const previousReportSection = document.getElementById('previousReportSection');
-  const currentReportSection = document.getElementById('currentReportSection');
-  const comparisonReportSection = document.getElementById('comparisonReportSection');
-  const analysisReportSection = document.getElementById('analysisReportSection');
-  const regenerateBtn = document.getElementById('regenerateBtn');
-  
-  // DOM - Modals
-  const detailsModal = document.getElementById('detailsModal');
-  const modalContent = document.getElementById('modalContent');
-  const closeModal = document.getElementById('closeModal');
-  const comparisonModal = document.getElementById('comparisonModal');
-  const comparisonModalContent = document.getElementById('comparisonModalContent');
-  const closeComparisonModal = document.getElementById('closeComparisonModal');
-  const alertModal = document.getElementById('alertModal');
-  const alertIcon = document.getElementById('alertIcon');
-  const alertTitle = document.getElementById('alertTitle');
-  const alertMessage = document.getElementById('alertMessage');
-  const alertCloseBtn = document.getElementById('alertCloseBtn');
-  const loadingModal = document.getElementById('loadingModal');
-  const loadingMessage = document.getElementById('loadingMessage');
-  const analysisFilterSelect = document.getElementById('analysisFilter');
-  
-  // Helpers
-  function showAlert(title, message, type = 'error') {
-    alertTitle.textContent = title;
-    alertMessage.textContent = message;
-    const iconClass = 
-      type === 'success' ? 'fa-check-circle text-blue-500' : 
-      type === 'warning' ? 'fa-exclamation-triangle text-yellow-500' : 
-      type === 'info' ? 'fa-info-circle text-green-500' :
-      'fa-exclamation-circle text-red-500';
-    alertIcon.innerHTML = `<i class="fas ${iconClass} text-6xl"></i>`;
-    alertModal.classList.remove('hidden');
-  }
-  
-  function showLoading(message = 'Loading...') {
-    loadingMessage.textContent = message;
-    loadingModal.classList.remove('hidden');
-  }
-  
-  function hideLoading() {
-    loadingModal.classList.add('hidden');
-  }
-  
-  // Format period to readable date
-  function convertDateToPeriod(dateInput) {
-    // Input format: "2024-09" -> Output format: "202409"
-    if (!dateInput) return '';
-    return dateInput.replace('-', '');
+  const generateChangeBtn = document.getElementById("generateChange");
+  const cancelChangeBtn = document.getElementById("cancelChange");
+
+  const changeModal = document.getElementById("changeModal");
+  const changeModalTitle = document.getElementById("changeModalTitle");
+  const changeModalMessage = document.getElementById("changeModalMessage");
+  const changeModalIcon = document.getElementById("changeModalIcon");
+  const changeModalCloseBtn = document.getElementById("changeModalCloseBtn");
+  const loadingModal = document.getElementById("loadingModal");
+
+  let filterOptions = null;
+
+  // Show modal
+  function showChangeModal(title, message, isError = false) {
+    changeModalTitle.textContent = title;
+    changeModalMessage.textContent = message;
+    changeModalIcon.innerHTML = isError 
+      ? '<i class="fas fa-exclamation-circle text-red-500"></i>'
+      : '<i class="fas fa-check-circle text-blue-500"></i>';
+    changeModal.classList.remove("hidden");
   }
 
-  function formatPeriod(period) {
-    if (!period || period.length < 6) return period;
-    const year = period.substring(0, 4);
-    const month = period.substring(4, 6);
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
-  }
-  
-  // Fetch available periods (last 2 months from latest)
-  /*async function fetchAvailablePeriods() {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/periods`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (!res.ok) throw new Error('Failed to fetch periods');
-      
-      const data = await res.json();
-      
-      if (data.status === 'SUCCESS' && data.periods && data.periods.length > 0) {
-        // Get last 2 months from latest period
-        const periods = data.periods.slice(0, 2);
-        
-        startPeriod.innerHTML = '<option value="">Select Start Period</option>' +
-          periods.map(p => `<option value="${p}">${formatPeriod(p)}</option>`).join('');
-        endPeriod.innerHTML = '<option value="">Select End Period</option>' +
-          periods.map(p => `<option value="${p}">${formatPeriod(p)}</option>`).join('');
-      }
-    } catch (err) {
-      console.error('Error fetching periods:', err);
-    }
-  }
-  */
+  changeModalCloseBtn.onclick = () => changeModal.classList.add("hidden");
 
-  // Fetch employees list with pagination
-  async function fetchEmployeesList(page = 1, append = false) {
-    if (isLoadingEmployees) return;
-    
-    try {
-      isLoadingEmployees = true;
-      const token = localStorage.getItem('token');
-      
-      const res = await fetch(`${API_BASE}/employees?page=${page}&limit=50`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (!res.ok) throw new Error('Failed to fetch employees');
-      
-      const data = await res.json();
-      
-      if (data.status === 'SUCCESS' && data.employees) {
-        if (append) {
-          allEmployees = [...allEmployees, ...data.employees];
-        } else {
-          allEmployees = data.employees;
-        }
-        
-        employeeHasMore = data.hasMore || false;
-        populateEmployeeDropdown(append);
-      }
-      
-      isLoadingEmployees = false;
-    } catch (err) {
-      console.error('Error fetching employees:', err);
-      isLoadingEmployees = false;
-    }
-  }
+  // Show Filter button - reveals form for reprints
+  showFilterBtn.onclick = () => {
+    formContent.classList.remove('hidden');
+    showFilterBtn.classList.add('hidden');
+  };
 
-  // Populate employee dropdown
-  function populateEmployeeDropdown(append = false) {
-    if (!append) {
-      employeeDropdown.innerHTML = '';
-    }
-    
-    const newItems = allEmployees.slice(append ? allEmployees.length - 50 : 0);
-    
-    newItems.forEach(emp => {
-      const div = document.createElement('div');
-      div.className = 'px-4 py-2 hover:bg-green-50 cursor-pointer transition border-b border-gray-100';
-      div.setAttribute('data-id', emp.Empl_ID);
-      div.innerHTML = `
-        <span class="font-semibold text-green-600">${emp.full_name}</span>
-        <span class="text-xs text-gray-500 ml-2">(${emp.Empl_ID})</span>
-      `;
-      
-      div.addEventListener('click', () => {
-        selectedEmployeeId = emp.Empl_ID;
-        searchInput.value = emp.full_name;
-        dropdownList.classList.add('hidden');
-      });
-      
-      employeeDropdown.appendChild(div);
-    });
-    
-    // Add loading indicator if more data available
-    if (employeeHasMore && !append) {
-      const loader = document.createElement('div');
-      loader.id = 'employeeLoader';
-      loader.className = 'px-4 py-3 text-center text-gray-500 text-sm';
-      loader.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Scroll for more...';
-      employeeDropdown.appendChild(loader);
-    }
-  }
-
-  // Infinite scroll for employee dropdown
-  employeeDropdown.addEventListener('scroll', () => {
-    if (isLoadingEmployees || !employeeHasMore) return;
-    
-    const scrollTop = employeeDropdown.scrollTop;
-    const scrollHeight = employeeDropdown.scrollHeight;
-    const clientHeight = employeeDropdown.clientHeight;
-    
-    // Load more when user scrolls to bottom 100px
-    if (scrollTop + clientHeight >= scrollHeight - 100) {
-      employeePage++;
-      fetchEmployeesList(employeePage, true);
-    }
-  });
-
-  // Update search to work with paginated data
-  searchInput.addEventListener('input', () => {
-    const q = searchInput.value.trim().toLowerCase();
-    
-    if (!q) { 
-      dropdownList.classList.add('hidden'); 
-      selectedEmployeeId = null; 
-      return; 
-    }
-    
-    // Filter from loaded employees
-    const filtered = allEmployees.filter(emp => 
-      (emp.full_name || '').toLowerCase().includes(q) || 
-      (emp.Empl_ID || '').toLowerCase().includes(q)
-    );
-    
-    employeeDropdown.innerHTML = '';
-    
-    if (filtered.length === 0) {
-      employeeDropdown.innerHTML = `
-        <div class="px-4 py-3 text-center text-gray-500 text-sm">
-          No employees found
-        </div>
-      `;
-    } else {
-      filtered.forEach(emp => {
-        const div = document.createElement('div');
-        div.className = 'px-4 py-2 hover:bg-green-50 cursor-pointer transition border-b border-gray-100';
-        div.setAttribute('data-id', emp.Empl_ID);
-        div.innerHTML = `
-          <span class="font-semibold text-green-600">${emp.full_name}</span>
-          <span class="text-xs text-gray-500 ml-2">(${emp.Empl_ID})</span>
-        `;
-        
-        div.addEventListener('click', () => {
-          selectedEmployeeId = emp.Empl_ID;
-          searchInput.value = emp.full_name;
-          dropdownList.classList.add('hidden');
-        });
-        
-        employeeDropdown.appendChild(div);
-      });
-    }
-    
-    dropdownList.classList.remove('hidden');
-  });
-
-  // Show dropdown on focus
-  searchInput.addEventListener('focus', () => {
-    if (allEmployees.length === 0) {
-      fetchEmployeesList(1);
-    }
-    dropdownList.classList.remove('hidden');
-  });
-
-  // Populate employee dropdown
-  function populateEmployeeDropdown() {
-    employeeDropdown.innerHTML = allEmployees.map(emp => `
-      <div class="px-4 py-2 hover:bg-green-50 cursor-pointer transition border-b border-gray-100" data-id="${emp.Empl_ID}">
-        <span class="font-semibold text-green-600">${emp.full_name}</span>
-        <span class="text-xs text-gray-500 ml-2">(${emp.Empl_ID})</span>
-      </div>
-    `).join('');
-    
-    employeeDropdown.querySelectorAll('div[data-id]').forEach(item => {
-      item.addEventListener('click', () => {
-        selectedEmployeeId = item.getAttribute('data-id');
-        searchInput.value = item.querySelector('.font-semibold').textContent;
-        dropdownList.classList.add('hidden');
-      });
-    });
-  }
-
-  // Fetch employee for comparison
-  async function fetchEmployeeData(emplId) {
-    try {
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams(currentFilters);
-      
-      const [prevRes, currRes] = await Promise.all([
-        fetch(`${API_BASE}/previous?${params.toString()}&employeeId=${emplId}&page=1&limit=1`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_BASE}/current?${params.toString()}&employeeId=${emplId}&page=1&limit=1`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
-      
-      if (prevRes.ok && currRes.ok) {
-        const prevDataRes = await prevRes.json();
-        const currDataRes = await currRes.json();
-        
-        if (prevDataRes.status === 'SUCCESS' && prevDataRes.records.length > 0) {
-          fullPrevData[emplId] = prevDataRes.records[0];
-        }
-        
-        if (currDataRes.status === 'SUCCESS' && currDataRes.records.length > 0) {
-          fullCurrData[emplId] = currDataRes.records[0];
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching employee data:', err);
-    }
-  }
-
-  // Search handler
-  searchInput.addEventListener('input', () => {
-    const q = searchInput.value.trim().toLowerCase();
-    if (!q) {
-      dropdownList.classList.add('hidden');
-      selectedEmployeeId = null;
-      return;
-    }
-    
-    const filtered = allEmployees.filter(emp => 
-      (emp.full_name || '').toLowerCase().includes(q) || 
-      (emp.Empl_ID || '').toLowerCase().includes(q)
-    );
-    
-    employeeDropdown.innerHTML = filtered.map(emp => `
-      <div class="px-4 py-2 hover:bg-green-50 cursor-pointer transition border-b border-gray-100" data-id="${emp.Empl_ID}">
-        <span class="font-semibold text-green-600">${emp.full_name}</span>
-        <span class="text-xs text-gray-500 ml-2">(${emp.Empl_ID})</span>
-      </div>
-    `).join('');
-    
-    dropdownList.classList.remove('hidden');
-    
-    employeeDropdown.querySelectorAll('div[data-id]').forEach(item => {
-      item.addEventListener('click', () => {
-        selectedEmployeeId = item.getAttribute('data-id');
-        searchInput.value = item.querySelector('.font-semibold').textContent;
-        dropdownList.classList.add('hidden');
-      });
-    });
-  });
-  
-  // Toggle personnel filter
-  filterByPersonnel.addEventListener('change', () => {
-    if (filterByPersonnel.checked) {
-      personnelWrapper.classList.remove('hidden');
-    } else {
-      personnelWrapper.classList.add('hidden');
-      selectedEmployeeId = null;
-      searchInput.value = '';
-      dropdownList.classList.add('hidden');
-    }
-  });
-  
-  // Clear button
-  clearBtn.addEventListener('click', () => {
-    startDate.value = '';
-    endDate.value = '';
-    filterByPersonnel.checked = false;
-    personnelWrapper.classList.add('hidden');
-    selectedEmployeeId = null;
-    searchInput.value = '';
-    dropdownList.classList.add('hidden');
-  });
-  
-  // Generate Reports
-  generateBtn.addEventListener('click', async () => {
-    // Validation
-    if (!startDate.value || !endDate.value) {
-      return showAlert('Validation Error', 'Please select both start and end dates', 'warning');
-    }
-    
-    if (filterByPersonnel.checked && !selectedEmployeeId) {
-      return showAlert('Validation Error', 'Please select a personnel', 'warning');
-    }
-    
-    await generateReports();
-  });
-    
-  // Main function to generate reports
-  async function generateReports() {
-    try {
-      showLoading('Generating reports...');
-      
-      const token = localStorage.getItem('token');
-      
-      // Build filters
-      currentFilters = {
-        startPeriod: convertDateToPeriod(startDate.value),
-        endPeriod: convertDateToPeriod(endDate.value)
-      };
-      
-      if (filterByPersonnel.checked && selectedEmployeeId) {
-        currentFilters.employeeId = selectedEmployeeId;
-      }
-      
-      // Fetch both reports simultaneously
-      const params = new URLSearchParams(currentFilters);
-      
-      const [prevRes, currRes] = await Promise.all([
-        fetch(`${API_BASE}/previous?${params.toString()}&page=1&limit=${RECORDS_PER_PAGE}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_BASE}/current?${params.toString()}&page=1&limit=${RECORDS_PER_PAGE}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
-      
-      if (!prevRes.ok || !currRes.ok) {
-        throw new Error('Failed to fetch reports');
-      }
-      
-      const prevDataRes = await prevRes.json();
-      const currDataRes = await currRes.json();
-      
-      hideLoading();
-      
-      if (prevDataRes.status !== 'SUCCESS' || currDataRes.status !== 'SUCCESS') {
-        throw new Error('Failed to generate reports');
-      }
-      
-      // Update BT05 stage to 775 on first generation only
-      if (!hasGenerated && currentStage === STAGE_CLOSED) {
-        await updateStage(STAGE_READY);
-        hasGenerated = true; // Set this AFTER successful stage update
-      }
-      
-      // Store data
-      prevData = prevDataRes.records || [];
-      prevPage = 1;
-      prevTotalPages = prevDataRes.pagination?.totalPages || 1;
-      prevTotalRecords = prevDataRes.pagination?.totalRecords || 0;
-      
-      currData = currDataRes.records || [];
-      currPage = 1;
-      currTotalPages = currDataRes.pagination?.totalPages || 1;
-      currTotalRecords = currDataRes.pagination?.totalRecords || 0;
-      
-      // Reset comparison set on new generation
-      comparisonSet.clear();
-      
-      // Update UI
-      updateUIVisibility();
-      renderPrevTable();
-      renderCurrTable();
-      renderComparisonSection(); // Render empty comparison with message
-      switchTab('previous');
-      
-      showAlert('Success', 'Reports generated successfully!', 'success');
-    } catch (err) {
-      hideLoading();
-      console.error('Error generating reports:', err);
-      showAlert('Error', err.message || 'Failed to generate reports', 'error');
-    }
-  }
-
-  // Fetch Previous Report Page
-  async function fetchPrevPage(page) {
-    try {
-      showLoading('Loading page...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams(currentFilters);
-      
-      const res = await fetch(`${API_BASE}/previous?${params.toString()}&page=${page}&limit=${RECORDS_PER_PAGE}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (!res.ok) throw new Error('Failed to fetch data');
-      
-      const data = await res.json();
-      hideLoading();
-      
-      if (data.status === 'SUCCESS') {
-        prevData = data.records || [];
-        prevPage = page;
-        prevTotalPages = data.pagination?.totalPages || 1;
-        prevTotalRecords = data.pagination?.totalRecords || 0;
-        renderPrevTable();
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error fetching previous page:', err);
-      showAlert('Error', 'Failed to load page', 'error');
-    }
-  }
-
-  // Fetch Current Report Page
-  async function fetchCurrPage(page) {
-    try {
-      showLoading('Loading page...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams(currentFilters);
-      
-      const res = await fetch(`${API_BASE}/current?${params.toString()}&page=${page}&limit=${RECORDS_PER_PAGE}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (!res.ok) throw new Error('Failed to fetch data');
-      
-      const data = await res.json();
-      hideLoading();
-      
-      if (data.status === 'SUCCESS') {
-        currData = data.records || [];
-        currPage = page;
-        currTotalPages = data.pagination?.totalPages || 1;
-        currTotalRecords = data.pagination?.totalRecords || 0;
-        renderCurrTable();
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error fetching current page:', err);
-      showAlert('Error', 'Failed to load page', 'error');
-    }
-  }
-    
-  // Update BT05 stage
-  async function updateStage(stage) {
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`${API_BASE}/update-stage`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ stage })
-      });
-      currentStage = stage;
-    } catch (err) {
-      console.error('Error updating stage:', err);
-    }
-  }
-  
-  // Update UI visibility based on state
+  // Update UI visibility based on stage
   function updateUIVisibility() {
-    // Show reports if stage is 775 or higher (reports are permanent once generated)
+    // Stage >= 666: Ready to use
     if (currentStage >= STAGE_READY) {
       topActionBar.classList.add('hidden');
-      mainForm.classList.add('hidden');
       notReadyMessage.classList.add('hidden');
-      reportTypeTabs.classList.remove('hidden');
-      reportsContainer.classList.remove('hidden');
-      return;
-    }
-
-    // Show form if stage is 666 (closed, ready to generate)
-    if (currentStage >= STAGE_CLOSED) {
-      topActionBar.classList.add('hidden');
-      mainForm.classList.remove('hidden');
-      notReadyMessage.classList.add('hidden');
-      reportTypeTabs.classList.add('hidden');
-      reportsContainer.classList.add('hidden');
+      
+      if (hasGenerated) {
+        // After first print (stage >= 775): hide form content, show banner, show "Show Filter" button
+        mainForm.classList.remove('hidden');
+        formContent.classList.add('hidden');
+        showFilterBtn.classList.remove('hidden');
+        nextStepBanner.classList.remove('hidden');
+      } else {
+        // Before first print (stage 666-774): show form content, hide banner, hide "Show Filter" button
+        mainForm.classList.remove('hidden');
+        formContent.classList.remove('hidden');
+        showFilterBtn.classList.add('hidden');
+        nextStepBanner.classList.add('hidden');
+      }
       return;
     }
 
     // Not ready yet (stage < 666)
     topActionBar.classList.remove('hidden');
-    mainForm.classList.add('hidden');
     notReadyMessage.classList.remove('hidden');
-    reportTypeTabs.classList.add('hidden');
-    reportsContainer.classList.add('hidden');
+    mainForm.classList.add('hidden');
+    nextStepBanner.classList.add('hidden');
   }
 
-  // Switch report tab
-  function switchTab(tab) {
-    activeTab = tab;
-    
-    // Update tab buttons
-    [previousReportTab, currentReportTab, analysisReportTab, comparisonReportTab].forEach(btn => {
-      btn.classList.remove('bg-yellow-50/25', 'text-green-900', 'shadow-md', 'border-2', 'border-green-500', 'border-blue-500', 'border-purple-500', 'border-yellow-500');
-      btn.classList.add('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
-    });
-    
-    if (tab === 'previous') {
-      previousReportTab.classList.add('bg-yellow-50/25', 'text-green-900', 'shadow-md', 'border-2', 'border-green-500');
-      previousReportTab.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
-      previousReportSection.classList.remove('hidden');
-      currentReportSection.classList.add('hidden');
-      comparisonReportSection.classList.add('hidden');
-      analysisReportSection.classList.add('hidden');
-    } else if (tab === 'current') {
-      currentReportTab.classList.add('bg-yellow-50/25', 'text-green-900', 'shadow-md', 'border-2', 'border-blue-500');
-      currentReportTab.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
-      previousReportSection.classList.add('hidden');
-      currentReportSection.classList.remove('hidden');
-      comparisonReportSection.classList.add('hidden');
-      analysisReportSection.classList.add('hidden');
-    } else if (tab === 'analysis') {
-      analysisReportTab.classList.add('bg-yellow-50/25', 'text-green-900', 'shadow-md', 'border-2', 'border-purple-500');
-      analysisReportTab.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
-      previousReportSection.classList.add('hidden');
-      currentReportSection.classList.add('hidden');
-      comparisonReportSection.classList.add('hidden');
-      analysisReportSection.classList.remove('hidden');
-      
-      // Fetch analysis data if not already loaded
-      if (analysisData.length === 0) {
-        fetchAnalysisData();
-      }
-    } else {
-      comparisonReportTab.classList.add('bg-yellow-50/25', 'text-green-900', 'shadow-md', 'border-2', 'border-yellow-500');
-      comparisonReportTab.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
-      previousReportSection.classList.add('hidden');
-      currentReportSection.classList.add('hidden');
-      comparisonReportSection.classList.remove('hidden');
-      analysisReportSection.classList.add('hidden');
-    }
-  }
-
-  // Render Previous Table
-  function renderPrevTable() {
-    const tbody = document.getElementById('prevTableBody');
-    tbody.innerHTML = '';
-    
-    document.getElementById('prevRecordCount').textContent = `(${prevTotalRecords} record${prevTotalRecords !== 1 ? 's' : ''})`;
-    
-    if (prevData.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-            <i class="fas fa-inbox text-4xl mb-2"></i>
-            <br><span class="text-lg font-medium">No records found</span>
-          </td>
-        </tr>
-      `;
-      updatePrevPagination();
-      return;
-    }
-    
-    prevData.forEach(record => {
-      // Store in full data cache
-      fullPrevData[record.Empl_ID] = record;
-      
-      const row = document.createElement('tr');
-      row.className = 'hover:bg-green-50 transition';
-      
-      // Check if exists in full current data cache
-      const existsInCurrent = fullCurrData[record.Empl_ID] !== undefined;
-      const isCompared = comparisonSet.has(record.Empl_ID);
-      
-      row.innerHTML = `
-        <td class="border px-3 py-3">${formatPeriod(record.period || '')}</td>
-        <td class="border px-3 py-3 font-semibold">${record.Empl_ID || 'N/A'}</td>
-        <td class="border px-3 py-3">${record.Surname || ''} ${record.OtherName || ''}</td>
-        <td class="border px-3 py-3">${record.TITLEDESC || record.Title || 'N/A'}</td>
-        <td class="border px-3 py-3 text-[11px] font-bold">${record.Location_desc || record.Location || 'N/A'}</td>       
-        <td class="border px-3 py-3">${record.gradelevel || 'N/A'}</td>
-        <td class="border px-3 py-3 no-print">
-          <button class="text-green-600 hover:text-green-800 font-semibold transition mr-2 view-details" data-type="previous" data-record='${JSON.stringify(record).replace(/'/g, "&apos;")}'>
-            <i class="fas fa-eye mr-1"></i>View
-          </button>
-          <!--<button class="text-${isCompared ? 'green' : 'yellow'}-600 hover:text-${isCompared ? 'green' : 'yellow'}-800 font-semibold transition add-compare" data-id="${record.Empl_ID}">
-            <i class="fas fa-${isCompared ? 'check' : 'exchange-alt'} mr-1"></i>${isCompared ? 'Compared' : 'Compare'}
-          </button>-->
-        </td>
-      `;
-      
-      tbody.appendChild(row);
-    });
-    
-    // Add event listeners
-    tbody.querySelectorAll('.view-details').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const record = JSON.parse(e.currentTarget.getAttribute('data-record').replace(/&apos;/g, "'"));
-        showDetailsModal(record, 'previous');
-      });
-    });
-    
-    tbody.querySelectorAll('.add-compare').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const emplId = e.currentTarget.getAttribute('data-id');
-        await addToComparison(emplId);
-      });
-    });
-    
-    updatePrevPagination();
-  }
-
-  // Render Current Table
-  async function renderCurrTable() {
-    const tbody = document.getElementById('currTableBody');
-    tbody.innerHTML = '';
-    
-    document.getElementById('currRecordCount').textContent = `(${currTotalRecords} record${currTotalRecords !== 1 ? 's' : ''})`;
-    
-    if (currData.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-            <i class="fas fa-inbox text-4xl mb-2"></i>
-            <br><span class="text-lg font-medium">No records found</span>
-          </td>
-        </tr>
-      `;
-      updateCurrPagination();
-      return;
-    }
-    
-    // First, render table immediately with loading state for action buttons
-    currData.forEach(record => {
-      fullCurrData[record.Empl_ID] = record;
-      
-      const row = document.createElement('tr');
-      row.className = 'hover:bg-blue-50 transition';
-      row.setAttribute('data-empl-id', record.Empl_ID);
-      
-      const isCompared = comparisonSet.has(record.Empl_ID);
-      
-      row.innerHTML = `
-        <td class="border px-3 py-3 font-semibold">${record.Empl_ID || 'N/A'}</td>
-        <td class="border px-3 py-3">${record.Surname || ''} ${record.OtherName || ''}</td>
-        <td class="border px-3 py-3">${record.TITLEDESC || record.Title || 'N/A'}</td>
-        <td class="border px-3 py-3 text-[11px] font-bold">${record.Location_desc || record.Location || 'N/A'}</td>
-        <td class="border px-3 py-3">${record.grpdesc || record.gradelevel || 'N/A'}</td>
-        <td class="border px-3 py-3 no-print">
-          <div class="flex items-center gap-2">
-            <button class="text-blue-600 hover:text-blue-800 font-semibold transition view-details" data-type="current" data-record='${JSON.stringify(record).replace(/'/g, "&apos;")}'>
-              <i class="fas fa-eye mr-1"></i>View
-            </button>
-            <span class="action-placeholder-${record.Empl_ID} inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 min-w-[90px] justify-center">
-              <i class="fas fa-spinner fa-spin mr-1"></i>Loading
-            </span>
-          </div>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
-    
-    // Add event listeners for view buttons
-    tbody.querySelectorAll('.view-details').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const record = JSON.parse(e.currentTarget.getAttribute('data-record').replace(/&apos;/g, "'"));
-        showDetailsModal(record, 'current');
-      });
-    });
-    
-    updateCurrPagination();
-    
-    // Now check which employees exist in previous report (async)
-    const token = localStorage.getItem('token');
-    const params = new URLSearchParams(currentFilters);
-    const emplIds = currData.map(r => r.Empl_ID).filter(Boolean);
-    
-    let employeesInPrevious = new Set();
-    
-    if (emplIds.length > 0) {
-      try {
-        const res = await fetch(`${API_BASE}/check-previous?${params.toString()}&employeeIds=${emplIds.join(',')}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === 'SUCCESS' && data.employeeIds) {
-            employeesInPrevious = new Set(data.employeeIds);
-          }
+  // Load filter options on page load
+  async function loadFilterOptions() {
+    try {
+      const token = localStorage.getItem('token') || '';
+      const response = await fetch(`${API_BASE}/filter-options`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      } catch (err) {
-        console.error('Error checking previous employees:', err);
-      }
-    }
-    
-    // Update action buttons based on API response
-    currData.forEach(record => {
-      const placeholder = tbody.querySelector(`.action-placeholder-${CSS.escape(record.Empl_ID)}`);
-      if (!placeholder) return;
+      });
+      const result = await response.json();
       
-      const existsInPrevious = employeesInPrevious.has(record.Empl_ID);
-      const isCompared = comparisonSet.has(record.Empl_ID);
-      
-      if (existsInPrevious) {
-        const compareBtn = document.createElement('button');
-        compareBtn.className = `text-${isCompared ? 'green' : 'yellow'}-600 hover:text-${isCompared ? 'green' : 'yellow'}-800 font-semibold transition add-compare min-w-[90px]`;
-        compareBtn.setAttribute('data-id', record.Empl_ID);
-        compareBtn.innerHTML = `<i class="fas fa-${isCompared ? 'check' : 'exchange-alt'} mr-1"></i>${isCompared ? 'Compared' : 'Compare'}`;
+      if (result.success) {
+        filterOptions = result.data;
         
-        compareBtn.addEventListener('click', async () => {
-          await addToComparison(record.Empl_ID);
+        // Populate years
+        const fromYearSelect = document.getElementById('fromYear');
+        const toYearSelect = document.getElementById('toYear');
+        
+        filterOptions.years.forEach(year => {
+          const option1 = document.createElement('option');
+          option1.value = year.code;
+          option1.textContent = year.description;
+          fromYearSelect.appendChild(option1);
+          
+          const option2 = document.createElement('option');
+          option2.value = year.code;
+          option2.textContent = year.description;
+          toYearSelect.appendChild(option2);
         });
         
-        placeholder.replaceWith(compareBtn);
-      } else {
-        const newBadge = document.createElement('span');
-        newBadge.className = 'inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 min-w-[90px] justify-center';
-        newBadge.innerHTML = '<i class="fas fa-plus-circle mr-1"></i>New';
-        placeholder.replaceWith(newBadge);
+        // Populate months
+        const fromMonthSelect = document.getElementById('fromMonth');
+        const toMonthSelect = document.getElementById('toMonth');
+        
+        filterOptions.months.forEach(month => {
+          const option1 = document.createElement('option');
+          option1.value = month.code;
+          option1.textContent = month.description;
+          fromMonthSelect.appendChild(option1);
+          
+          const option2 = document.createElement('option');
+          option2.value = month.code;
+          option2.textContent = month.description;
+          toMonthSelect.appendChild(option2);
+        });
+        
+        // Set default "to" period to current
+        toYearSelect.value = filterOptions.currentYear.toString();
+        toMonthSelect.value = filterOptions.currentMonth.toString();
+        
+        // Populate employees
+        if (filterOptions.employees && filterOptions.employees.length > 0) {
+          filterOptions.employees.forEach(emp => {
+            const option = document.createElement('option');
+            option.value = emp.employee_id;
+            option.textContent = `${emp.employee_id} - ${emp.full_name}`;
+            personnelSelect.appendChild(option);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading filter options:', error);
+      showChangeModal('Error', 'Failed to load filter options. Please refresh the page.', true);
+    }
+  }
+
+  // Radio change event
+  changeRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      personnelSelectWrapper.classList.add("hidden");
+
+      if (radio.value === "personnel") {
+        personnelSelectWrapper.classList.remove("hidden");
       }
     });
-  } 
-    
-  // Add to comparison
-  async function addToComparison(emplId) {
-    // Check if already compared
-    if (comparisonSet.has(emplId)) {
-      showAlert(
-        'Already in Comparison', 
-        'This personnel is already added to the comparison list. Click on the "Compare (Max 5)" tab at the top to view the comparison details.', 
-        'info'
+  });
+
+  // Generate button
+  generateChangeBtn.onclick = async () => {
+    const selectedScope = document.querySelector('input[name="changeScope"]:checked')?.value;
+    const fromYear = document.getElementById("fromYear").value;
+    const fromMonth = document.getElementById("fromMonth").value;
+    const toYear = document.getElementById("toYear").value;
+    const toMonth = document.getElementById("toMonth").value;
+    const exportFormat = document.querySelector('input[name="exportFormat"]:checked')?.value || 'excel';
+
+    // Validation
+    if (!selectedScope) {
+      return showChangeModal("Validation Error", "Please select a report scope!", true);
+    }
+    if (!fromYear || !fromMonth) {
+      return showChangeModal("Validation Error", "Please select From period (year and month)!", true);
+    }
+    if (!toYear || !toMonth) {
+      return showChangeModal("Validation Error", "Please select To period (year and month)!", true);
+    }
+
+    // Build query parameters
+    let queryParams = `fromYear=${fromYear}&fromMonth=${fromMonth}&toYear=${toYear}&toMonth=${toMonth}&format=${exportFormat}`;
+
+    // Add employee filter if selected
+    if (selectedScope === "personnel") {
+      const emplId = personnelSelect.value;
+      if (!emplId) {
+        return showChangeModal("Validation Error", "Please select a personnel!", true);
+      }
+      queryParams += `&emplId=${emplId}`;
+    }
+
+    // Show loading modal
+    loadingModal.classList.remove("hidden");
+
+    try {
+      const token = localStorage.getItem('token') || '';
+      const response = await fetch(`${API_BASE}?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate report');
+      }
+
+      // Handle file download for Excel/PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `employee_changes_${fromYear}${fromMonth}_${toYear}${toMonth}.${exportFormat === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      loadingModal.classList.add("hidden");
+      
+      // Mark as generated
+      hasGenerated = true;
+      
+      // Hide form content, show banner, show "Show Filter" button
+      formContent.classList.add('hidden');
+      showFilterBtn.classList.remove('hidden');
+      nextStepBanner.classList.remove("hidden");
+      
+      showChangeModal(
+        "Success", 
+        `Report downloaded successfully!`
       );
-      return;
+    } catch (error) {
+      loadingModal.classList.add("hidden");
+      console.error('Error generating report:', error);
+      showChangeModal("Error", error.message || 'Failed to generate report', true);
     }
-    
-    if (comparisonSet.size >= MAX_COMPARISON) {
-      return showAlert('Comparison Limit', `You can only compare up to ${MAX_COMPARISON} personnel at a time`, 'warning');
-    }
-    
-    // Fetch employee data if not already cached
-    if (!fullPrevData[emplId] || !fullCurrData[emplId]) {
-      showLoading('Loading employee data...');
-      await fetchEmployeeData(emplId);
-      hideLoading();
-    }
-    
-    comparisonSet.add(emplId);
-    renderComparisonSection();
-    
-    // Re-render tables to update button states
-    renderPrevTable();
-    renderCurrTable();
-    
-    showAlert('Added to Comparison', 'Personnel added to comparison list successfully. Click "Compare (Max 5)" tab to view details.', 'success');
-  }
-    
-  // Render comparison section
-  function renderComparisonSection() {
-    const content = document.getElementById('comparisonContent');
-    const count = document.getElementById('compSelectedCount');
-    
-    count.textContent = `(${comparisonSet.size} selected)`;
-    
-    if (comparisonSet.size === 0) {
-      content.innerHTML = `
-        <div class="text-center py-12 text-gray-500">
-          <i class="fas fa-users text-4xl mb-3"></i>
-          <p class="text-lg">No personnel selected for comparison</p>
-          <p class="text-sm mt-2">Click "Compare" button on any record in Current Details tab</p>
-        </div>
-      `;
-      return;
-    }
-    
-    content.innerHTML = '';
-    
-    Array.from(comparisonSet).forEach(emplId => {
-      const prevRecord = fullPrevData[emplId];
-      const currRecord = fullCurrData[emplId];
-      
-      if (!prevRecord && !currRecord) return;
-      
-      const compCard = document.createElement('div');
-      compCard.className = 'border-2 border-gray-200 rounded-lg p-6 mb-4';
-      
-      const allFields = [
-        { label: 'Service No', prevKey: 'Empl_ID', currKey: 'Empl_ID' },
-        { label: 'Name', prevKey: 'Surname', currKey: 'Surname', concat: true },
-        { label: 'Location', prevKey: 'Location', currKey: 'Location' },
-        { label: 'Grade Level', prevKey: 'gradelevel', currKey: 'gradelevel' },
-        { label: 'Status', prevKey: 'Status', currKey: 'Status' },
-        { label: 'Bank Code', prevKey: 'Bankcode', currKey: 'Bankcode' },
-        { label: 'Bank Account', prevKey: 'BankACNumber', currKey: 'BankACNumber' },
-        { label: 'Email', prevKey: 'email', currKey: 'email' },
-        { label: 'Job Title', prevKey: 'Jobtitle', currKey: 'Jobtitle' },
-        { label: 'Title', prevKey: 'Title', currKey: 'Title' },
-        { label: 'Sex', prevKey: 'Sex', currKey: 'Sex' },
-        { label: 'Marital Status', prevKey: 'MaritalStatus', currKey: 'MaritalStatus' },
-        { label: 'Factory', prevKey: 'Factory', currKey: 'Factory' },
-        { label: 'Birth Date', prevKey: 'Birthdate', currKey: 'Birthdate' },
-        { label: 'Date Employed', prevKey: 'DateEmpl', currKey: 'DateEmpl' },
-        { label: 'Date Left', prevKey: 'DateLeft', currKey: 'DateLeft', showOldTag: true },
-        { label: 'Exit Type', prevKey: 'exittype', currKey: 'exittype', showOldTag: true },
-        { label: 'Telephone', prevKey: 'TELEPHONE', currKey: 'TELEPHONE' },
-        { label: 'Home Address', prevKey: 'HOMEADDR', currKey: 'HOMEADDR' },
-        { label: 'NOK Name', prevKey: 'nok_name', currKey: 'nok_name' },
-        { label: 'Bank Branch', prevKey: 'bankbranch', currKey: 'bankbranch' },
-        { label: 'State of Origin', prevKey: 'StateofOrigin', currKey: 'StateofOrigin' },
-        { label: 'Local Govt', prevKey: 'LocalGovt', currKey: 'LocalGovt' },
-        { label: 'PFA Code', prevKey: 'pfacode', currKey: 'pfacode' },
-        //{ label: 'GSM Number', prevKey: 'gsm_number', currKey: 'gsm_number' },
-        //{ label: 'Religion', prevKey: 'religion', currKey: 'religion' }
-      ];
-      
-      // Filter to show only changed fields
-      const changedFields = allFields.filter(field => {
-        let prevVal = prevRecord?.[field.prevKey] || '';
-        let currVal = currRecord?.[field.currKey] || '';
-        
-        if (field.concat) {
-          prevVal = `${prevRecord?.Surname || ''} ${prevRecord?.OtherName || ''}`.trim();
-          currVal = `${currRecord?.Surname || ''} ${currRecord?.OtherName || ''}`.trim();
-        }
-        
-        return String(prevVal) !== String(currVal);
-      });
-      
-      let html = `
-        <div class="flex justify-between items-center mb-4 pb-3 border-b-2">
-          <h4 class="text-lg font-bold text-gray-800">
-            <i class="fas fa-user-circle mr-2 text-green-600"></i>
-            ${currRecord?.Surname || prevRecord?.Surname || ''} ${currRecord?.OtherName || prevRecord?.OtherName || ''} (${emplId})
-          </h4>
-          <div class="flex gap-2">
-            <button class="text-green-600 hover:text-green-800 border-r-2 pr-2 font-semibold transition view-comparison" data-id="${emplId}">
-              <i class="fas fa-eye text-xl"></i> View Full
-            </button>
-            <button class="text-red-600 hover:text-red-800 transition remove-compare" data-id="${emplId}">
-              <i class="fas fa-times-circle text-xl"></i>
-            </button>
-          </div>
-        </div>
-      `;
-      
-      if (changedFields.length === 0) {
-        html += `
-          <div class="text-center py-8 text-gray-500">
-            <i class="fas fa-check-circle text-4xl mb-2 text-blue-500"></i>
-            <p class="text-lg font-medium">No changes detected</p>
-            <p class="text-sm">All fields are identical between previous and current records</p>
-          </div>
-        `;
-      } else {
-        html += `
-          <div class="flex justify-between items-center mb-3">
-            <p class="text-sm font-semibold text-grey-900">
-              <i class="fas fa-exclamation-triangle mr-1"></i>
-              ${changedFields.length} field${changedFields.length > 1 ? 's' : ''} changed
-            </p>
-            <button class="text-green-600 hover:text-green-800 mr-10 font-semibold transition view-changes-table" data-id="${emplId}">
-              <i class="fas fa-eye mr-1"></i>View Changes
-            </button>
-          </div>
-        `;
-      }
-      
-      compCard.innerHTML = html;
-      content.appendChild(compCard);
-    });
-    
-    // Add event listeners
-    content.querySelectorAll('.remove-compare').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const emplId = e.currentTarget.getAttribute('data-id');
-        comparisonSet.delete(emplId);
-        renderComparisonSection();
-        
-        // Re-render tables to reset button states
-        renderPrevTable();
-        renderCurrTable();
-      });
-    });
-    
-    content.querySelectorAll('.view-comparison').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        showComparisonModal(e.currentTarget.getAttribute('data-id'));
-      });
-    });
-    
-    content.querySelectorAll('.view-changes-table').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        showChangesTableModal(e.currentTarget.getAttribute('data-id'));
-      });
-    });
-  }
-    
-  // New function: Show only changed fields table in modal
-  function showChangesTableModal(emplId) {
-    const prevRecord = fullPrevData[emplId];
-    const currRecord = fullCurrData[emplId];
-    
-    if (!prevRecord && !currRecord) {
-      showAlert('Error', 'Employee data not found', 'error');
-      return;
-    }
-    
-    const allFields = [
-      { label: 'Service No', prevKey: 'Empl_ID', currKey: 'Empl_ID' },
-      { label: 'Name', prevKey: 'Surname', currKey: 'Surname', concat: true },
-      { label: 'Title', prevKey: 'Title', currKey: 'Title', prevDescKey: 'TITLEDESC', currDescKey: 'TITLEDESC' },
-      { label: 'Location', prevKey: 'Location', currKey: 'Location', prevDescKey: 'Location_desc', currDescKey: 'Location_desc' },
-      { label: 'Grade Level', prevKey: 'gradelevel', currKey: 'gradelevel'},
-      { label: 'Status', prevKey: 'Status', currKey: 'Status' },
-      { label: 'Bank Code', prevKey: 'Bankcode', currKey: 'Bankcode' },
-      { label: 'Bank Account', prevKey: 'BankACNumber', currKey: 'BankACNumber' },
-      { label: 'Email', prevKey: 'email', currKey: 'email' },
-      { label: 'Job Title', prevKey: 'Jobtitle', currKey: 'Jobtitle' },
-      { label: 'Sex', prevKey: 'Sex', currKey: 'Sex', prevDescKey: 'sex_desc', currDescKey: 'sex_desc' },
-      { label: 'Marital Status', prevKey: 'MaritalStatus', currKey: 'MaritalStatus' },
-      { label: 'Factory', prevKey: 'Factory', currKey: 'Factory', prevDescKey: 'Factory_desc', currDescKey: 'Factory_desc' },
-      { label: 'Birth Date', prevKey: 'Birthdate', currKey: 'Birthdate' },
-      { label: 'Date Employed', prevKey: 'DateEmpl', currKey: 'DateEmpl' },
-      { label: 'Date Left', prevKey: 'DateLeft', currKey: 'DateLeft', showOldTag: true },
-      { label: 'Exit Type', prevKey: 'exittype', currKey: 'exittype', prevDescKey: 'exittype_desc', currDescKey: 'exittype_desc', showOldTag: true },
-      { label: 'Telephone', prevKey: 'TELEPHONE', currKey: 'TELEPHONE' },
-      { label: 'Home Address', prevKey: 'HOMEADDR', currKey: 'HOMEADDR' },
-      { label: 'NOK Name', prevKey: 'nok_name', currKey: 'nok_name' },
-      { label: 'Bank Branch', prevKey: 'bankbranch', currKey: 'bankbranch' },
-      { label: 'State of Origin', prevKey: 'StateofOrigin', currKey: 'StateofOrigin', prevDescKey: 'Statename', currDescKey: 'Statename' },
-      { label: 'Local Govt', prevKey: 'LocalGovt', currKey: 'LocalGovt', prevDescKey: 'Lgname', currDescKey: 'Lgname' },
-      { label: 'PFA Code', prevKey: 'pfacode', currKey: 'pfacode', prevDescKey: 'pfadesc', currDescKey: 'pfadesc' }
-    ];
-    
-    // Filter to show only changed fields
-    const changedFields = allFields.filter(field => {
-      let prevVal, currVal;
-      
-      if (field.concat) {
-        prevVal = `${prevRecord?.Surname || ''} ${prevRecord?.OtherName || ''}`.trim();
-        currVal = `${currRecord?.Surname || ''} ${currRecord?.OtherName || ''}`.trim();
-      } else {
-        prevVal = prevRecord?.[field.prevKey] || '';
-        currVal = currRecord?.[field.currKey] || '';
-      }
-      
-      return String(prevVal) !== String(currVal);
-    });
-    
-    let html = `
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="border px-3 py-2 text-left font-semibold text-yellow-800">Field</th>
-              <th class="border px-3 py-2 text-left font-semibold text-green-800">Previous (${formatPeriod(prevRecord?.period || '')})</th>
-              <th class="border px-3 py-2 text-left font-semibold text-blue-800">Current</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-    
-    changedFields.forEach(field => {
-      let prevVal, currVal;
-      
-      if (field.concat) {
-        prevVal = `${prevRecord?.Surname || ''} ${prevRecord?.OtherName || ''}`.trim() || 'N/A';
-        currVal = `${currRecord?.Surname || ''} ${currRecord?.OtherName || ''}`.trim() || 'N/A';
-      } else {
-        // Use description if available
-        if (field.prevDescKey && prevRecord?.[field.prevDescKey]) {
-          const code = prevRecord?.[field.prevKey] || '';
-          const desc = prevRecord?.[field.prevDescKey] || '';
-          prevVal = desc ? `${desc} (${code})` : (code || 'N/A');
-        } else {
-          prevVal = prevRecord?.[field.prevKey] || 'N/A';
-        }
-        
-        if (field.currDescKey && currRecord?.[field.currDescKey]) {
-          const code = currRecord?.[field.currKey] || '';
-          const desc = currRecord?.[field.currDescKey] || '';
-          currVal = desc ? `${desc} (${code})` : (code || 'N/A');
-        } else {
-          currVal = currRecord?.[field.currKey] || 'N/A';
-        }
-      }
-      
-      html += `
-        <tr class="text-yellow-700">
-          <td class="border px-3 py-2 font-medium">${field.label}</td>
-          <td class="border px-3 py-2 text-green-700 font-semibold">${prevVal}</td>
-          <td class="border px-3 py-2 text-blue-700 font-semibold">${currVal}</td>
-        </tr>
-      `;
-    });
-    
-    html += `
-          </tbody>
-        </table>
-      </div>
-    `;
-    
-    comparisonModalContent.innerHTML = html;
-    comparisonModal.classList.remove('hidden');
-  }
-    
-  // Show comparison modal with all fields
-  function showComparisonModal(emplId) {
-    const prevRecord = fullPrevData[emplId];
-    const currRecord = fullCurrData[emplId];
-    
-    if (!prevRecord && !currRecord) {
-      showAlert('Error', 'Employee data not found', 'error');
-      return;
-    }
-    
-    const allFields = [
-      { label: 'Service No.', prevKey: 'Empl_ID', currKey: 'Empl_ID' },
-      { label: 'Name', prevKey: 'Surname', currKey: 'Surname', concat: true },
-      { label: 'Title', prevKey: 'Title', currKey: 'Title', prevDescKey: 'TITLEDESC', currDescKey: 'TITLEDESC' },
-      { label: 'Sex', prevKey: 'Sex', currKey: 'Sex', prevDescKey: 'sex_desc', currDescKey: 'sex_desc' },
-      { label: 'Job Title', prevKey: 'Jobtitle', currKey: 'Jobtitle' },
-      { label: 'Marital Status', prevKey: 'MaritalStatus', currKey: 'MaritalStatus' },
-      { label: 'Factory', prevKey: 'Factory', currKey: 'Factory', prevDescKey: 'Factory_desc', currDescKey: 'Factory_desc' },
-      { label: 'Location', prevKey: 'Location', currKey: 'Location', prevDescKey: 'Location_desc', currDescKey: 'Location_desc' },
-      { label: 'Birth Date', prevKey: 'Birthdate', currKey: 'Birthdate' },
-      { label: 'Date Employed', prevKey: 'DateEmpl', currKey: 'DateEmpl' },
-      { label: 'Date Left', prevKey: 'DateLeft', currKey: 'DateLeft', showOldTag: true },
-      { label: 'Exit Type', prevKey: 'exittype', currKey: 'exittype', prevDescKey: 'exittype_desc', currDescKey: 'exittype_desc', showOldTag: true },
-      { label: 'Telephone', prevKey: 'TELEPHONE', currKey: 'TELEPHONE' },
-      { label: 'Home Address', prevKey: 'HOMEADDR', currKey: 'HOMEADDR' },
-      { label: 'NOK Name', prevKey: 'nok_name', currKey: 'nok_name' },
-      { label: 'Bank Code', prevKey: 'Bankcode', currKey: 'Bankcode' },
-      { label: 'Bank Branch', prevKey: 'bankbranch', currKey: 'bankbranch' },
-      { label: 'Bank Account', prevKey: 'BankACNumber', currKey: 'BankACNumber' },
-      { label: 'State of Origin', prevKey: 'StateofOrigin', currKey: 'StateofOrigin', prevDescKey: 'Statename', currDescKey: 'Statename' },
-      { label: 'Local Govt', prevKey: 'LocalGovt', currKey: 'LocalGovt', prevDescKey: 'Lgname', currDescKey: 'Lgname' },
-      { label: 'Status', prevKey: 'Status', currKey: 'Status' },
-      { label: 'Grade Level', prevKey: 'gradelevel', currKey: 'gradelevel'},
-      { label: 'Email', prevKey: 'email', currKey: 'email' },
-      { label: 'PFA Code', prevKey: 'pfacode', currKey: 'pfacode', prevDescKey: 'pfadesc', currDescKey: 'pfadesc' }
-    ];
-    
-    let html = `
-      <div class="mb-6">
-        <h3 class="text-2xl font-bold text-gray-800">
-          <i class="fas fa-user-circle mr-2 text-green-600"></i>
-          ${currRecord?.Surname || prevRecord?.Surname || ''} ${currRecord?.OtherName || prevRecord?.OtherName || ''} (${emplId})
-        </h3>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-gray-100">
-            <tr>
-              <th class="border px-3 py-2 text-left font-semibold text-yellow-800">Field</th>
-              <th class="border px-3 py-2 text-left font-semibold text-green-800">Previous (${formatPeriod(prevRecord?.period || '')})</th>
-              <th class="border px-3 py-2 text-left font-semibold text-blue-800">Current</th>
-              <th class="border px-3 py-2 text-center font-semibold">Changed?</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-    
-    allFields.forEach(field => {
-      let prevVal, currVal;
-      
-      if (field.concat) {
-        prevVal = `${prevRecord?.Surname || ''} ${prevRecord?.OtherName || ''}`.trim() || 'N/A';
-        currVal = `${currRecord?.Surname || ''} ${currRecord?.OtherName || ''}`.trim() || 'N/A';
-      } else {
-        // Use description if available
-        if (field.prevDescKey && prevRecord?.[field.prevDescKey]) {
-          const code = prevRecord?.[field.prevKey] || '';
-          const desc = prevRecord?.[field.prevDescKey] || '';
-          prevVal = desc ? `${desc} (${code})` : (code || 'N/A');
-        } else {
-          prevVal = prevRecord?.[field.prevKey] || 'N/A';
-        }
-        
-        if (field.currDescKey && currRecord?.[field.currDescKey]) {
-          const code = currRecord?.[field.currKey] || '';
-          const desc = currRecord?.[field.currDescKey] || '';
-          currVal = desc ? `${desc} (${code})` : (code || 'N/A');
-        } else {
-          currVal = currRecord?.[field.currKey] || 'N/A';
-        }
-      }
+  };
 
-      // Add (Old Employee) tag
-      if (field.showOldTag) {
-        if (prevVal && prevVal !== 'N/A' && String(prevVal).trim() !== '') {
-          prevVal = `${prevVal} <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">(Old Employee)</span>`;
-        }
-        if (currVal && currVal !== 'N/A' && String(currVal).trim() !== '') {
-          currVal = `${currVal} <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">(Old Employee)</span>`;
-        }
-      }
-      
-      const changed = String(prevVal) !== String(currVal);
-      
-      html += `
-        <tr class="${changed ? 'bg-yellow-50' : ''}">
-          <td class="border px-3 py-2 font-medium">${field.label}</td>
-          <td class="border px-3 py-2 text-green-700 font-semibold">${prevVal}</td>
-          <td class="border px-3 py-2 text-blue-700 font-semibold ${changed ? 'font-semibold text-blue-700' : ''}">${currVal}</td>
-          <td class="border px-3 py-2 text-center">
-            ${changed ? '<i class="fas fa-check-circle text-orange-600"></i>' : '<i class="fas fa-minus-circle text-gray-400"></i>'}
-          </td>
-        </tr>
-      `;
-    });
-    
-    html += `
-          </tbody>
-        </table>
-      </div>
-    `;
-    
-    comparisonModalContent.innerHTML = html;
-    comparisonModal.classList.remove('hidden');
-  }  
-    
-  // Show details modal
-  function showDetailsModal(record, type) {
-    const fields = [
-      { label: 'Service No.', key: 'Empl_ID' },
-      { label: 'Surname', key: 'Surname' },
-      { label: 'Other Name', key: 'OtherName' },
-      { label: 'Title', key: 'Title', descKey: 'TITLEDESC' },
-      { label: 'Sex', key: 'Sex', descKey: 'sex_desc' },
-      { label: 'Job Title', key: 'Jobtitle' },
-      { label: 'Marital Status', key: 'MaritalStatus' },
-      { label: 'Factory', key: 'Factory', descKey: 'Factory_desc' },
-      { label: 'Location', key: 'Location', descKey: 'Location_desc' },
-      { label: 'Birth Date', key: 'Birthdate' },
-      { label: 'Date Employed', key: 'DateEmpl' },
-      { label: 'Date Left', key: 'DateLeft', showOldTag: true },
-      { label: 'Exit Type', key: 'exittype', descKey: 'exittype_desc', showOldTag: true },
-      { label: 'Telephone', key: 'TELEPHONE' },
-      { label: 'Home Address', key: 'HOMEADDR' },
-      { label: 'NOK Name', key: 'nok_name' },
-      { label: 'Bank Code', key: 'Bankcode' },
-      { label: 'Bank Branch', key: 'bankbranch' },
-      { label: 'Bank Account', key: 'BankACNumber' },
-      { label: 'State of Origin', key: 'StateofOrigin', descKey: 'Statename' },
-      { label: 'Local Govt', key: 'LocalGovt', descKey: 'Lgname' },
-      { label: 'Status', key: 'Status' },
-      { label: 'Grade Level', key: 'gradelevel' },
-      { label: 'Email', key: 'email' },
-      { label: 'PFA Code', key: 'pfacode', descKey: 'pfadesc' }
-    ];
-    
-    if (type === 'previous') {
-      fields.unshift({ label: 'Period', key: 'period' });
-    } else {
-      fields.push({ label: 'GSM Number', key: 'gsm_number' });
-      fields.push({ label: 'Religion', key: 'religion' });
-    }
-    
-    modalContent.innerHTML = `
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        ${fields.map(field => {
-          let value;
-          if (field.key === 'period') {
-            value = formatPeriod(record[field.key] || '');
-          } else if (field.descKey && record[field.descKey]) {
-            // Use description if available, show code in parentheses
-            const code = record[field.key] || '';
-            const desc = record[field.descKey] || '';
-            value = desc ? `${desc} (${code})` : (code || 'N/A');
-          } else {
-            value = record[field.key] || 'N/A';
-          }
-          
-          let displayValue = value;
-          
-          // Add (Old Employee) tag if field has value and showOldTag is true
-          if (field.showOldTag && value && value !== 'N/A' && value.trim() !== '') {
-            displayValue = `${value} <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">(Old Employee)</span>`;
-          }
-          
-          return `
-            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <div class="text-xs font-semibold text-gray-500 uppercase mb-1">${field.label}</div>
-              <div class="text-sm font-medium text-gray-900">${displayValue}</div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-    
-    detailsModal.classList.remove('hidden');
-  } 
-  
-  // Update pagination
-  function updatePrevPagination() {
-    const start = prevData.length > 0 ? (prevPage - 1) * RECORDS_PER_PAGE + 1 : 0;
-    const end = Math.min((prevPage - 1) * RECORDS_PER_PAGE + prevData.length, prevTotalRecords);
-    
-    document.getElementById('prevShowingStart').textContent = start;
-    document.getElementById('prevShowingEnd').textContent = end;
-    document.getElementById('prevTotalRecords').textContent = prevTotalRecords; // Use actual total
-    document.getElementById('prevPageInfo').textContent = `Page ${prevPage} of ${prevTotalPages}`;
-    
-    document.getElementById('prevFirstPage').disabled = prevPage === 1;
-    document.getElementById('prevPrevPage').disabled = prevPage === 1;
-    document.getElementById('prevNextPage').disabled = prevPage >= prevTotalPages;
-    document.getElementById('prevLastPage').disabled = prevPage >= prevTotalPages;
-  }
+  // Cancel/Clear button
+  cancelChangeBtn.onclick = () => {
+    // Hide personnel wrapper
+    personnelSelectWrapper.classList.add("hidden");
 
-  function updateCurrPagination() {
-    const start = currData.length > 0 ? (currPage - 1) * RECORDS_PER_PAGE + 1 : 0;
-    const end = Math.min((currPage - 1) * RECORDS_PER_PAGE + currData.length, currTotalRecords);
+    // Reset all form fields
+    document.getElementById("fromYear").value = "";
+    document.getElementById("fromMonth").value = "";
+    document.getElementById("toYear").value = "";
+    document.getElementById("toMonth").value = "";
+    document.getElementById("personnelSelect").value = "";
     
-    document.getElementById('currShowingStart').textContent = start;
-    document.getElementById('currShowingEnd').textContent = end;
-    document.getElementById('currTotalRecords').textContent = currTotalRecords; // Use actual total
-    document.getElementById('currPageInfo').textContent = `Page ${currPage} of ${currTotalPages}`;
+    // Reset radio to "all"
+    document.querySelector('input[name="changeScope"][value="all"]').checked = true;
     
-    document.getElementById('currFirstPage').disabled = currPage === 1;
-    document.getElementById('currPrevPage').disabled = currPage === 1;
-    document.getElementById('currNextPage').disabled = currPage >= currTotalPages;
-    document.getElementById('currLastPage').disabled = currPage >= currTotalPages;
-  }
-  
-  // Export handlers (Previous)
-  document.getElementById('prevExportExcel').addEventListener('click', async () => {
-    try {
-      showLoading('Generating Excel...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams(currentFilters);
-      const res = await fetch(`${API_BASE}/export/excel-prev?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      hideLoading();
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `previous_details_${new Date().toISOString().split('T')[0]}.xlsx`; 
-      a.click();
-      showAlert('Success', 'Excel exported successfully', 'success');
-    } catch (err) {
-      hideLoading();
-      showAlert('Export Failed', err.message, 'error');
-    }
-  });
-  
-  document.getElementById('prevExportPdf').addEventListener('click', async () => {
-    try {
-      showLoading('Generating PDF...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams(currentFilters);
-      const res = await fetch(`${API_BASE}/export/pdf-prev?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      hideLoading();
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `previous_details_${new Date().toISOString().split('T')[0]}.pdf`; 
-      a.click();
-      showAlert('Success', 'PDF exported successfully', 'success');
-    } catch (err) {
-      hideLoading();
-      showAlert('Export Failed', err.message, 'error');
-    }
-  });
-  
-  // Export handlers (Current)
-  document.getElementById('currExportExcel').addEventListener('click', async () => {
-    try {
-      showLoading('Generating Excel...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams(currentFilters);
-      const res = await fetch(`${API_BASE}/export/excel-cur?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      hideLoading();
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `current_details_${new Date().toISOString().split('T')[0]}.xlsx`; 
-      a.click();
-      showAlert('Success', 'Excel exported successfully', 'success');
-    } catch (err) {
-      hideLoading();
-      showAlert('Export Failed', err.message, 'error');
-    }
-  });
-  
-  document.getElementById('currExportPdf').addEventListener('click', async () => {
-    try {
-      showLoading('Generating PDF...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams(currentFilters);
-      const res = await fetch(`${API_BASE}/export/pdf-cur?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      hideLoading();
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `current_details_${new Date().toISOString().split('T')[0]}.pdf`; 
-      a.click();
-      showAlert('Success', 'PDF exported successfully', 'success');
-    } catch (err) {
-      hideLoading();
-      showAlert('Export Failed', err.message, 'error');
-    }
-  });
-  
-  // Print handlers
-  //document.getElementById('prevPrint').addEventListener('click', () => window.print());
-  //document.getElementById('currPrint').addEventListener('click', () => window.print());
-  //document.getElementById('compPrint').addEventListener('click', () => window.print());
-
-  // Search Event listeners
-  prevSearchInput.addEventListener('input', (e) => {
-    prevSearchQuery = e.target.value.toLowerCase().trim();
+    // Reset export format to PDF
+    document.querySelector('input[name="exportFormat"][value="pdf"]').checked = true;
     
-    // Clear existing timeout
-    if (prevSearchTimeout) {
-      clearTimeout(prevSearchTimeout);
+    // If already generated, hide form and show banner
+    if (hasGenerated) {
+      formContent.classList.add('hidden');
+      showFilterBtn.classList.remove('hidden');
     }
     
-    if (prevSearchQuery) {
-      prevClearSearch.classList.remove('hidden');
-      
-      // Debounce search - wait 500ms after user stops typing
-      prevSearchTimeout = setTimeout(async () => {
-        await searchPreviousData(prevSearchQuery);
-      }, 500);
-    } else {
-      prevClearSearch.classList.add('hidden');
-      // Reset to normal pagination view
-      fetchPrevPage(1);
-    }
-  });
+    // Reload filter options to reset defaults
+    loadFilterOptions();
+  };
 
-  prevClearSearch.addEventListener('click', () => {
-    prevSearchInput.value = '';
-    prevSearchQuery = '';
-    prevClearSearch.classList.add('hidden');
-    fetchPrevPage(1);
-  });
-
-  // Current table search with backend
-  currSearchInput.addEventListener('input', (e) => {
-    currSearchQuery = e.target.value.toLowerCase().trim();
-    
-    // Clear existing timeout
-    if (currSearchTimeout) {
-      clearTimeout(currSearchTimeout);
-    }
-    
-    if (currSearchQuery) {
-      currClearSearch.classList.remove('hidden');
-      
-      // Debounce search - wait 500ms after user stops typing
-      currSearchTimeout = setTimeout(async () => {
-        await searchCurrentData(currSearchQuery);
-      }, 500);
-    } else {
-      currClearSearch.classList.add('hidden');
-      // Reset to normal pagination view
-      fetchCurrPage(1);
-    }
-  });
-
-  currClearSearch.addEventListener('click', () => {
-    currSearchInput.value = '';
-    currSearchQuery = '';
-    currClearSearch.classList.add('hidden');
-    fetchCurrPage(1);
-  });
-    
-  // Tab switching
-  previousReportTab.addEventListener('click', () => switchTab('previous'));
-  currentReportTab.addEventListener('click', () => switchTab('current'));
-  comparisonReportTab.addEventListener('click', () => switchTab('comparison'));
-  analysisReportTab.addEventListener('click', () => switchTab('analysis'));
-  
-  // Regenerate button
-  regenerateBtn.addEventListener('click', () => {
-    // Don't reset hasGenerated, keep reports permanent
-    // Just show the form to regenerate with new filters
-    startDate.value = '';
-    endDate.value = '';
-    filterByPersonnel.checked = false;
-    personnelWrapper.classList.add('hidden');
-    selectedEmployeeId = null;
-    searchInput.value = '';
-    dropdownList.classList.add('hidden');
-    
-    reportTypeTabs.classList.add('hidden');
-    reportsContainer.classList.add('hidden');
-    analysisReportSection.classList.add('hidden');
-    mainForm.classList.remove('hidden');
-  });
-  
-  // Modal close
-  closeModal.addEventListener('click', () => detailsModal.classList.add('hidden'));
-  closeComparisonModal.addEventListener('click', () => comparisonModal.classList.add('hidden'));
-  alertCloseBtn.addEventListener('click', () => alertModal.classList.add('hidden'));
-
-  // Fetch last generated report
-  async function fetchLastGeneratedReport() {
-    try {
-      showLoading('Loading last report...');
-      const token = localStorage.getItem('token');
-      
-      const [prevRes, currRes] = await Promise.all([
-        fetch(`${API_BASE}/view?reportType=previous&page=1&limit=${RECORDS_PER_PAGE}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_BASE}/view?reportType=current&page=1&limit=${RECORDS_PER_PAGE}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
-      
-      hideLoading();
-      
-      if (!prevRes.ok || !currRes.ok) {
-        console.error('Failed to fetch last report');
-        return;
-      }
-      
-      const prevDataRes = await prevRes.json();
-      const currDataRes = await currRes.json();
-      
-      if (prevDataRes.status === 'SUCCESS' && currDataRes.status === 'SUCCESS') {
-        currentFilters = prevDataRes.filters || {};
-        
-        prevData = prevDataRes.records || [];
-        prevPage = 1;
-        prevTotalPages = prevDataRes.pagination?.totalPages || 1;
-        prevTotalRecords = prevDataRes.pagination?.totalRecords || 0; // Store actual total
-        
-        currData = currDataRes.records || [];
-        currPage = 1;
-        currTotalPages = currDataRes.pagination?.totalPages || 1;
-        currTotalRecords = currDataRes.pagination?.totalRecords || 0; // Store actual total
-        
-        comparisonSet.clear();
-        hasGenerated = true;
-        
-        updateUIVisibility();
-        renderPrevTable();
-        renderCurrTable();
-        renderComparisonSection();
-        switchTab('previous');
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error loading last report:', err);
-    }
-  }
-
-  // Search previous data via backend
-  async function searchPreviousData(query) {
-    try {
-      showLoading('Searching...');
-      const token = localStorage.getItem('token');
-
-      prevSearchQuery = query;
-      
-      const params = new URLSearchParams({
-        ...currentFilters,
-        searchQuery: query,
-        page: 1,
-        limit: RECORDS_PER_PAGE
-      });
-      
-      const res = await fetch(`${API_BASE}/previous/search?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      hideLoading();
-      
-      if (!res.ok) throw new Error('Search failed');
-      
-      const data = await res.json();
-      
-      if (data.status === 'SUCCESS') {
-        prevData = data.records || [];
-        prevPage = 1;
-        prevTotalPages = data.pagination?.totalPages || 1;
-        prevTotalRecords = data.pagination?.totalRecords || 0;
-        renderPrevTable();
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error searching previous data:', err);
-      showAlert('Search Failed', err.message, 'error');
-    }
-  }
-
-  // Search current data via backend
-  async function searchCurrentData(query) {
-    try {
-      showLoading('Searching...');
-      const token = localStorage.getItem('token');
-
-      currSearchQuery = query;
-      
-      const params = new URLSearchParams({
-        ...currentFilters,
-        searchQuery: query,
-        page: 1,
-        limit: RECORDS_PER_PAGE
-      });
-      
-      const res = await fetch(`${API_BASE}/current/search?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      hideLoading();
-      
-      if (!res.ok) throw new Error('Search failed');
-      
-      const data = await res.json();
-      
-      if (data.status === 'SUCCESS') {
-        currData = data.records || [];
-        currPage = 1;
-        currTotalPages = data.pagination?.totalPages || 1;
-        currTotalRecords = data.pagination?.totalRecords || 0;
-        renderCurrTable();
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error searching current data:', err);
-      showAlert('Search Failed', err.message, 'error');
-    }
-  }
-
-  // Update pagination for search results
-  async function fetchPrevPageSearch(page) {
-    if (!prevSearchQuery) {
-      return fetchPrevPage(page);
-    }
-    
-    try {
-      showLoading('Loading page...');
-      const token = localStorage.getItem('token');
-      
-      const params = new URLSearchParams({
-        ...currentFilters,
-        searchQuery: prevSearchQuery,
-        page: page,
-        limit: RECORDS_PER_PAGE
-      });
-      
-      const res = await fetch(`${API_BASE}/previous/search?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      hideLoading();
-      
-      if (!res.ok) throw new Error('Failed to fetch page');
-      
-      const data = await res.json();
-      
-      if (data.status === 'SUCCESS') {
-        prevData = data.records || [];
-        prevPage = page;
-        prevTotalPages = data.pagination?.totalPages || 1;
-        renderPrevTable();
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error fetching previous page:', err);
-      showAlert('Error', 'Failed to load page', 'error');
-    }
-  }
-
-  async function fetchCurrPageSearch(page) {
-    if (!currSearchQuery) {
-      return fetchCurrPage(page);
-    }
-    
-    try {
-      showLoading('Loading page...');
-      const token = localStorage.getItem('token');
-      
-      const params = new URLSearchParams({
-        ...currentFilters,
-        searchQuery: currSearchQuery,
-        page: page,
-        limit: RECORDS_PER_PAGE
-      });
-      
-      const res = await fetch(`${API_BASE}/current/search?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      hideLoading();
-      
-      if (!res.ok) throw new Error('Failed to fetch page');
-      
-      const data = await res.json();
-      
-      if (data.status === 'SUCCESS') {
-        currData = data.records || [];
-        currPage = page;
-        currTotalPages = data.pagination?.totalPages || 1;
-        renderCurrTable();
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error fetching current page:', err);
-      showAlert('Error', 'Failed to load page', 'error');
-    }
-  }
-
-  // Update pagination event listeners to support search
-  document.getElementById('prevFirstPage').addEventListener('click', () => fetchPrevPageSearch(1));
-  document.getElementById('prevPrevPage').addEventListener('click', () => fetchPrevPageSearch(prevPage - 1));
-  document.getElementById('prevNextPage').addEventListener('click', () => fetchPrevPageSearch(prevPage + 1));
-  document.getElementById('prevLastPage').addEventListener('click', () => fetchPrevPageSearch(prevTotalPages));
-
-  document.getElementById('currFirstPage').addEventListener('click', () => fetchCurrPageSearch(1));
-  document.getElementById('currPrevPage').addEventListener('click', () => fetchCurrPageSearch(currPage - 1));
-  document.getElementById('currNextPage').addEventListener('click', () => fetchCurrPageSearch(currPage + 1));
-  document.getElementById('currLastPage').addEventListener('click', () => fetchCurrPageSearch(currTotalPages));
-      
   // Check payroll status
   async function checkPayrollStatus() {
     try {
@@ -2247,342 +469,25 @@
       });
       const data = await res.json();
       currentStage = Number(data?.sun || 0);
+      
+      // If stage >= 775, report has already been generated at least once
+      if (currentStage >= STAGE_PRINTED) {
+        hasGenerated = true;
+      }
+      
       updateUIVisibility();
-
-      if (currentStage >= STAGE_READY && !hasGenerated) {
-      await fetchLastGeneratedReport();
-    }
+      
+      // Load filter options if stage is ready (>= 666)
+      if (currentStage >= STAGE_READY) {
+        await loadFilterOptions();
+      }
     } catch (err) {
       console.error('Error checking status:', err);
     }
   }
-  
-  //------ Analssis Section Full --------//
-  // Filter change handler
-  analysisFilterSelect.addEventListener('change', (e) => {
-    analysisFilter = e.target.value;
-    analysisPage = 1;
-    fetchAnalysisData();
-
-    // Show/hide changes column based on filter
-    toggleAnalysisChangesColumn();
-  });
-
-  // Search handlers
-  analysisSearchInput.addEventListener('input', (e) => {
-    analysisSearchQuery = e.target.value.toLowerCase().trim();
-    
-    // Clear existing timeout
-    if (analysisSearchTimeout) {
-      clearTimeout(analysisSearchTimeout);
-    }
-    
-    if (analysisSearchQuery) {
-      analysisClearSearch.classList.remove('hidden');
-      
-      // Debounce search - wait 500ms after user stops typing
-      analysisSearchTimeout = setTimeout(() => {
-        analysisPage = 1;
-        fetchAnalysisData();
-      }, 500);
-    } else {
-      analysisClearSearch.classList.add('hidden');
-      analysisPage = 1;
-      fetchAnalysisData();
-    }
-  });
-
-  analysisClearSearch.addEventListener('click', () => {
-    analysisSearchInput.value = '';
-    analysisSearchQuery = '';
-    analysisClearSearch.classList.add('hidden');
-    analysisPage = 1;
-    fetchAnalysisData();
-  });
-
-  // Toggle changes column visibility
-  function toggleAnalysisChangesColumn() {
-    const changesHeader = document.getElementById('analysisChangesHeader');
-    const changesColumns = document.querySelectorAll('.analysis-changes-column');
-    
-    if (analysisFilter === 'new') {
-      changesHeader.classList.add('hidden');
-      changesColumns.forEach(col => col.classList.add('hidden'));
-    } else {
-      changesHeader.classList.remove('hidden');
-      changesColumns.forEach(col => col.classList.remove('hidden'));
-    }
-  }
-
-  // Fetch analysis data
-  async function fetchAnalysisData() {
-    try {
-      showLoading('Loading analysis...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams({
-        ...currentFilters,
-        filter: analysisFilter,
-        page: analysisPage,
-        limit: RECORDS_PER_PAGE
-      });
-      
-      // Add search query if present
-      if (analysisSearchQuery) {
-        params.append('searchQuery', analysisSearchQuery);
-      }
-      
-      const res = await fetch(`${API_BASE}/analysis?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      hideLoading();
-      
-      if (!res.ok) throw new Error('Failed to fetch analysis data');
-      
-      const data = await res.json();
-      
-      if (data.status === 'SUCCESS') {
-        analysisData = data.records || [];
-        analysisPage = data.pagination?.page || 1;
-        analysisTotalPages = data.pagination?.totalPages || 1;
-        analysisTotalRecords = data.pagination?.totalRecords || 0;
-        analysisStats = data.stats || { total: 0, new: 0, changes: 0, old: 0 };
-        
-        renderAnalysisTable();
-        updateAnalysisStats();
-        updateAnalysisPagination();
-        toggleAnalysisChangesColumn();
-      }
-    } catch (err) {
-      hideLoading();
-      console.error('Error fetching analysis data:', err);
-      showAlert('Error', err.message, 'error');
-    }
-  }
-
-  // Render analysis table
-  function renderAnalysisTable() {
-    const tbody = document.getElementById('analysisTableBody');
-    tbody.innerHTML = '';
-    
-    // Update h3 text based on filter
-    const filterTexts = {
-      'all': 'All Personnel',
-      'new': 'New Employees',
-      'changes': 'Personnel with Changes',
-      'old': 'Old Employees'
-    };
-    
-    const analysisHeader = document.querySelector('#analysisReportSection h3');
-    if (analysisHeader) {
-      analysisHeader.innerHTML = `
-        <i class="fas fa-chart-line mr-2"></i>${filterTexts[analysisFilter] || 'Personnel Analysis'}
-        <span id="analysisRecordCount" class="text-sm text-gray-600">(${analysisTotalRecords} record${analysisTotalRecords !== 1 ? 's' : ''})</span>
-      `;
-    }
-    
-    if (analysisData.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-            <i class="fas fa-inbox text-4xl mb-2"></i>
-            <br><span class="text-lg font-medium">No records found</span>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-    
-    analysisData.forEach(record => {
-      const row = document.createElement('tr');
-      row.className = 'hover:bg-purple-50 transition';
-      
-      // Determine category badge
-      let categoryBadge = '';
-      let category = record.category;
-      
-      // Override category if employee has left (use the oldEmployees array from stats)
-      // This ensures consistency with backend categorization
-      if (category === 'old') {
-        categoryBadge = '<span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-user-times mr-1"></i>Left</span>';
-      } else if (category === 'new') {
-        categoryBadge = '<span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-plus-circle mr-1"></i>New</span>';
-      } else if (category === 'changed' || record.changesCount > 0) {
-        categoryBadge = '<span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800"><i class="fas fa-exclamation-triangle mr-1"></i>Changed</span>';
-      } else {
-        categoryBadge = '<span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-check-circle mr-1"></i>No Change</span>';
-      }
-      
-      // Update the stored category for the click handler
-      record.category = category;
-      
-      // Show/hide changes column based on filter
-      const shouldShowChanges = analysisFilter !== 'new';
-
-      // For old employees, show changes count if they have any
-      let changesDisplay = '';
-      if (shouldShowChanges) {
-        if (record.changesCount > 0) {
-          changesDisplay = `<span class="text-yellow-600 font-semibold">${record.changesCount} field${record.changesCount > 1 ? 's' : ''}</span>`;
-        } else {
-          changesDisplay = '<span class="text-gray-400">-</span>';
-        }
-      }
-      
-      row.innerHTML = `
-        <td class="border px-3 py-3 font-semibold">${record.Empl_ID || 'N/A'}</td>
-        <td class="border px-3 py-3">${record.Surname || ''} ${record.OtherName || ''}</td>
-        <td class="border px-3 py-3">${record.TITLEDESC || record.Title || 'N/A'}</td>
-        <td class="border px-3 py-3 text-[11px] font-bold">${record.Location_desc || record.Location || 'N/A'}</td>
-        <td class="border px-3 py-3">${record.grpdesc || record.gradelevel || 'N/A'}</td>
-        <td class="border px-3 py-3">${categoryBadge}</td>
-        <td class="border px-3 py-3 analysis-changes-column ${!shouldShowChanges ? 'hidden' : ''}">
-          ${shouldShowChanges && record.changesCount > 0 ? 
-            `<span class="text-yellow-600 font-semibold">${record.changesCount} field${record.changesCount > 1 ? 's' : ''}</span>` : 
-            shouldShowChanges ? '<span class="text-gray-400">-</span>' : ''
-          }
-        </td>
-        <td class="border px-3 py-3 no-print">
-          <button class="text-purple-600 hover:text-purple-800 font-semibold transition view-analysis-details" data-id="${record.Empl_ID}">
-            <i class="fas fa-eye mr-1"></i>View
-          </button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
-    
-    // Add event listeners
-    tbody.querySelectorAll('.view-analysis-details').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const emplId = e.currentTarget.getAttribute('data-id');
-        const record = analysisData.find(r => r.Empl_ID === emplId);
-
-        if (!record) return;
-
-        // NEW employee → only current details, no comparison
-        if (record.category === 'new') {
-          showDetailsModal(record, 'current');
-          return;
-        }
-
-        try {
-          showLoading('Loading employee data...');
-          await fetchEmployeeData(emplId);
-          hideLoading();
-
-          const prev = fullPrevData[emplId] || null;
-          const curr = fullCurrData[emplId] || null;
-
-          // If both missing
-          if (!prev && !curr) {
-            showAlert('Error', 'Employee data not found', 'error');
-            return;
-          }
-
-          // If only previous exists → OLD employee that has left before current period
-          if (prev && !curr) {
-            showDetailsModal(prev, 'previous');
-            return;
-          }
-
-          // If only current exists → fallback to show current
-          if (!prev && curr) {
-            showDetailsModal(curr, 'current');
-            return;
-          }
-
-          // At this point, BOTH prev & curr exist
-          showComparisonModal(emplId);
-
-        } catch (error) {
-          hideLoading();
-          console.error('Error fetching employee data:', error);
-
-          // Fallback
-          if (record) showDetailsModal(record, 'current');
-          else showAlert('Error', 'Unable to load employee data', 'error');
-        }
-      });
-    });
-  }
-
-  // Update stats
-  function updateAnalysisStats() {
-    document.getElementById('statTotal').textContent = analysisStats.total || 0;
-    document.getElementById('statNew').textContent = analysisStats.new || 0;
-    document.getElementById('statChanges').textContent = analysisStats.changes || 0;
-    document.getElementById('statOld').textContent = analysisStats.old || 0;
-  }
-
-  // Update pagination
-  function updateAnalysisPagination() {
-    const start = analysisData.length > 0 ? (analysisPage - 1) * RECORDS_PER_PAGE + 1 : 0;
-    const end = Math.min((analysisPage - 1) * RECORDS_PER_PAGE + analysisData.length, analysisTotalRecords);
-    
-    document.getElementById('analysisShowingStart').textContent = start;
-    document.getElementById('analysisShowingEnd').textContent = end;
-    document.getElementById('analysisTotalRecords').textContent = analysisTotalRecords; // Use actual total
-    document.getElementById('analysisPageInfo').textContent = `Page ${analysisPage} of ${analysisTotalPages}`;
-    
-    document.getElementById('analysisFirstPage').disabled = analysisPage === 1;
-    document.getElementById('analysisPrevPage').disabled = analysisPage === 1;
-    document.getElementById('analysisNextPage').disabled = analysisPage >= analysisTotalPages;
-    document.getElementById('analysisLastPage').disabled = analysisPage >= analysisTotalPages;
-  }
-
-  // Pagination event listeners
-  document.getElementById('analysisFirstPage').addEventListener('click', () => {
-    analysisPage = 1;
-    fetchAnalysisData();
-  });
-  document.getElementById('analysisPrevPage').addEventListener('click', () => {
-    if (analysisPage > 1) {
-      analysisPage--;
-      fetchAnalysisData();
-    }
-  });
-  document.getElementById('analysisNextPage').addEventListener('click', () => {
-    if (analysisPage < analysisTotalPages) {
-      analysisPage++;
-      fetchAnalysisData();
-    }
-  });
-  document.getElementById('analysisLastPage').addEventListener('click', () => {
-    analysisPage = analysisTotalPages;
-    fetchAnalysisData();
-  });
-
-  // Export handlers
-  document.getElementById('analysisExportExcel').addEventListener('click', async () => {
-    try {
-      showLoading('Generating Excel...');
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams({
-        ...currentFilters,
-        filter: analysisFilter
-      });
-      const res = await fetch(`${API_BASE}/analysis/export/excel?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      hideLoading();
-      if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `personnel_analysis_${analysisFilter}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      a.click();
-      showAlert('Success', 'Excel exported successfully', 'success');
-    } catch (err) {
-      hideLoading();
-      showAlert('Export Failed', err.message, 'error');
-    }
-  });
 
   // Initialize
   function initialize() {
-    //fetchAvailablePeriods();
-    //fetchEmployeesList();
     checkPayrollStatus();
   }
   
@@ -2590,6 +495,3 @@
   if (document.readyState !== 'loading') initialize();
 })();
 </script>
-
-
-
