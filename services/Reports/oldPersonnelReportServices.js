@@ -156,9 +156,13 @@ class OldPersonnelReportService {
         FROM hr_employees h
         LEFT JOIN ac_costcentre cc ON cc.unitcode = h.Location
         LEFT JOIN py_salarygroup sg ON sg.groupcode = h.gradetype
-        WHERE h.payrollclass = ?
-          AND ((LENGTH(IFNULL(h.DateLeft, '')) > 0 AND STR_TO_DATE(h.DateLeft, '%Y%m%d') <= CURDATE()) 
-            OR LENGTH(IFNULL(h.exittype, '')) > 0)
+        WHERE ((h.exittype IS NOT NULL AND h.exittype <> '')
+            OR (
+              h.DateLeft IS NOT NULL
+              AND h.DateLeft <> ''
+              AND STR_TO_DATE(h.DateLeft, '%Y%m%d') <= CURDATE()
+            )) 
+          AND h.payrollclass = ?
           ${title ? 'AND h.Title = ?' : ''}
           ${pfa ? 'AND h.pfacode = ?' : ''}
           ${location ? 'AND h.Location = ?' : ''}
@@ -297,9 +301,13 @@ class OldPersonnelReportService {
           SUM(CASE WHEN h.emolumentform = 'NO' THEN 1 ELSE 0 END) as emolumentform_no
           
         FROM hr_employees h
-        WHERE h.payrollclass = ?
-          AND ((LENGTH(IFNULL(h.DateLeft, '')) > 0 AND STR_TO_DATE(h.DateLeft, '%Y%m%d') <= CURDATE()) 
-            OR LENGTH(IFNULL(h.exittype, '')) > 0)
+        WHERE ((h.exittype IS NOT NULL AND h.exittype <> '')
+            OR (
+              h.DateLeft IS NOT NULL
+              AND h.DateLeft <> ''
+              AND STR_TO_DATE(h.DateLeft, '%Y%m%d') <= CURDATE()
+            )) 
+          AND h.payrollclass = ?
           ${title ? 'AND h.Title = ?' : ''}
           ${pfa ? 'AND h.pfacode = ?' : ''}
           ${location ? 'AND h.Location = ?' : ''}

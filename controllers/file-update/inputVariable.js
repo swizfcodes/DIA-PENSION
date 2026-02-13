@@ -72,6 +72,7 @@ class PayPeriodReportController extends BaseReportController {
       // Return JSON with statistics
       res.json({ 
         success: true, 
+        message: 'Input Variable report generated successfully',
         data,
         statistics
       });
@@ -86,11 +87,15 @@ class PayPeriodReportController extends BaseReportController {
   // ==========================================================================
   async generatePayPeriodReportExcel(data, res, statistics) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No data available this month');
+      }
+
       const exporter = new GenericExcelExporter();
 
       const columns = [
         { header: 'S/N', key: 'sn', width: 8, align: 'center' },
-        { header: 'Pay Period', key: 'pay_period', width: 12, align: 'center' },
+        //{ header: 'Pay Period', key: 'pay_period', width: 12, align: 'center' },
         { header: 'Svc No.', key: 'employee_id', width: 15 },
         { header: 'Rank', key: 'Title', width: 10 },
         { header: 'Full Name', key: 'full_name', width: 30 },
@@ -115,7 +120,7 @@ class PayPeriodReportController extends BaseReportController {
       const totalAmountToDate = data.reduce((sum, item) => sum + parseFloat(item.amount_to_date || 0), 0);
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA PAYROLL - INPUT VARIATION REPORT',
+        title: 'NAVY PAYROLL - INPUT VARIATION REPORT',
         subtitle: 'All Records',
         columns: columns,
         data: dataWithSN,
@@ -126,7 +131,7 @@ class PayPeriodReportController extends BaseReportController {
             11: totalAmountToDate
           }
         },
-        sheetName: 'Pay Period Report'
+        sheetName: 'Input Variable Report'
       });
 
       // Apply conditional formatting
@@ -154,7 +159,7 @@ class PayPeriodReportController extends BaseReportController {
         paperSize: 9 // A4
       };
 
-      await exporter.exportToResponse(workbook, res, `pay_period_report.xlsx`);
+      await exporter.exportToResponse(workbook, res, `input_variable_report.xlsx`);
 
     } catch (error) {
       console.error('Pay Period Report Export error:', error);
@@ -170,7 +175,7 @@ class PayPeriodReportController extends BaseReportController {
   async generatePayPeriodReportPDF(data, req, res, statistics) {
     try {
       if (!data || data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No data available this month');
       }
 
       console.log('Pay Period Report PDF - Data rows:', data.length);
@@ -192,6 +197,9 @@ class PayPeriodReportController extends BaseReportController {
         {
           data: data,
           statistics: statistics,
+          period: data.length > 0 ? 
+            `${this.getMonthName(data[0].month)} ${data[0].year}` : 
+            'N/A',
           reportDate: new Date(),
           filters: 'All Records',
           className: this.getDatabaseNameFromRequest(req),

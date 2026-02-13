@@ -3,37 +3,172 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIA-Pays</title>
+  <title>DIA-Payroll</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+    
+    @keyframes pulse-slow {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+    
+    .animate-fadeInUp {
+      animation: fadeInUp 0.8s ease-out;
+    }
+    
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .animate-pulse-slow {
+      animation: pulse-slow 3s ease-in-out infinite;
+    }
+    
+    .delay-100 {
+      animation-delay: 0.1s;
+    }
+    
+    .delay-200 {
+      animation-delay: 0.2s;
+    }
+    
+    .delay-300 {
+      animation-delay: 0.3s;
+    }
+    
+    .delay-400 {
+      animation-delay: 0.4s;
+    }
+
+    /* Canvas positioning */
+    #particleCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* Ensure content is above canvas */
+    .content-layer {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-amber-100 flex">
+<body class="min-h-screen overflow-hidden">
 
-  <!-- Left side with logo only -->
-  <div class="w-1/2 hidden md:flex items-center justify-center">
-    <img src="photos/logo.png" alt="Logo" class="max-w-[70%] max-h-[70%] object-contain">
-  </div>
+  <!-- Animated Particle Canvas Background -->
+  <canvas id="particleCanvas"></canvas>
 
-  <!-- Right content area -->
-  <div class="flex-1 flex items-center justify-center p-8">
-    <div class="max-w-md text-center space-y-6">
-      <h1 class="text-4xl font-bold text-gray-800">Welcome</h1>
-      <p class="text-gray-600 text-lg">
-        login to continue.
-      </p>
+  <!-- Main Content Layer -->
+  <div class="content-layer min-h-screen flex">
+    
+    <!-- Copyright - Bottom Left -->
+    <div class="absolute bottom-8 left-8 z-10">
+      <p class="text-green-200 text-sm">© 2026 Hicad Systems Limited. All rights reserved.</p>
+    </div>
 
-      <!-- Navigation Buttons -->
-      <div class="flex flex-col gap-4 mt-6">
-        <a href="personnel-login.html" 
-           class="px-6 py-3 rounded-2xl bg-amber-500 text-white font-semibold shadow hover:bg-amber-600 transition">
-          User Login
-        </a>
+    <!-- Left side with logo only -->
+    <div class="w-1/2 hidden md:flex items-center justify-center p-12 relative">
+      <div class="text-center animate-fadeInUp">
+        <!-- Logo with floating animation - vertically centered -->
+        <div class="animate-float">
+          <img src="photos/logo.png" alt="DIA-Pays Logo" class="max-w-[100%] max-h-[60vh] object-contain mx-auto drop-shadow-2xl">
+        </div>
+      </div>
+    </div>
+
+    <!-- Right content area -->
+    <div class="flex-1 flex items-center justify-center p-8 relative">
+      <div class="w-full max-w-md">
+        <!-- Card container with transparent background -->
+        <div class="space-y-6 animate-fadeInUp">
+          
+          <!-- Mobile logo (visible only on small screens) -->
+          <div class="md:hidden mb-3">
+            <img src="photos/logo.png" alt="DIA-Pays Logo" class="max-w-[40%] mx-auto">
+          </div>
+
+          <!-- Compact Calendar Card -->
+          <div class="text-center">
+            <div class="inline-block">
+              <!-- Calendar Container with transparent background -->
+              <div class="bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-white/10" style="width: 220px;">
+                
+                <!-- Green Header with Month/Year -->
+                <div class="bg-gradient-to-r from-green-600 to-green-500 text-white py-2 px-4">
+                  <div id="monthYear" class="text-sm font-bold text-center tracking-wide">MONTH YEAR</div>
+                </div>
+                
+                <!-- Calendar Body -->
+                <div class="bg-transparent py-4 px-4">
+                  <!-- Day of Week -->
+                  <div id="dayOfWeek" class="text-lg font-bold text-green-400 uppercase tracking-wider mb-2">DAY</div>
+                  
+                  <!-- Date Number -->
+                  <div id="dateNumber" class="text-6xl font-bold text-white leading-none mb-3">00</div>
+                  
+                  <!-- Live Time -->
+                  <div class="pt-2 border-t border-white/20">
+                    <div id="liveTime" class="text-2xl font-bold text-green-300 tracking-wide">00:00:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Header -->
+          <div class="text-center space-y-2">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl mb-2 shadow-lg">
+              <i class="fas fa-user-circle text-white text-xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white">Welcome Back</h1>
+            <p class="text-green-200 text-sm">
+              Log in to access your payroll dashboard
+            </p>
+          </div>
+
+          <!-- Login Button -->
+          <div class="mt-4">
+            <a href="personnel-login.html" 
+               class="group relative block w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+              <div class="flex items-center justify-center gap-3">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>User Login</span>
+                <i class="fas fa-arrow-right text-sm transform group-hover:translate-x-1 transition-transform"></i>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-
 </body>
+<script src="script/index.js"></script>
 </html>
-
-
-
-

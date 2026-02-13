@@ -160,11 +160,6 @@
       font-weight: bold;
     }
 
-    .highlight-exit {
-      color: #FF8C00;
-      font-weight: bold;
-    }
-
     .page-break {
       page-break-after: always;
     }
@@ -206,7 +201,7 @@
 
   <div class="header-info">
     <div class="left">
-      <strong>PERSONNEL REPORT {{#if showingExitedEmployees}}(EXITED){{/if}}</strong>
+      <strong>CURRENT PERSONNEL REPORT</strong>
     </div>
     <div class="center">
       <span>PRODUCED ON</span> 
@@ -239,12 +234,12 @@
         <th>Grade Type</th>
         <th style="width: 8%;">PFA</th>
         <th style="width: 8%;">RSA(PEN) Code</th>
+        <th style="width: 5%;">Emol.form</th>
         <th style="width: 4%;" class="text-center">Age</th>
-        <th style="width: 5%;" class="text-center">Yrs Served</th>
+        <th style="width: 5%;" class="text-center">Yrs Of Service</th>
         <th style="width: 8%;">Date Of 1st Appointment</th>
-        <th style="width: 8%;">Date Left</th>
-        <th style="width: 6%;" class="text-center">Exit Reason</th>
-        <th style="width: 5%;" class="text-center">Yrs Since Exit</th>
+        <th style="width: 8%;">Date Promoted</th>
+        <th style="width: 6%;" class="text-center">Yrs Since Promotion</th> 
         <th style="width: 8%;">State</th>
       </tr>
     </thead>
@@ -259,17 +254,19 @@
           <td style="white-space: nowrap;">{{this.gradetype_code}}</td>
           <td>{{this.pfa}}</td>
           <td>{{this.nsitf_code}}</td>
+          <td class="text-center">{{this.emolumentform}}</td>
           <td class="text-center {{#if (gt this.age 55)}}highlight-age{{/if}}">
             {{this.age}}yrs
           </td>
           <td class="text-center {{#if (gte this.years_of_service 30)}}highlight-service{{/if}}">
-            {{this.years_served_formatted}}
+              {{this.years_of_service}}yrs
           </td>
           <td style="font-size: 7px;">{{this.date_employed_formatted}}</td>
-          <td style="font-size: 7px; white-space: nowrap;">{{this.date_left_formatted}}</td>
-          <td class="text-center">{{this.exittype}}</td>
-          <td class="text-center {{#if (lt this.years_since_exit 2)}}highlight-exit{{/if}}">
-            {{this.years_since_exit}}yrs
+          <td style="font-size: 7px; white-space: nowrap;">
+              {{this.date_promoted_formatted}}
+          </td>
+          <td class="text-center">
+              {{this.years_since_promotion}}yrs
           </td>
           <td>{{this.state_of_origin}}</td>
         </tr>

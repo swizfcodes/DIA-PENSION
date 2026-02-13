@@ -16,13 +16,15 @@ if (!fs.existsSync(RESTORE_DIR)) {
     fs.mkdirSync(RESTORE_DIR, { recursive: true });
 }
 
+// SSE sessions for progress tracking
+const activeSessions = new Map();
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, RESTORE_DIR);
     },
     filename: (req, file, cb) => {
-        // Keep original filename for easier management
         const timestamp = Date.now();
         const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
         cb(null, `${timestamp}_${sanitizedName}`);
@@ -32,10 +34,9 @@ const storage = multer.diskStorage({
 const upload = multer({ 
     storage: storage,
     limits: {
-        fileSize: 100 * 1024 * 1024 // 100MB limit
+        fileSize: 10 * 1024 * 1024 * 1024 // 10GB limit
     },
     fileFilter: (req, file, cb) => {
-        // Allow common backup file extensions
         const allowedExtensions = ['.sql', '.dump', '.bak', '.gz', '.zip'];
         const ext = path.extname(file.originalname).toLowerCase();
         
@@ -50,12 +51,12 @@ const upload = multer({
 // Helper function to get friendly name
 const getFriendlyName = (dbName) => {
     const dbToClassMap = {
-        [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-        [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-        [process.env.DB_RATINGS]: 'PENSION STAFF',
-        [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-        [process.env.DB_RATINGS_B]: 'RUNNING COST',
-        // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
+      [process.env.DB_RATINGS_B]: 'RUNNING COST',
+      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
     
     return dbToClassMap[dbName] || dbName;
@@ -70,13 +71,11 @@ const loadHistory = (dbName = null) => {
         const data = fs.readFileSync(HISTORY_FILE, 'utf8');
         const allHistory = JSON.parse(data);
         
-        // Add friendly names to existing entries that don't have them
         const historyWithNames = allHistory.map(entry => ({
             ...entry,
             class_name: entry.class_name || getFriendlyName(entry.database)
         }));
         
-        // Filter by database if provided
         if (dbName) {
             return historyWithNames.filter(entry => entry.database === dbName);
         }
@@ -97,10 +96,8 @@ const saveHistory = (history) => {
 };
 
 const addToHistory = (entry) => {
-    // Load all history (not filtered)
     const allHistory = loadHistory();
     
-    // Add friendly name to new entry
     const newEntry = {
         ...entry,
         id: Date.now(),
@@ -113,16 +110,30 @@ const addToHistory = (entry) => {
     return allHistory;
 };
 
-/**
- * Utility to run shell command with better error handling
- */
+// Broadcast progress to SSE clients
+function broadcastProgress(sessionId, progress) {
+    const session = activeSessions.get(sessionId);
+    if (!session) return;
+    
+    session.progress = progress;
+    const data = `data: ${JSON.stringify(progress)}\n\n`;
+    
+    session.clients.forEach(client => {
+        try {
+            client.write(data);
+        } catch (err) {
+            console.error('Error writing to SSE client:', err.message);
+        }
+    });
+}
+
 function runCommand(command, callback) {
     console.log('Executing command:', command);
     
     exec(command, { 
         shell: true,
-        timeout: 300000, // 5 minute timeout
-        maxBuffer: 1024 * 1024 * 10 // 10MB buffer
+        timeout: 3600000, // 1 hour
+        maxBuffer: 1024 * 1024 * 100 // 100MB buffer
     }, (err, stdout, stderr) => {
         if (err) {
             console.error("Command failed:", err.message);
@@ -139,55 +150,84 @@ function runCommand(command, callback) {
     });
 }
 
-/**
- * Create a backup before overwrite restore
- */
-async function createBackupBeforeRestore(database) {
-    return new Promise((resolve, reject) => {
+async function createBackupBeforeRestore(database, config) {
+    return new Promise((resolve) => {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const backupDir = path.join(process.cwd(), 'backups', 'pre-restore');
         
-        // Ensure backup directory exists
         if (!fs.existsSync(backupDir)) {
             fs.mkdirSync(backupDir, { recursive: true });
         }
         
         const backupFile = path.join(backupDir, `${database}_pre-restore_${timestamp}.sql`);
+        const backupCommand = `mysqldump --skip-lock-tables -h ${config.host} -P ${config.port} -u ${config.user} -p${config.password} ${database} > "${backupFile}"`;
         
-        const dbUser = process.env.DB_USER || dbConfig.user;
-        const dbPassword = process.env.DB_PASSWORD || dbConfig.password;
-        const dbHost = process.env.DB_HOST || dbConfig.host || 'localhost';
-        const dbPort = process.env.DB_PORT || dbConfig.port || 3306;
-        
-        const backupCommand = `mysqldump -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${database} > "${backupFile}"`;
-        
-        runCommand(backupCommand, (err, output) => {
+        runCommand(backupCommand, (err) => {
             if (err) {
-                console.warn('Failed to create pre-restore backup:', err.message);
-                // Continue with restore even if backup fails
-                resolve(null);
+                console.warn('Pre-restore backup failed (continuing):', err.message);
             } else {
                 console.log('Pre-restore backup created:', backupFile);
-                resolve(backupFile);
             }
+            resolve(backupFile);
         });
     });
 }
 
-// Connection status route
+// SSE Progress endpoint
+router.get("/progress/:sessionId", async (req, res) => {
+    const sessionId = req.params.sessionId;
+    const token = req.query.token;
+    
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    try {
+        const jwt = require('jsonwebtoken');
+        jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        return res.status(403).json({ error: 'Invalid token' });
+    }
+    
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    if (!activeSessions.has(sessionId)) {
+        activeSessions.set(sessionId, {
+            clients: [],
+            progress: { stage: 'waiting', percent: 0, message: 'Waiting...' }
+        });
+    }
+    
+    const session = activeSessions.get(sessionId);
+    res.write(`data: ${JSON.stringify(session.progress)}\n\n`);
+    session.clients.push(res);
+    
+    req.on('close', () => {
+        const index = session.clients.indexOf(res);
+        if (index !== -1) {
+            session.clients.splice(index, 1);
+        }
+    });
+});
+
+// Connection status
 router.get("/status", verifyToken, async (req, res) => {
     let connection;
-        try {
-            connection = await mysql.createConnection(dbConfig);
-            await connection.ping(); // Simple connectivity test
-            res.json({ status: "connected", engine: "mysql" });
-        } catch (err) {
-        console.error("DB connection failed:", err.message);
-        res.json({
-            status: "disconnected",
-            engine: "mysql",
-            error: err.message,
+    try {
+        const config = await dbConfig.getConfig();
+        connection = await mysql.createConnection({
+            host: config.host,
+            port: config.port,
+            user: config.user,
+            password: config.password
         });
+        await connection.ping();
+        res.json({ status: "connected", engine: config.type || "mysql" });
+    } catch (err) {
+        console.error("DB connection failed:", err.message);
+        res.json({ status: "disconnected", error: err.message });
     } finally {
         if (connection) {
             try {
@@ -201,103 +241,91 @@ router.get("/status", verifyToken, async (req, res) => {
 
 // Get database name
 router.get('/database', verifyToken, (req, res) => {
-  try {
-    const currentClass = req.current_class;
-    
-    // Get friendly name for the database
     const dbToClassMap = {
-        [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-        [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-        [process.env.DB_RATINGS]: 'PENSION STAFF',
-        [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-        [process.env.DB_RATINGS_B]: 'RUNNING COST',
-        // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
+      [process.env.DB_RATINGS_B]: 'RUNNING COST',
+      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
-    const friendlyName = dbToClassMap[currentClass] || 'Unknown Class';
-
-    res.json({ 
-      database: currentClass,
-      class_name: friendlyName,
-      primary_class: req.primary_class,
-      user_info: {
-        user_id: req.user_id,
-        full_name: req.user_fullname,
-        role: req.user_role
-      }
-    });
-  } catch (error) {
-    console.error('Error getting database info:', error);
-    res.json({ 
-      database: 'Error',
-      class_name: 'Error',
-      error: error.message 
-    });
-  }
+  res.json({ 
+    database: req.current_class,
+    class_name: dbToClassMap[req.current_class] || 'Unknown',
+    primary_class: req.primary_class,
+    user_info: {
+      user_id: req.user_id,
+      full_name: req.user_fullname,
+      role: req.user_role
+    }
+  });
 });
 
-/**
- * POST /api/restore-db/restore
- * Upload and restore database
- */
+// RESTORE endpoint - SIMPLIFIED
 router.post("/restore", verifyToken, async (req, res) => {
     upload.single("file")(req, res, async (uploadErr) => {
         if (uploadErr) {
-            console.error("Upload error:", uploadErr.message);
-            return res.status(400).json({ 
-                success: false, 
-                error: uploadErr.message 
-            });
+            return res.status(400).json({ success: false, error: uploadErr.message });
         }
 
         const { mode = "overwrite", engine = "mysql" } = req.body;
-        const database = req.current_class; // Use database from JWT token
+        const database = req.current_class;
         const file = req.file;
 
         if (!file || !database) {
-            return res.status(400).json({ 
-                success: false, 
-                error: "Missing file or database parameter" 
-            });
+            return res.status(400).json({ success: false, error: "Missing file or database" });
         }
 
+        // Generate session ID and return immediately
+        const sessionId = `restore_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        activeSessions.set(sessionId, {
+            clients: [],
+            progress: { stage: 'uploading', percent: 5, message: 'File uploaded...' }
+        });
+        
+        res.json({ success: true, sessionId });
+
+        // Continue in background
         const restoreFile = file.path;
         const originalFilename = file.originalname;
-        let preRestoreBackup = null;
 
         try {
-            // Create backup before restore if mode is overwrite
-            if (mode === "overwrite") {
-                preRestoreBackup = await createBackupBeforeRestore(database);
+            broadcastProgress(sessionId, { stage: 'preparing', percent: 10, message: 'Preparing restore...' });
+            
+            const config = await dbConfig.getConfig();
+            let preRestoreBackup = null;
+            
+            // Optional: create backup
+            if (mode === "overwrite" && req.body.skipPreBackup !== 'true') {
+                broadcastProgress(sessionId, { stage: 'backup', percent: 15, message: 'Creating pre-restore backup...' });
+                preRestoreBackup = await createBackupBeforeRestore(database, config);
             }
 
-            // Build command based on database engine and mode
-            let command;
-            const dbUser = process.env.DB_USER || dbConfig.user;
-            const dbPassword = process.env.DB_PASSWORD || dbConfig.password;
-            const dbHost = process.env.DB_HOST || dbConfig.host || 'localhost';
-            const dbPort = process.env.DB_PORT || dbConfig.port || 3306;
+            broadcastProgress(sessionId, { stage: 'preparing', percent: 20, message: 'Building restore command...' });
 
-            // Detect platform
+            // Build command based on platform and engine
+            let command;
             const os = require("os");
             const isWindows = os.platform().startsWith("win");
 
             switch (engine.toLowerCase()) {
                 case "mysql":
-                    let mysqlOptions = `-h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword}`;
+                    let mysqlOptions = `-h ${config.host} -P ${config.port} -u ${config.user} -p${config.password}`;
                     
                     if (mode === "merge") {
-                        // For merge mode, add --force to continue on duplicate key errors
                         mysqlOptions += " --force";
                     }
                     
                     // Handle different file types
                     if (originalFilename.endsWith('.gz')) {
+                        broadcastProgress(sessionId, { stage: 'decompressing', percent: 30, message: 'Decompressing gzipped file...' });
                         command = `gunzip < "${restoreFile}" | mysql ${mysqlOptions} ${database}`;
                     } else {
+                        broadcastProgress(sessionId, { stage: 'processing', percent: 30, message: 'Processing SQL file...' });
                         if (isWindows) {
-                            // Windows: Use PowerShell to strip DEFINER and pipe to mysql
-                            command = `powershell -Command "Get-Content '${restoreFile}' | ForEach-Object { $_ -replace 'DEFINER\\s*=\\s*\`[^\`]+\`@\`[^\`]+\`', '' } | mysql ${mysqlOptions} ${database}"`;
+                            // Windows: Direct restore (PowerShell method causes memory issues with large files)
+                            command = `mysql ${mysqlOptions} ${database} < "${restoreFile}"`;
                         } else {
                             // Linux: Use sed to strip DEFINER
                             command = `sed 's/DEFINER\\s*=\\s*\`[^\`]*\`@\`[^\`]*\`//g' "${restoreFile}" | mysql ${mysqlOptions} ${database}`;
@@ -306,7 +334,7 @@ router.post("/restore", verifyToken, async (req, res) => {
                     break;
                     
                 case "postgres":
-                    let pgOptions = `-h ${dbHost} -p ${dbPort} -U ${dbUser} -d ${database}`;
+                    let pgOptions = `-h ${config.host} -p ${config.port} -U ${config.user} -d ${database}`;
                     
                     if (mode === "merge") {
                         pgOptions += " --on-conflict-do-nothing";
@@ -316,7 +344,7 @@ router.post("/restore", verifyToken, async (req, res) => {
                     break;
                     
                 case "mongo":
-                    let mongoOptions = `--host ${dbHost}:${dbPort} --db ${database}`;
+                    let mongoOptions = `--host ${config.host}:${config.port} --db ${database}`;
                     
                     if (mode === "overwrite") {
                         mongoOptions += " --drop";
@@ -326,14 +354,33 @@ router.post("/restore", verifyToken, async (req, res) => {
                     break;
                     
                 default:
-                    return res.status(400).json({ 
-                        success: false, 
-                        error: `Unsupported database engine: ${engine}` 
+                    broadcastProgress(sessionId, { 
+                        stage: 'failed', 
+                        percent: 100, 
+                        message: `Unsupported database engine: ${engine}` 
                     });
+                    return;
             }
 
-            // Execute the restore command
+            broadcastProgress(sessionId, { stage: 'restoring', percent: 40, message: 'Importing data to database...' });
+            
+            // Simulate progress during restore (visual feedback)
+            let progressPercent = 40;
+            const progressInterval = setInterval(() => {
+                if (progressPercent < 90) {
+                    progressPercent += 5;
+                    broadcastProgress(sessionId, { 
+                        stage: 'restoring', 
+                        percent: progressPercent, 
+                        message: `Restoring database... ${progressPercent}%` 
+                    });
+                }
+            }, 2000); // Update every 2 seconds
+
+            // Execute restore
             runCommand(command, (err, output) => {
+                clearInterval(progressInterval); // Stop progress simulation
+                
                 const historyEntry = {
                     filename: originalFilename,
                     storedFilename: path.basename(restoreFile),
@@ -348,166 +395,108 @@ router.post("/restore", verifyToken, async (req, res) => {
                     userName: req.user_fullname
                 };
 
-                // Add to history
                 addToHistory(historyEntry);
 
-                // Clean up uploaded file after processing
+                // Cleanup file
                 setTimeout(() => {
                     try {
                         if (fs.existsSync(restoreFile)) {
                             fs.unlinkSync(restoreFile);
                         }
                     } catch (cleanupErr) {
-                        console.error("Cleanup error:", cleanupErr.message);
+                        console.log("Cleanup error:", cleanupErr.message);
                     }
-                }, 1000);
+                }, 5000);
 
                 if (err) {
-                    return res.status(500).json({ 
-                        success: false, 
-                        error: "Database restore failed", 
-                        details: err.message 
+                    broadcastProgress(sessionId, { 
+                        stage: 'failed', 
+                        percent: 100, 
+                        message: 'Restore failed: ' + err.message 
+                    });
+                } else {
+                    broadcastProgress(sessionId, { 
+                        stage: 'complete', 
+                        percent: 100, 
+                        message: 'Restore completed successfully!' 
                     });
                 }
+            });
 
-                res.json({ 
-                    success: true, 
-                    message: `Database restore completed successfully (${mode} mode)`, 
-                    entry: historyEntry 
-                });
+            res.json({ 
+                success: true, 
+                message: `Payroll Class restore completed successfully (${mode} mode)`, 
+                entry: historyEntry 
             });
             
         } catch (error) {
-            console.error('Restore process error:', error);
-            return res.status(500).json({ 
-                success: false, 
-                error: "Restore process failed", 
-                details: error.message 
+            console.error('Restore error:', error);
+            broadcastProgress(sessionId, { 
+                stage: 'failed', 
+                percent: 100, 
+                message: 'Error: ' + error.message 
             });
         }
     });
 });
 
-//Get restore history for current database only
+// Get history
 router.get("/history", verifyToken, (req, res) => {
     const database = req.current_class;
-
-    // Get friendly name for the database
     const dbToClassMap = {
-        [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-        [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-        [process.env.DB_RATINGS]: 'PENSION STAFF',
-        [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-        [process.env.DB_RATINGS_B]: 'RUNNING COST',
-        // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
+      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
+      [process.env.DB_RATINGS]: 'PENSION STAFF',
+      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
+      [process.env.DB_RATINGS_B]: 'RUNNING COST',
+      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
     };
 
-    const friendlyName = dbToClassMap[database] || database;
-
-    const history = loadHistory(database); // Filter by current database
     res.json({ 
-      history,
-      database: database,
-      class_name: friendlyName
+      history: loadHistory(database),
+      database,
+      class_name: dbToClassMap[database] || database
     });
 });
 
-/**
- * GET /api/restore-db/stats
- * Get restore stats for current database only
- */
+// Get stats
 router.get("/stats", verifyToken, (req, res) => {
-    const database = req.current_class;
-    const history = loadHistory(database); // Filter by current database
-    
-    const successful = history.filter(h => h.status === "Success").length;
-    const failed = history.filter(h => h.status === "Failed").length;
-    const lastRestore = history.length > 0 
-        ? history[history.length - 1].date 
-        : null;
-
-    res.json({ successful, failed, lastRestore, database });
+    const history = loadHistory(req.current_class);
+    res.json({ 
+        successful: history.filter(h => h.status === "Success").length,
+        failed: history.filter(h => h.status === "Failed").length,
+        lastRestore: history.length > 0 ? history[history.length - 1].date : null,
+        database: req.current_class
+    });
 });
 
-/**
- * DELETE /api/restore-db/restore/:filename
- * Delete a restore entry from history (only for current database)
- */
+// Delete history entry
 router.delete('/restore/:filename', verifyToken, (req, res) => {
     try {
         const filename = decodeURIComponent(req.params.filename);
-        const database = req.current_class;
-        
-        // Load all history (not filtered)
         const allHistory = loadHistory();
-        
-        // Find the entry that matches both filename and current database
         const entryIndex = allHistory.findIndex(entry => 
-            entry.filename === filename && entry.database === database
+            entry.filename === filename && entry.database === req.current_class
         );
         
         if (entryIndex === -1) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'Restore entry not found for your database' 
-            });
+            return res.status(404).json({ success: false, error: 'Entry not found' });
         }
 
-        // Remove the entry from history
-        const removedEntry = allHistory.splice(entryIndex, 1)[0];
+        allHistory.splice(entryIndex, 1);
         saveHistory(allHistory);
-
-        // Try to delete the associated file if it still exists
-        if (removedEntry.storedFilename) {
-            const filePath = path.join(RESTORE_DIR, removedEntry.storedFilename);
-            try {
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                }
-            } catch (fileErr) {
-                console.warn('Could not delete associated file:', fileErr.message);
-            }
-        }
-
-        // Try to delete pre-restore backup if it exists
-        if (removedEntry.preRestoreBackup) {
-            const backupPath = path.join(process.cwd(), 'backups', 'pre-restore', removedEntry.preRestoreBackup);
-            try {
-                if (fs.existsSync(backupPath)) {
-                    fs.unlinkSync(backupPath);
-                }
-            } catch (backupErr) {
-                console.warn('Could not delete pre-restore backup:', backupErr.message);
-            }
-        }
-
-        res.json({ 
-            success: true, 
-            message: 'Restore entry deleted successfully' 
-        });
-        
+        res.json({ success: true, message: 'Restore entry deleted successfully' });
     } catch (err) {
-        console.error('Delete restore entry error:', err);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to delete restore entry' 
-        });
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// Error handling middleware for multer errors
+// Error handler
 router.use((error, req, res, next) => {
-    if (error instanceof multer.MulterError) {
-        if (error.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({
-                success: false,
-                error: 'File too large. Maximum size is 100MB.'
-            });
-        }
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ success: false, error: 'File too large. Max 10GB.' });
     }
     next(error);
 });
 
 module.exports = router;
-
-

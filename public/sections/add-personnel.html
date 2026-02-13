@@ -236,9 +236,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Accommodation Type</label>
-          <select name="accomm_type" id="accomm_type" class="w-full border border-green-500 bg-transparent rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            <option>Select Accommodation Type</option>
-          </select>
+          <input name="accomm_type" id="accomm_type" placeholder="Accommodation Type" class="w-full border border-blue-500 bg-transparent rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Rent Subsidy</label>
@@ -624,7 +622,7 @@ const dropdownConfig = {
   "Marital Status": { endpoint: "marital", value: "MaritalCode", text: "MaritalStatus" },
   "State Of Origin": { endpoint: "state", value: "Statecode", text: "Statename" },
   "Local Government": { endpoint: "lga", value: "Lgcode", text: "Lgname" },
-  "Rank": { endpoint: "title", value: "Titlecode", text: "Description" },
+  "Rank": { endpoint: "title", value: "Description", text: "Description" },
   "Religion": { endpoint: "religion", value: "ReligionCode", text: "ReligionName" }
 };
 
@@ -2705,9 +2703,14 @@ async function submitPersonnelForm() {
       const redirectTitle = hasExited ? 'Old Personnel' : 'Current Personnel';
 
       showPopup("Personnel updated successfully", () => {
+        // Clear ALL navigation states to prevent returning to wrong section
         localStorage.removeItem('editing_employee_id');
-        //localStorage.removeItem('navigatedFromCurrentPersonnel');
-        //localStorage.removeItem('navigatedFromOldPersonnel');
+        localStorage.removeItem('navigatedFromCurrentPersonnel');
+        localStorage.removeItem('navigatedFromOldPersonnel');
+        localStorage.removeItem('currentPersonnelPage');
+        localStorage.removeItem('currentPersonnelType');
+        localStorage.removeItem('oldPersonnelPage');
+        localStorage.removeItem('oldPersonnelType');
         localStorage.removeItem('isEditMode');
 
         if (window.navigation?.navigateToSection) {
@@ -2795,6 +2798,7 @@ async function submitPersonnelForm() {
     showAlert('Failed to save employee: ' + error.message);
   }
 }
+
 
 // Capitalize first letter, keep the rest lower
 function capitalizeWords(str) {
@@ -2935,7 +2939,7 @@ if (result.summary) {
         //await loadScales();
         resetBatchUploadForm();
 
-        showPopup("Personnels Uploaded successfully", () => {
+        showPopup("Personnel Uploaded successfully", () => {
           if (window.navigation?.navigateToSection) {
             window.navigation.navigateToSection('current-personnel', 'Current Personnel');
             setTimeout(() => {
@@ -2951,7 +2955,7 @@ if (result.summary) {
       document.getElementById("batchUploadForm").reset();
       document.getElementById("batchUploadForm").classList.add("hidden");
 
-      showPopup("Personnels Uploaded successfully", () => {
+      showPopup("Personnel Uploaded successfully", () => {
         if (window.navigation?.navigateToSection) {
           window.navigation.navigateToSection('current-personnel', 'Current Personnel');
           setTimeout(() => {

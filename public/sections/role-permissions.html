@@ -1,51 +1,134 @@
-<div class="p-6 max-w-7xl mx-auto">
+<div class="p-6 max-w-4xl mx-auto">
   <!-- Header -->
-  <div class="flex items-center justify-between p-6 border-b">
-    <div>
-      <h2 class="text-2xl font-bold text-green-800">Configure which menu items each role can access</h2>
-      <p class="text-sm text-gray-600 mt-1"></p>
+  <div class="p-6 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800">Configure menu access for each role</h2>
+        <p class="text-sm text-gray-600 mt-1"></p>
+      </div>
+      <button id="openModalBtn" 
+        class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        disabled>
+        <i class="fas fa-cog"></i>
+        <span>Configure Permissions</span>
+      </button>
     </div>
-    <button id="saveBtn" 
-      class="px-2 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium flex items-center gap-2">
-      <span> <i class="fas fa-save mr-2"></i>Save Permissions</span>
-    </button>
   </div>
 
-  <!-- Role Selection -->
-  <div class="p-6 border-b">
-    <label class="block text-sm font-medium text-gray-700 mb-2">Select Role:</label>
-    <select id="roleSelect" class="w-full md:w-96 border border-green-500 rounded px-4 py-2 focus:ring-2 focus:ring-green-500">
+  <!-- Role Selection Card -->
+  <div class="p-6">
+    <label class="block text-sm font-medium text-gray-700 mb-3">Select Role:</label>
+    <select id="roleSelect" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
       <option value="">Loading roles...</option>
     </select>
+    
+    <div id="roleInfo" class="mt-4 p-4 bg-green-50 rounded-lg hidden">
+      <div class="flex items-start gap-3">
+        <i class="fas fa-info-circle text-green-600 mt-1"></i>
+        <div>
+          <p class="text-sm font-medium text-gray-800" id="roleInfoText"></p>
+          <p class="text-xs text-gray-600 mt-1">Click "Configure Permissions" to manage menu access</p>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- Permissions Grid -->
-  <div id="permissionsContainer" class="p-6">
-    <p class="text-gray-500 text-center py-8">Select a role to configure permissions</p>
+<!-- Permissions Modal -->
+<div id="permissionsModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-slate-100 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+    
+    <!-- Modal Header -->
+    <div class="px-6 py-5 border-b bg-gray-50 rounded-t-xl border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold text-green-500">Configure Menu Permissions</h3>
+          <p class="text-sm text-gray-600 mt-1" id="modalRoleName">Role: --</p>
+        </div>
+        <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="flex-1 overflow-y-auto px-6 py-6">
+      <div id="menuSections" class="space-y-4">
+        <!-- Menu sections will be rendered here -->
+      </div>
+      
+      <div id="emptyState" class="text-center py-12 text-gray-500">
+        <i class="fas fa-folder-open text-4xl mb-3"></i>
+        <p>No menu items available</p>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+      <div class="flex items-center justify-between">
+        <button id="prevBtn" 
+          class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled>
+          <i class="fas fa-chevron-left"></i>
+          <span>Previous</span>
+        </button>
+        
+        <div class="flex items-center gap-2">
+          <span id="sectionIndicator" class="text-sm text-gray-600">Section 1 of 1</span>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button id="nextBtn" 
+            class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled>
+            <span>Next</span>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          
+          <button id="savePermissionsBtn" 
+            class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center gap-2 transition-colors">
+            <i class="fas fa-save"></i>
+            <span>Save Permissions</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Success Modal -->
-<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-8 max-w-sm w-full mx-4 text-center">
-    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-      </svg>
+<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden items-center justify-center z-[60]">
+  <div class="bg-white rounded-xl p-8 max-w-sm w-full mx-4 text-center shadow-2xl transform transition-all">
+    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-check text-white text-2xl"></i>
     </div>
-    <p class="text-gray-700 font-medium text-lg">Permissions Saved!</p>
+    <h4 class="text-xl font-bold text-gray-800 mb-2">Success!</h4>
+    <p class="text-gray-600">Permissions saved successfully</p>
   </div>
 </div>
 
 <script>
   const roleSelect = document.getElementById('roleSelect');
-  const permissionsContainer = document.getElementById('permissionsContainer');
-  const saveBtn = document.getElementById('saveBtn');
+  const openModalBtn = document.getElementById('openModalBtn');
+  const permissionsModal = document.getElementById('permissionsModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const menuSections = document.getElementById('menuSections');
+  const emptyState = document.getElementById('emptyState');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const savePermissionsBtn = document.getElementById('savePermissionsBtn');
   const successModal = document.getElementById('successModal');
+  const sectionIndicator = document.getElementById('sectionIndicator');
+  const modalRoleName = document.getElementById('modalRoleName');
+  const roleInfo = document.getElementById('roleInfo');
+  const roleInfoText = document.getElementById('roleInfoText');
   
   let allMenuItems = [];
   let currentRoleId = null;
+  let currentRoleName = '';
   let selectedPermissions = new Set();
+  let rootMenus = [];
+  let currentSection = 0;
 
   // Fetch roles
   async function fetchRoles() {
@@ -61,11 +144,13 @@
       roles.forEach(role => {
         const option = document.createElement('option');
         option.value = role.id;
-        option.textContent = `${role.name} - ${role.description}`;
+        option.textContent = role.name;
+        option.dataset.description = role.description;
         roleSelect.appendChild(option);
       });
     } catch (err) {
       console.error('Failed to fetch roles:', err);
+      roleSelect.innerHTML = '<option value="">Error loading roles</option>';
     }
   }
 
@@ -93,7 +178,14 @@
       
       const permissions = await res.json();
       selectedPermissions = new Set(permissions);
-      renderPermissions();
+      
+      // Auto-enable Dashboard for everyone
+      const dashboardMenu = allMenuItems.find(m => m.menu_name.toLowerCase() === 'dashboard');
+      if (dashboardMenu) {
+        selectedPermissions.add(dashboardMenu.id);
+        // Also add all Dashboard children
+        selectAllChildren(dashboardMenu.id);
+      }
     } catch (err) {
       console.error('Failed to fetch permissions:', err);
     }
@@ -102,7 +194,7 @@
   // Build menu hierarchy
   function buildMenuHierarchy() {
     const menuMap = new Map();
-    const rootMenus = [];
+    rootMenus = [];
     
     // Create menu map
     allMenuItems.forEach(item => {
@@ -124,63 +216,134 @@
     return rootMenus;
   }
 
-  // Render permissions UI
-  function renderPermissions() {
-    const hierarchy = buildMenuHierarchy();
-    
-    if (!currentRoleId) {
-      permissionsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Select a role to configure permissions</p>';
+  // Render single section
+  function renderSection(sectionIndex) {
+    if (!rootMenus[sectionIndex]) {
+      menuSections.innerHTML = '';
+      emptyState.classList.remove('hidden');
       return;
     }
     
-    let html = '<div class="space-y-6">';
-    
-    hierarchy.forEach(menu => {
-      html += renderMenu(menu, 0);
-    });
-    
-    html += '</div>';
-    permissionsContainer.innerHTML = html;
-    
-    // Add event listeners
-    document.querySelectorAll('.menu-checkbox').forEach(cb => {
-      cb.addEventListener('change', handleCheckboxChange);
-    });
-  }
-
-  // Render individual menu
-  function renderMenu(menu, level) {
-    const indent = level * 24;
-    const isChecked = selectedPermissions.has(menu.id);
-    const hasChildren = menu.children && menu.children.length > 0;
+    emptyState.classList.add('hidden');
+    const menu = rootMenus[sectionIndex];
+    const isMenuChecked = selectedPermissions.has(menu.id);
+    const isDashboard = menu.menu_name.toLowerCase() === 'dashboard';
     
     let html = `
-      <div class="border border-gray-200 rounded-lg p-4" style="margin-left: ${indent}px">
-        <div class="flex items-center gap-3">
+      <div class="space-y-4">
+        <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
+          ${isDashboard ? 
+            `<i class="fas fa-folder text-green-600 text-lg cursor-not-allowed opacity-50"></i>` :
+            `<i class="fas fa-folder menu-header-icon text-lg cursor-pointer transition-colors ${isMenuChecked ? 'text-green-600' : 'text-gray-300 hover:text-gray-400'}" 
+                data-menu-id="${menu.id}" 
+                title="Click to ${isMenuChecked ? 'uncheck' : 'check'} all items in this menu"></i>`
+          }
+          <h4 class="text-lg font-bold text-gray-800">${menu.menu_name}</h4>
+          <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">${menu.menu_type}</span>
+          ${isDashboard ? '<span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">Auto-enabled</span>' : ''}
+        </div>
+        
+        <div class="space-y-2">
+          ${renderMenuChildren(menu)}
+        </div>
+      </div>
+    `;
+    
+    menuSections.innerHTML = html;
+    
+    // Update navigation
+    prevBtn.disabled = sectionIndex === 0;
+    nextBtn.disabled = sectionIndex === rootMenus.length - 1;
+    sectionIndicator.textContent = `Section ${sectionIndex + 1} of ${rootMenus.length}`;
+    
+    // Add event listeners
+    attachCheckboxListeners();
+    attachMenuHeaderListeners();
+  }
+
+  // Render only children of a menu (not the menu itself)
+  function renderMenuChildren(menu) {
+    const hasChildren = menu.children && menu.children.length > 0;
+    
+    if (!hasChildren) {
+      return '';
+    }
+    
+    let html = '';
+    menu.children.forEach(child => {
+      html += renderMenuItem(child, 0);
+    });
+    
+    return html;
+  }
+
+  // Render menu item recursively
+  function renderMenuItem(menu, level) {
+    const isChecked = selectedPermissions.has(menu.id);
+    const hasChildren = menu.children && menu.children.length > 0;
+    const indentClass = level === 0 ? '' : `ml-${Math.min(level * 6, 12)}`;
+    
+    let html = `
+      <div class="${indentClass} border-l-2 ${isChecked ? 'border-green-500' : 'border-gray-200'} pl-4 py-2">
+        <label class="flex items-center gap-3 cursor-pointer group">
           <input 
             type="checkbox" 
-            id="menu-${menu.id}" 
-            class="menu-checkbox w-5 h-5 text-green-600 rounded"
+            class="menu-checkbox w-5 h-5 text-green-600 rounded border-gray-300 focus:ring-2 focus:ring-green-500"
             data-menu-id="${menu.id}"
             ${isChecked ? 'checked' : ''}
           >
-          <label for="menu-${menu.id}" class="flex-1 cursor-pointer">
-            <span class="font-medium text-gray-800">${menu.menu_name}</span>
+          <span class="flex-1 text-gray-800 group-hover:text-green-600 transition-colors">
+            ${menu.menu_name}
             <span class="text-xs text-gray-500 ml-2">(${menu.menu_type})</span>
-          </label>
-        </div>
+          </span>
+        </label>
     `;
     
     if (hasChildren) {
-      html += '<div class="mt-3 space-y-2">';
+      html += '<div class="mt-2 space-y-2">';
       menu.children.forEach(child => {
-        html += renderMenu(child, level + 1);
+        html += renderMenuItem(child, level + 1);
       });
       html += '</div>';
     }
     
     html += '</div>';
+    
     return html;
+  }
+
+  // Attach checkbox listeners
+  function attachCheckboxListeners() {
+    document.querySelectorAll('.menu-checkbox').forEach(cb => {
+      cb.addEventListener('change', handleCheckboxChange);
+    });
+  }
+
+  // Attach menu header icon listeners
+  function attachMenuHeaderListeners() {
+    document.querySelectorAll('.menu-header-icon').forEach(icon => {
+      icon.addEventListener('click', handleMenuHeaderClick);
+    });
+  }
+
+  // Handle menu header icon click
+  function handleMenuHeaderClick(e) {
+    const menuId = parseInt(e.target.dataset.menuId);
+    const isCurrentlyChecked = selectedPermissions.has(menuId);
+    
+    if (isCurrentlyChecked) {
+      // Uncheck the menu and all its children
+      selectedPermissions.delete(menuId);
+      deselectChildren(menuId);
+    } else {
+      // Check the menu and all its children
+      selectedPermissions.add(menuId);
+      selectAllChildren(menuId);
+      selectParents(menuId);
+    }
+    
+    // Re-render current section
+    renderSection(currentSection);
   }
 
   // Handle checkbox change
@@ -188,29 +351,47 @@
     const menuId = parseInt(e.target.dataset.menuId);
     
     if (e.target.checked) {
+      // Check this menu
       selectedPermissions.add(menuId);
-      // Auto-select parent if exists
-      const menu = allMenuItems.find(m => m.id === menuId);
-      if (menu && menu.parent_id) {
-        selectedPermissions.add(menu.parent_id);
-        const parentCheckbox = document.querySelector(`[data-menu-id="${menu.parent_id}"]`);
-        if (parentCheckbox) parentCheckbox.checked = true;
-      }
+      // Auto-check all children recursively
+      selectAllChildren(menuId);
+      // Auto-select all parents up the tree
+      selectParents(menuId);
     } else {
+      // Uncheck this menu
       selectedPermissions.delete(menuId);
-      // Auto-deselect children
+      // Auto-uncheck all children recursively
       deselectChildren(menuId);
+    }
+    
+    // Re-render current section to update visual state
+    renderSection(currentSection);
+  }
+
+  // Select all parent menus up the tree
+  function selectParents(menuId) {
+    const menu = allMenuItems.find(m => m.id === menuId);
+    if (menu && menu.parent_id) {
+      selectedPermissions.add(menu.parent_id);
+      selectParents(menu.parent_id);
     }
   }
 
-  // Deselect all children of a menu
+  // Select all children recursively
+  function selectAllChildren(parentId) {
+    const children = allMenuItems.filter(m => m.parent_id === parentId);
+    children.forEach(child => {
+      selectedPermissions.add(child.id);
+      selectAllChildren(child.id); // Recursive for sub-sub-menus
+    });
+  }
+
+  // Deselect all children recursively
   function deselectChildren(parentId) {
     const children = allMenuItems.filter(m => m.parent_id === parentId);
     children.forEach(child => {
       selectedPermissions.delete(child.id);
-      const checkbox = document.querySelector(`[data-menu-id="${child.id}"]`);
-      if (checkbox) checkbox.checked = false;
-      deselectChildren(child.id); // Recursive
+      deselectChildren(child.id); // Recursive for sub-sub-menus
     });
   }
 
@@ -219,6 +400,13 @@
     if (!currentRoleId) {
       alert('Please select a role first');
       return;
+    }
+    
+    // Ensure Dashboard is always included
+    const dashboardMenu = allMenuItems.find(m => m.menu_name.toLowerCase() === 'dashboard');
+    if (dashboardMenu) {
+      selectedPermissions.add(dashboardMenu.id);
+      selectAllChildren(dashboardMenu.id);
     }
     
     try {
@@ -236,6 +424,7 @@
       
       if (res.ok) {
         showSuccess();
+        closeModal();
       } else {
         const error = await res.json();
         alert('Error: ' + (error.error || 'Failed to save'));
@@ -256,18 +445,68 @@
     }, 2000);
   }
 
+  // Open modal
+  function openModal() {
+    buildMenuHierarchy();
+    currentSection = 0;
+    modalRoleName.textContent = `Role: ${currentRoleName}`;
+    renderSection(currentSection);
+    permissionsModal.classList.remove('hidden');
+    permissionsModal.classList.add('flex');
+  }
+
+  // Close modal
+  function closeModal() {
+    permissionsModal.classList.add('hidden');
+    permissionsModal.classList.remove('flex');
+  }
+
   // Event listeners
-  roleSelect.addEventListener('change', (e) => {
+  roleSelect.addEventListener('change', async (e) => {
     currentRoleId = e.target.value;
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    
     if (currentRoleId) {
-      fetchRolePermissions(currentRoleId);
+      currentRoleName = selectedOption.textContent;
+      const description = selectedOption.dataset.description;
+      
+      roleInfoText.textContent = `${currentRoleName} - ${description}`;
+      roleInfo.classList.remove('hidden');
+      
+      openModalBtn.disabled = false;
+      await fetchRolePermissions(currentRoleId);
     } else {
+      roleInfo.classList.add('hidden');
+      openModalBtn.disabled = true;
       selectedPermissions.clear();
-      renderPermissions();
     }
   });
 
-  saveBtn.addEventListener('click', savePermissions);
+  openModalBtn.addEventListener('click', openModal);
+  closeModalBtn.addEventListener('click', closeModal);
+  
+  prevBtn.addEventListener('click', () => {
+    if (currentSection > 0) {
+      currentSection--;
+      renderSection(currentSection);
+    }
+  });
+  
+  nextBtn.addEventListener('click', () => {
+    if (currentSection < rootMenus.length - 1) {
+      currentSection++;
+      renderSection(currentSection);
+    }
+  });
+  
+  savePermissionsBtn.addEventListener('click', savePermissions);
+
+  // Close modal on backdrop click
+  permissionsModal.addEventListener('click', (e) => {
+    if (e.target === permissionsModal) {
+      closeModal();
+    }
+  });
 
   // Initialize
   (async () => {
@@ -275,6 +514,3 @@
     await fetchMenuItems();
   })();
 </script>
-
-
-

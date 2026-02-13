@@ -802,7 +802,7 @@ async function getCurrentPayrollPeriod() {
   }
 }
 
-// FIX: Init with proper async/await to prevent race conditions
+// Init with proper async/await to prevent race conditions
 (async function initDashboard() {
   if (document.getElementById('dynamicGreeting') || document.getElementById('payrollClassName')) {
     // Wait for class mappings to load BEFORE updating greeting
@@ -1292,11 +1292,11 @@ class NavigationSystem {
     }
     
     // Update page title
-    document.title = 'HICAD — Dashboard';
+    document.title = 'DIA — Dashboard';
   }
 
   updateHistory(sectionId, sectionName) {
-    document.title = `HICAD — ${sectionName}`;
+    document.title = `DIA — ${sectionName}`;
     // Store both sectionId and original sectionName in history state
     window.history.pushState(
       { 
@@ -1394,7 +1394,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = NavigationSystem;
 }
 
-// Dashboard stats update - FIXED VERSION
+// Dashboard stats update
 async function updateDashboardStats() {
   try {
     // Check if the element exists before making the API call

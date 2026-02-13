@@ -123,6 +123,7 @@ class EmployeeChangeHistoryController extends BaseReportController {
       res.json({ 
         success: true, 
         data,
+        message: 'Changes In Personnel Data generated successfully',
         statistics,
         filters
       });

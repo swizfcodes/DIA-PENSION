@@ -84,11 +84,9 @@ class ControlSheetService {
   // ========================================================================
   async getCurrentPeriod() {
     const query = `
-      SELECT DISTINCT 
-        cyear as year, 
-        pmonth as month
-      FROM py_tempsumm
-      ORDER BY cyear DESC, pmonth DESC
+      SELECT ord as year, mth as month, pmth as prev_month
+      FROM py_stdrate 
+      WHERE type = 'BT05'
       LIMIT 1
     `;
     const [rows] = await pool.query(query);
@@ -97,5 +95,3 @@ class ControlSheetService {
 }
 
 module.exports = new ControlSheetService();
-
-

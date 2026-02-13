@@ -1,7 +1,6 @@
 const pool = require('../../config/db');
 
 class PersonnelReportService {
-  
   // ========================================================================
   // HELPER: Get Payroll Class from Current Database
   // ========================================================================
@@ -30,7 +29,6 @@ class PersonnelReportService {
       location, 
       gradetype, 
       gradelevel, 
-      oldEmployees, 
       bankBranch, 
       stateOfOrigin, 
       emolumentForm,
@@ -64,8 +62,6 @@ class PersonnelReportService {
           h.Birthdate as birth_date,
           h.DateEmpl as date_employed,
           h.datepmted as date_promoted,
-          h.DateLeft as date_left,
-          h.exittype,
           h.StateofOrigin as state_of_origin,
           h.Bankcode as bank_code,
           h.bankbranch as bank_branch,
@@ -82,16 +78,12 @@ class PersonnelReportService {
             ELSE NULL
           END as age,
           
-          -- Calculate Years of Service (from employment to exit or current date)
+          -- Calculate Years of Service (from employment to current date)
           CASE 
             WHEN h.DateEmpl IS NOT NULL AND h.DateEmpl != '' AND LENGTH(h.DateEmpl) = 8
             THEN TIMESTAMPDIFF(YEAR, 
               STR_TO_DATE(h.DateEmpl, '%Y%m%d'), 
-              CASE 
-                WHEN h.DateLeft IS NOT NULL AND h.DateLeft != '' AND LENGTH(h.DateLeft) = 8
-                THEN STR_TO_DATE(h.DateLeft, '%Y%m%d')
-                ELSE CURDATE()
-              END)
+              CURDATE())
             ELSE NULL
           END as years_of_service,
           
@@ -100,11 +92,7 @@ class PersonnelReportService {
             WHEN h.DateEmpl IS NOT NULL AND h.DateEmpl != '' AND LENGTH(h.DateEmpl) = 8
             THEN TIMESTAMPDIFF(MONTH, 
               STR_TO_DATE(h.DateEmpl, '%Y%m%d'), 
-              CASE 
-                WHEN h.DateLeft IS NOT NULL AND h.DateLeft != '' AND LENGTH(h.DateLeft) = 8
-                THEN STR_TO_DATE(h.DateLeft, '%Y%m%d')
-                ELSE CURDATE()
-              END)
+              CURDATE())
             ELSE NULL
           END as total_months_of_service,
           
@@ -112,22 +100,9 @@ class PersonnelReportService {
             WHEN h.DateEmpl IS NOT NULL AND h.DateEmpl != '' AND LENGTH(h.DateEmpl) = 8
             THEN TIMESTAMPDIFF(DAY, 
               STR_TO_DATE(h.DateEmpl, '%Y%m%d'), 
-              CASE 
-                WHEN h.DateLeft IS NOT NULL AND h.DateLeft != '' AND LENGTH(h.DateLeft) = 8
-                THEN STR_TO_DATE(h.DateLeft, '%Y%m%d')
-                ELSE CURDATE()
-              END)
-            ELSE NULL
-          END as total_days_of_service,
-          
-          -- Calculate Years Since Exit (only for exited employees)
-          CASE 
-            WHEN h.DateLeft IS NOT NULL AND h.DateLeft != '' AND LENGTH(h.DateLeft) = 8
-            THEN TIMESTAMPDIFF(YEAR, 
-              STR_TO_DATE(h.DateLeft, '%Y%m%d'), 
               CURDATE())
             ELSE NULL
-          END as years_since_exit,
+          END as total_days_of_service,
           
           -- Calculate Years Since Promotion
           CASE 
@@ -155,20 +130,18 @@ class PersonnelReportService {
             WHEN h.datepmted IS NOT NULL AND h.datepmted != '' AND LENGTH(h.datepmted) = 8
             THEN DATE_FORMAT(STR_TO_DATE(h.datepmted, '%Y%m%d'), '%d-%b-%Y')
             ELSE NULL
-          END as date_promoted_formatted,
-          
-          CASE 
-            WHEN h.DateLeft IS NOT NULL AND h.DateLeft != '' AND LENGTH(h.DateLeft) = 8
-            THEN DATE_FORMAT(STR_TO_DATE(h.DateLeft, '%Y%m%d'), '%d-%b-%Y')
-            ELSE NULL
-          END as date_left_formatted
+          END as date_promoted_formatted
           
         FROM hr_employees h
         LEFT JOIN ac_costcentre cc ON cc.unitcode = h.Location
         LEFT JOIN py_salarygroup sg ON sg.groupcode = h.gradetype
-        WHERE h.payrollclass = ?
-          ${oldEmployees === 'yes' ? 'AND (LENGTH(IFNULL(h.DateLeft, "")) > 0 OR LENGTH(IFNULL(h.exittype, "")) > 0)' : ''}
-          ${oldEmployees === 'no' || !oldEmployees ? 'AND LENGTH(IFNULL(h.DateLeft, "")) = 0 AND LENGTH(IFNULL(h.exittype, "")) = 0' : ''}
+        WHERE (h.exittype IS NULL OR h.exittype = '')
+          AND (
+            h.DateLeft IS NULL
+            OR h.DateLeft = ''
+            OR STR_TO_DATE(h.DateLeft, '%Y%m%d') > CURDATE()
+          )
+          AND h.payrollclass = ?
           ${title ? 'AND h.Title = ?' : ''}
           ${pfa ? 'AND h.pfacode = ?' : ''}
           ${location ? 'AND h.Location = ?' : ''}
@@ -207,7 +180,6 @@ class PersonnelReportService {
           location: location || 'All',
           gradetype: gradetype || 'All',
           gradelevel: gradelevel || 'All',
-          oldEmployees: oldEmployees || 'Active Only',
           bankBranch: bankBranch || 'All',
           stateOfOrigin: stateOfOrigin || 'All',
           rentSubsidy: rentSubsidy || 'All',
@@ -241,7 +213,6 @@ class PersonnelReportService {
       location, 
       gradetype, 
       gradelevel, 
-      oldEmployees, 
       bankBranch, 
       stateOfOrigin, 
       emolumentForm,
@@ -264,10 +235,6 @@ class PersonnelReportService {
           COUNT(DISTINCT h.pfacode) as total_pfas,
           COUNT(DISTINCT h.StateofOrigin) as total_states,
           
-          -- Active vs Separated
-          SUM(CASE WHEN LENGTH(IFNULL(h.DateLeft, '')) = 0 AND LENGTH(IFNULL(h.exittype, '')) = 0 THEN 1 ELSE 0 END) as active_employees,
-          SUM(CASE WHEN LENGTH(IFNULL(h.DateLeft, '')) > 0 OR LENGTH(IFNULL(h.exittype, '')) > 0 THEN 1 ELSE 0 END) as separated_employees,
-          
           -- Average calculations
           ROUND(AVG(
             CASE 
@@ -282,11 +249,7 @@ class PersonnelReportService {
               WHEN h.DateEmpl IS NOT NULL AND h.DateEmpl != '' AND LENGTH(h.DateEmpl) = 8
               THEN TIMESTAMPDIFF(YEAR, 
                 STR_TO_DATE(h.DateEmpl, '%Y%m%d'), 
-                CASE 
-                  WHEN h.DateLeft IS NOT NULL AND h.DateLeft != '' AND LENGTH(h.DateLeft) = 8
-                  THEN STR_TO_DATE(h.DateLeft, '%Y%m%d')
-                  ELSE CURDATE()
-                END)
+                CURDATE())
               ELSE NULL
             END
           ), 1) as avg_years_of_service,
@@ -304,9 +267,13 @@ class PersonnelReportService {
           SUM(CASE WHEN h.emolumentform = 'NO' THEN 1 ELSE 0 END) as emolumentform_no
           
         FROM hr_employees h
-        WHERE h.payrollclass = ?
-          ${oldEmployees === 'yes' ? 'AND (LENGTH(IFNULL(h.DateLeft, "")) > 0 OR LENGTH(IFNULL(h.exittype, "")) > 0)' : ''}
-          ${oldEmployees === 'no' || !oldEmployees ? 'AND LENGTH(IFNULL(h.DateLeft, "")) = 0 AND LENGTH(IFNULL(h.exittype, "")) = 0' : ''}
+        WHERE (h.exittype IS NULL OR h.exittype = '')
+          AND (
+            h.DateLeft IS NULL
+            OR h.DateLeft = ''
+            OR STR_TO_DATE(h.DateLeft, '%Y%m%d') > CURDATE()
+          )
+          AND h.payrollclass = ?
           ${title ? 'AND h.Title = ?' : ''}
           ${pfa ? 'AND h.pfacode = ?' : ''}
           ${location ? 'AND h.Location = ?' : ''}
@@ -335,8 +302,6 @@ class PersonnelReportService {
       
       console.log('✅ Statistics generated:', {
         total_employees: rows[0].total_employees,
-        active_employees: rows[0].active_employees,
-        separated_employees: rows[0].separated_employees,
         avg_age: rows[0].avg_age,
         avg_years_of_service: rows[0].avg_years_of_service
       });
@@ -369,7 +334,8 @@ class PersonnelReportService {
         LEFT JOIN py_Title t ON t.Titlecode = h.Title
         WHERE h.Title IS NOT NULL AND h.Title != ''
           AND h.payrollclass = ?
-          AND LENGTH(IFNULL(h.DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(h.DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(h.DateLeft, '')) = 8 AND STR_TO_DATE(h.DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(h.exittype, '')) = 0
         ORDER BY h.Title
       `;
@@ -397,7 +363,8 @@ class PersonnelReportService {
         FROM hr_employees
         WHERE pfacode IS NOT NULL AND pfacode != ''
           AND payrollclass = ?
-          AND LENGTH(IFNULL(DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(DateLeft, '')) = 8 AND STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(exittype, '')) = 0
         ORDER BY pfacode
       `;
@@ -426,7 +393,8 @@ class PersonnelReportService {
         LEFT JOIN ac_costcentre cc ON cc.unitcode = h.Location
         WHERE h.Location IS NOT NULL AND h.Location != ''
           AND h.payrollclass = ?
-          AND LENGTH(IFNULL(h.DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(h.DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(h.DateLeft, '')) = 8 AND STR_TO_DATE(h.DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(h.exittype, '')) = 0
         ORDER BY h.Location
       `;
@@ -455,7 +423,8 @@ class PersonnelReportService {
         LEFT JOIN py_salarygroup sg ON sg.groupcode = h.gradetype
         WHERE h.gradetype IS NOT NULL AND h.gradetype != ''
           AND h.payrollclass = ?
-          AND LENGTH(IFNULL(h.DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(h.DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(h.DateLeft, '')) = 8 AND STR_TO_DATE(h.DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(h.exittype, '')) = 0
         ORDER BY h.gradetype
       `;
@@ -483,7 +452,8 @@ class PersonnelReportService {
         FROM hr_employees
         WHERE gradelevel IS NOT NULL AND gradelevel != ''
           AND payrollclass = ?
-          AND LENGTH(IFNULL(DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(DateLeft, '')) = 8 AND STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(exittype, '')) = 0
         ORDER BY gradelevel DESC
       `;
@@ -512,7 +482,8 @@ class PersonnelReportService {
         LEFT JOIN py_bank bk ON bk.branchcode = LPAD(bankbranch, 3, '0')
         WHERE bankbranch IS NOT NULL AND bankbranch != ''
           AND payrollclass = ?
-          AND LENGTH(IFNULL(DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(DateLeft, '')) = 8 AND STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(exittype, '')) = 0
         ORDER BY bankbranch
       `;
@@ -541,7 +512,8 @@ class PersonnelReportService {
         LEFT JOIN py_tblstates s ON Statecode = StateofOrigin
         WHERE StateofOrigin IS NOT NULL AND StateofOrigin != ''
           AND payrollclass = ?
-          AND LENGTH(IFNULL(DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(DateLeft, '')) = 8 AND STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(exittype, '')) = 0
         ORDER BY StateofOrigin
       `;
@@ -573,7 +545,8 @@ class PersonnelReportService {
         FROM hr_employees
         WHERE rent_subsidy IS NOT NULL AND rent_subsidy != ''
           AND payrollclass = ?
-          AND LENGTH(IFNULL(DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(DateLeft, '')) = 8 AND STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(exittype, '')) = 0
         ORDER BY rent_subsidy DESC
       `;
@@ -605,7 +578,8 @@ class PersonnelReportService {
         FROM hr_employees
         WHERE taxed IS NOT NULL AND taxed != ''
           AND payrollclass = ?
-          AND LENGTH(IFNULL(DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(DateLeft, '')) = 8 AND STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(exittype, '')) = 0
         ORDER BY taxed DESC
       `;
@@ -637,7 +611,8 @@ class PersonnelReportService {
         FROM hr_employees
         WHERE emolumentform IS NOT NULL AND emolumentform != ''
           AND payrollclass = ?
-          AND LENGTH(IFNULL(DateLeft, '')) = 0 
+          AND (LENGTH(IFNULL(DateLeft, '')) = 0 
+            OR (LENGTH(IFNULL(DateLeft, '')) = 8 AND STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()))
           AND LENGTH(IFNULL(exittype, '')) = 0
         ORDER BY emolumentform DESC
       `;
@@ -653,5 +628,3 @@ class PersonnelReportService {
 }
 
 module.exports = new PersonnelReportService();
-
-

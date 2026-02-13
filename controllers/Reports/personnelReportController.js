@@ -207,17 +207,12 @@ class PersonnelReportController extends BaseReportController {
   
       const image = await companySettings.getSettingsFromFile('./public/photos/logo.png');
 
-      let className = this.getDatabaseNameFromRequest(req);
-      if (className && className.includes(' ')) {
-        className = className.replace(' ', '<br>');
-      }
-
       const templateData = {
         data: data,
         statistics: statistics,
         reportDate: new Date(),
         filters: filterDescription,
-        className: className,
+        className: this.getDatabaseNameFromRequest(req),
         ...image
       };
 

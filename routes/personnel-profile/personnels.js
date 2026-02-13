@@ -52,8 +52,12 @@ router.get('/employees-current', verifyToken, async (req, res) => {
     const [rows] = await pool.query(`
       SELECT Empl_ID, Title, Surname, OtherName
       FROM hr_employees 
-      WHERE (DateLeft IS NULL OR DateLeft = '')
-        AND (exittype IS NULL OR exittype = '')
+      WHERE (exittype IS NULL OR exittype = '')
+        AND (
+          DateLeft IS NULL
+          OR DateLeft = ''
+          OR STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()
+        )
         AND payrollclass = ?
       ORDER BY Empl_ID ASC
     `, [payrollClass]);
@@ -113,8 +117,12 @@ router.get('/employees-current-pages', verifyToken, async (req, res) => {
     const [countResult] = await pool.query(`
       SELECT COUNT(*) as total
       FROM hr_employees 
-      WHERE (DateLeft IS NULL OR DateLeft = '')
-        AND (exittype IS NULL OR exittype = '')
+      WHERE (exittype IS NULL OR exittype = '')
+        AND (
+          DateLeft IS NULL
+          OR DateLeft = ''
+          OR STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()
+        )
         AND payrollclass = ?
     `, [payrollClass]);
     
@@ -125,8 +133,12 @@ router.get('/employees-current-pages', verifyToken, async (req, res) => {
     const [rows] = await pool.query(`
       SELECT Empl_ID, Title, Surname, OtherName 
       FROM hr_employees 
-      WHERE (DateLeft IS NULL OR DateLeft = '')
-        AND (exittype IS NULL OR exittype = '')
+      WHERE (exittype IS NULL OR exittype = '')
+        AND (
+          DateLeft IS NULL
+          OR DateLeft = ''
+          OR STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()
+        )
         AND payrollclass = ?
       ORDER BY Empl_ID ASC
       LIMIT ? OFFSET ?
@@ -190,8 +202,12 @@ router.get('/employees-current/search', verifyToken, async (req, res) => {
     let query = `
       SELECT Empl_ID, Title, Surname, OtherName
       FROM hr_employees 
-      WHERE (DateLeft IS NULL OR DateLeft = '')
-        AND (exittype IS NULL OR exittype = '')
+      WHERE (exittype IS NULL OR exittype = '')
+        AND (
+          DateLeft IS NULL
+          OR DateLeft = ''
+          OR STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()
+        )
         AND payrollclass = ?
     `;
     
@@ -275,8 +291,12 @@ router.get('/employees-old', verifyToken, async (req, res) => {
     const [rows] = await pool.query(`
       SELECT Empl_ID, Title, Surname, OtherName
       FROM hr_employees 
-      WHERE (NULLIF(TRIM(DateLeft), '') IS NOT NULL
-        OR NULLIF(TRIM(exittype), '') IS NOT NULL)
+      WHERE ((exittype IS NOT NULL AND exittype <> '')
+          OR (
+            DateLeft IS NOT NULL
+            AND DateLeft <> ''
+            AND STR_TO_DATE(DateLeft, '%Y%m%d') <= CURDATE()
+          )) 
         AND payrollclass = ?
       ORDER BY Empl_ID ASC
       `, [payrollClass]
@@ -331,8 +351,12 @@ router.get('/employees-old-pages', verifyToken, async (req, res) => {
     const [countResult] = await pool.query(`
       SELECT COUNT(*) as total
       FROM hr_employees 
-      WHERE (NULLIF(TRIM(DateLeft), '') IS NOT NULL
-        OR NULLIF(TRIM(exittype), '') IS NOT NULL)
+      WHERE ((exittype IS NOT NULL AND exittype <> '')
+          OR (
+            DateLeft IS NOT NULL
+            AND DateLeft <> ''
+            AND STR_TO_DATE(DateLeft, '%Y%m%d') <= CURDATE()
+          )) 
         AND payrollclass = ?
     `, [payrollClass]);
     
@@ -343,8 +367,12 @@ router.get('/employees-old-pages', verifyToken, async (req, res) => {
     const [rows] = await pool.query(`
       SELECT Empl_ID, Title, Surname, OtherName
       FROM hr_employees 
-      WHERE (NULLIF(TRIM(DateLeft), '') IS NOT NULL
-        OR NULLIF(TRIM(exittype), '') IS NOT NULL)
+      WHERE ((exittype IS NOT NULL AND exittype <> '')
+          OR (
+            DateLeft IS NOT NULL
+            AND DateLeft <> ''
+            AND STR_TO_DATE(DateLeft, '%Y%m%d') <= CURDATE()
+          )) 
         AND payrollclass = ?
       ORDER BY Empl_ID ASC
       LIMIT ? OFFSET ?
@@ -408,8 +436,12 @@ router.get('/employees-old/search', verifyToken, async (req, res) => {
     let query = `
       SELECT Empl_ID, Title, Surname, OtherName
       FROM hr_employees 
-      WHERE (NULLIF(TRIM(DateLeft), '') IS NOT NULL
-        OR NULLIF(TRIM(exittype), '') IS NOT NULL)
+      WHERE ((exittype IS NOT NULL AND exittype <> '')
+          OR (
+            DateLeft IS NOT NULL
+            AND DateLeft <> ''
+            AND STR_TO_DATE(DateLeft, '%Y%m%d') <= CURDATE()
+          )) 
         AND payrollclass = ?
     `;
     
@@ -1271,5 +1303,3 @@ router.delete('/employees/:id/family', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
-
-

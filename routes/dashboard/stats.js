@@ -30,12 +30,13 @@ router.get('/total-personnels', verifyToken, async (req, res) => {
 
     const query = `
       SELECT COUNT(*) AS totalPersonnels FROM hr_employees
-      WHERE payrollclass = ?
-        AND LENGTH(IFNULL(exittype, '')) = 0
+      WHERE (exittype IS NULL OR exittype = '')
         AND (
-          LENGTH(IFNULL(DateLeft, '')) = 0
-          OR DateLeft > CURDATE()
-        );
+          DateLeft IS NULL
+          OR DateLeft = ''
+          OR STR_TO_DATE(DateLeft, '%Y%m%d') > CURDATE()
+        )
+        AND payrollclass = ?
     `;
 
     const [result] = await pool.execute(query, [payrollClass]);
@@ -54,5 +55,3 @@ router.get('/total-personnels', verifyToken, async (req, res) => {
 
 
 module.exports = router;
-
-

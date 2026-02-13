@@ -463,11 +463,11 @@ class NavigationSystem {
     }
     
     // Update page title
-    document.title = 'HICAD — Dashboard';
+    document.title = 'DIA — Dashboard';
   }
 
   updateHistory(sectionId, sectionName) {
-    document.title = `HICAD — ${sectionName}`;
+    document.title = `DIA — ${sectionName}`;
     // Store both sectionId and original sectionName in history state
     window.history.pushState(
       { 

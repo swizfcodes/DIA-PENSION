@@ -100,7 +100,7 @@ class VarianceAnalysisController extends BaseReportController {
   async generateSalaryVarianceExcel(result, req, res) {
     try {
       if (!result.data || result.data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No variance detected for the selected filters');
       }
       
       const exporter = new GenericExcelExporter();
@@ -403,7 +403,7 @@ class VarianceAnalysisController extends BaseReportController {
   async generateSalaryVariancePDF(result, req, res) {
     try {
       if (!result.data || result.data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No variance detected for the selected filters');
       }
 
       const templatePath = path.join(__dirname, '../../templates/salary-variance.html');

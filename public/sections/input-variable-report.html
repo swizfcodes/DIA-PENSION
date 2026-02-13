@@ -26,19 +26,27 @@
     </div>
   </div>
 
-  <!-- Main Section (Stage >= 775) -->
+  <!-- Main Section -->
   <section id="mainSection" class="hidden">
-    <!-- Generate Button (moves to top-left after first print) -->
-    <div id="generateBtnContainer" class="flex justify-center items-center p-8">
+    <div id="sectionHeader" class="p-6">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="bg-yellow-500 text-white p-3 rounded-full shadow">
+          <i class="fas fa-file-invoice text-2xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">Generate Input Variable Report</h2>
+      </div>
+    </div>
+
+    <div id="generateBtnContainer" class="flex justify-end space-x-4 pt-4">
       <button id="generateBtn" class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all">
-        <i class="fas fa-file-alt mr-2"></i>Generate Input Variable Report
+        <i class="fas fa-file-alt mr-2"></i>Generate
       </button>
     </div>
   </section>
 
   <!-- Format Selection Modal -->
   <div id="formatModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
+    <div class="bg-slate-100 rounded-lg shadow-2xl w-full max-w-md p-6">
       <div class="text-center mb-6">
         <i class="fas fa-file-export text-green-600 text-5xl mb-3"></i>
         <h3 class="text-xl font-bold text-gray-900 mb-2">Select Export Format</h3>
@@ -127,6 +135,7 @@
   const generateBtnContainer = document.getElementById('generateBtnContainer');
   const generateBtn = document.getElementById('generateBtn');
   const nextStepBanner = document.getElementById('nextStepBanner');
+  const sectionHeader = document.getElementById('sectionHeader');
   
   const formatModal = document.getElementById('formatModal');
   const selectPdfBtn = document.getElementById('selectPdfBtn');
@@ -167,6 +176,7 @@
         generateBtnContainer.classList.add('justify-end', 'mb-4');
         generateBtn.classList.remove('text-lg', 'px-8', 'py-4');
         generateBtn.classList.add('px-4', 'py-2', 'text-sm');
+        sectionHeader.classList.add('hidden');
         generateBtn.innerHTML = '<i class="fas fa-redo mr-2"></i>Print Again';
         nextStepBanner.classList.remove('hidden');
       } else {
@@ -175,7 +185,8 @@
         generateBtnContainer.classList.remove('justify-start', 'mb-4');
         generateBtn.classList.add('text-lg', 'px-8', 'py-4');
         generateBtn.classList.remove('px-4', 'py-2', 'text-sm');
-        generateBtn.innerHTML = '<i class="fas fa-file-alt mr-2"></i>Generate Input Variable Report';
+        generateBtn.innerHTML = '<i class="fas fa-file-alt mr-2"></i>Generate';
+        sectionHeader.classList.remove('hidden');
         nextStepBanner.classList.add('hidden');
       }
       return;

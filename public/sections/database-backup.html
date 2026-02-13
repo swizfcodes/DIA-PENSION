@@ -1,6 +1,6 @@
-<div class="p-6">
+<div class="p-3">
     <!-- Connection Status -->
-    <div class="mb-6">
+    <div class="mb-3">
         <div id="connectionStatus">
             <div class="flex flex-wrap gap-2 items-center justify-between">
                 <div class="flex items-center">
@@ -21,16 +21,16 @@
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-6">
+    <div class="grid lg:grid-cols-2 gap-3">
         <!-- Backup Configuration -->
         <div class="rounded-lg border border-slate-300">
-            <div class="p-6 border-b border-slate-300">
+            <div class="p-3 border-b border-slate-300">
                 <h2 class="text-xl text-green-600 font-semibold flex items-center">
                     <i class="fas fa-cog mr-2 text-black"></i>
                     Backup Configuration
                 </h2>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-3 space-y-2">
                 <!-- Database Selection -->
                 <div>
                 <label class="block text-sm font-medium text-gray-900 mb-2">Database</label>
@@ -69,26 +69,50 @@
                 </div>
 
                 <!-- Storage Location -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-2">Storage Location</label>
-                    <div class="w-fit flex gap-4 items-center bg-white-50 p-1 rounded-lg border border-slate-300">
-                        <label class="flex items-center">
-                            <input type="radio" name="storage" value="local" class="text-green-600  border-slate-300 focus:ring-green-500" checked>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                    <label class="text-sm font-medium text-gray-900 whitespace-nowrap">
+                        Storage Location
+                    </label>
+
+                    <div
+                        class="flex flex-wrap items-center gap-x-4 gap-y-2"
+                    >
+                        <label class="flex items-center whitespace-nowrap">
+                            <input
+                                type="radio"
+                                name="storage"
+                                value="local"
+                                checked
+                                class="text-green-600 border-slate-300 focus:ring-green-500"
+                            />
                             <span class="ml-2 text-sm text-gray-900">Local Server</span>
                         </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="storage" value="ftp" class="text-green-600  border-slate-300 focus:ring-green-500">
+
+                        <label class="flex items-center whitespace-nowrap">
+                            <input
+                                type="radio"
+                                name="storage"
+                                value="ftp"
+                                class="text-green-600 border-slate-300 focus:ring-green-500"
+                            />
                             <span class="ml-2 text-sm text-gray-900">FTP Server</span>
                         </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="storage" value="cloud" class="text-green-600  border-slate-300 focus:ring-green-500">
+
+                        <label class="flex items-center whitespace-nowrap">
+                            <input
+                                type="radio"
+                                name="storage"
+                                value="cloud"
+                                class="text-green-600 border-slate-300 focus:ring-green-500"
+                            />
                             <span class="ml-2 text-sm text-gray-900">Cloud Storage</span>
                         </label>
                     </div>
                 </div>
 
+
                 <!-- Action Buttons -->
-                <div class="flex space-x-3 pt-4">
+                <div class="flex space-x-3 pt-2">
                     <button id="startBackup" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
                         <i class="fas fa-play mr-2"></i>Start Backup
                     </button>
@@ -101,13 +125,13 @@
 
         <!-- Backup History -->
         <div class="rounded-lg border border-slate-300 ">
-            <div class="p-6 border-b border-slate-300">
+            <div class="p-3 border-b border-slate-300">
                 <h2 class="text-xl font-semibold text-green-600 flex items-center">
                     <i class="fas fa-history mr-2 text-yellow-500"></i>
                     Backup History
                 </h2>
             </div>
-            <div class="p-6">
+            <div class="p-3">
                 <div id="backupHistory" class="space-y-3 max-h-96 overflow-y-auto">
                     <!-- Backup entries will be populated here -->
                 </div>

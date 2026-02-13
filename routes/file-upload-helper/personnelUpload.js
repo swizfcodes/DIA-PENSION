@@ -83,7 +83,8 @@ const FIELD_MAPPING = {
   'IPPIS NO': 'InternalACNo',
   'Country': 'Country',
   'Accommodation Type': 'accomm_type',
-  'Rent Subsidy': 'rent_subsidy'
+  'Rent Subsidy': 'rent_subsidy',
+  'Emolument Form': 'emolumentform',
 };
 
 // Helper function to parse Excel file
@@ -316,39 +317,229 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
 });
 
 // GET: Download sample template
-router.get('/batch-template', verifyToken, (req, res) => {
-  const headers = Object.keys(FIELD_MAPPING);
+// GET: Download sample template
+router.get('/batch-template', verifyToken, async (req, res) => {
+  const ExcelJS = require('exceljs');
   
-  // Create sample data
-  const sampleData = [{
-    'Service Number': 'NN001',
-    'Surname': 'Mr.',
-    'Other Name': 'John',
-    'Date of Birth': '15/06/1985',
-    'Sex': 'M',
-    'State Of Origin': 'LG',
-    'Local Government': 'IKJ',
-    'GSM Number': '08012345678',
-    'Bank Code': 'BK001',
-    'Account Number': '1234567890',
-    'Date Joined': '01/01/2010',
-    'Seniority Date': '01/01/2015',
-    'Salary Grade': 'Level 02',
-    'Salary Group': 'GRP001',
-  }];
-  
-  // Create workbook
-  const worksheet = XLSX.utils.json_to_sheet(sampleData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Personnel');
-  
-  // Generate buffer
-  const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-  
-  // Send file
-  res.setHeader('Content-Disposition', 'attachment; filename=personnel_template.xlsx');
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.send(buffer);
+  try {
+    // Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Personnel', {
+      views: [{ state: 'frozen', ySplit: 4 }] // Freeze first 4 rows
+    });
+    
+    // Add main header - Row 1 - Darker background
+    worksheet.mergeCells('A1:N1');
+    const mainHeader = worksheet.getCell('A1');
+    mainHeader.value = 'DEFENCE INTELLIGENCE AGENCY';
+    mainHeader.font = { name: 'Arial', size: 13, bold: true, color: { argb: 'FFFFFFFF' } }; // White text
+    mainHeader.alignment = { horizontal: 'center', vertical: 'middle' };
+    mainHeader.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1F784E' } // Dark navy blue
+    };
+    mainHeader.border = {
+      bottom: { style: 'thin', color: { argb: 'FF000000' } }
+    };
+    worksheet.getRow(1).height = 22;
+    
+    // Add sub header - Row 2 - Medium gray background
+    worksheet.mergeCells('A2:N2');
+    const subHeader = worksheet.getCell('A2');
+    subHeader.value = 'ASOKORO - ABUJA - DEFENCE INTELIGENCE AGENCY';
+    subHeader.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } }; // Black text
+    subHeader.alignment = { horizontal: 'center', vertical: 'middle' };
+    subHeader.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD9D9D9' } // Medium gray
+    };
+    subHeader.border = {
+      bottom: { style: 'thin', color: { argb: 'FF000000' } }
+    };
+    worksheet.getRow(2).height = 18;
+    
+    // Empty row 3
+    worksheet.getRow(3).height = 5;
+    
+    // Column headers - Row 4 with darker blue background
+    const headers = [
+      'Svc. No.',
+      'Rank',
+      'Surname',
+      'Other Name',
+      'Date of Birth',
+      'Sex',
+      'Bank Code',
+      'Bank Branch',
+      'Account Number',
+      'Date Joined',
+      'Seniority Date',
+      'Salary Grade',
+      'Salary Group',
+      'Emol. Form'
+    ];
+    
+    const headerRow = worksheet.getRow(4);
+    headers.forEach((header, index) => {
+      const cell = headerRow.getCell(index + 1);
+      cell.value = header;
+      cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } }; // White text
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF2E8A5C' } // Darker blue (similar to your image)
+      };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FFFFFFFF' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FFFFFFFF' } }
+      };
+    });
+    headerRow.height = 19.5;
+    
+    // Sample data - Row 5
+    const sampleData = [
+      '00NA/00/0001',    // Service Number
+      'SSGT',            // Rank
+      'Mr.',             // Surname
+      'John',            // Other Name
+      '15/06/1985',      // Date of Birth
+      'M',               // Sex
+      'BK001',           // Bank Code
+      '001',             // Bank Branch
+      '1234567890',      // Account Number
+      '01/01/2010',      // Date Joined
+      '01/01/2015',      // Seniority Date
+      '0101',            // Salary Grade
+      'MILITARY',        // Salary Group
+      'yes'              // Emolument Form
+    ];
+    
+    const dataRow = worksheet.getRow(5);
+    sampleData.forEach((value, index) => {
+      const cell = dataRow.getCell(index + 1);
+      cell.value = value;
+      cell.font = { name: 'Arial', size: 10 };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+        left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+        bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+        right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
+      };
+    });
+    dataRow.height = 22;
+    
+    // Add a few more empty rows with borders for visual guidance
+    for (let rowNum = 6; rowNum <= 10; rowNum++) {
+      const emptyRow = worksheet.getRow(rowNum);
+      headers.forEach((_, index) => {
+        const cell = emptyRow.getCell(index + 1);
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+          left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+          bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+          right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
+        };
+      });
+      emptyRow.height = 22;
+    }
+    
+    // Set column widths
+    worksheet.columns = [
+      { key: 'serviceNumber', width: 11.4 },
+      { key: 'rank', width: 7 },
+      { key: 'surname', width: 15 },
+      { key: 'otherName', width: 15 },
+      { key: 'dob', width: 12 },
+      { key: 'sex', width: 6 },
+      { key: 'bankCode', width: 12 },
+      { key: 'bankBranch', width: 12 },
+      { key: 'accountNumber', width: 15 },
+      { key: 'dateJoined', width: 11.5 },
+      { key: 'seniorityDate', width: 13 },
+      { key: 'salaryGrade', width: 12 },
+      { key: 'salaryGroup', width: 13 },
+      { key: 'emolumentForm', width: 14 }
+    ];
+    
+    // Add data validation for specific columns
+    // Sex column (F)
+    worksheet.getCell('F5').dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"M,F"'],
+      showErrorMessage: true,
+      errorTitle: 'Invalid Sex',
+      error: 'Please select M or F'
+    };
+    
+    // Emolument Form column (N)
+    worksheet.getCell('N5').dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"yes,no"'],
+      showErrorMessage: true,
+      errorTitle: 'Invalid Value',
+      error: 'Please select yes or no'
+    };
+    
+    // Add instructions/notes in a separate sheet
+    const instructionsSheet = workbook.addWorksheet('Instructions');
+    
+    // Instructions header
+    instructionsSheet.mergeCells('A1:D1');
+    const instrHeader = instructionsSheet.getCell('A1');
+    instrHeader.value = 'INSTRUCTIONS FOR FILLING THE PERSONNEL TEMPLATE';
+    instrHeader.font = { size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+    instrHeader.alignment = { horizontal: 'center', vertical: 'middle' };
+    instrHeader.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1F4E78' }
+    };
+    instructionsSheet.getRow(1).height = 25;
+    
+    instructionsSheet.getRow(2).height = 10;
+    
+    // Instructions content
+    const instructions = [
+      '1. Do not modify the header rows (rows 1-4)',
+      '2. Fill data starting from row 5',
+      '3. Date format should be DD/MM/YYYY (e.g., 15/06/1985)',
+      '4. Sex should be either M or F',
+      '5. Emolument Form should be either yes or no',
+      //'6. Service Number format: NN followed by numbers (e.g., NN001)',
+      '6. All fields are required unless specified as optional',
+      '7. Bank Code must match valid bank codes in the system',
+      '8. Account Number should be 10 digits'
+    ];
+    
+    instructions.forEach((instruction, index) => {
+      const cell = instructionsSheet.getCell(`A${index + 3}`);
+      cell.value = instruction;
+      cell.font = { name: 'Arial', size: 11 };
+      cell.alignment = { horizontal: 'left', vertical: 'middle' };
+    });
+    
+    instructionsSheet.getColumn('A').width = 60;
+    
+    // Generate Excel file
+    const buffer = await workbook.xlsx.writeBuffer();
+    
+    // Send file
+    res.setHeader('Content-Disposition', 'attachment; filename=personnel_template.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+    
+  } catch (error) {
+    console.error('Error generating template:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate template' });
+  }
 });
 
 // GET: Batch upload history
@@ -402,5 +593,3 @@ router.use((error, req, res, next) => {
 });
 
 module.exports = router;
-
-

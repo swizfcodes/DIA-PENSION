@@ -1,7 +1,7 @@
 <div id="current-personnel-section" data-personnel-type="current" class="p-6">
   <div class="flex flex-wrap gap-2 justify-between items-center mb-6">
     <div>
-      <h3 class="text-lg font-semibold text-gray-900">Manage Current Personnels</h3>
+      <h3 class="text-lg font-semibold text-gray-900">Manage Current Personnel</h3>
     </div>
 
     <div class="flex flex-wrap gap-2">
@@ -20,19 +20,17 @@
   <!-- Search and Filter -->
   <div class="mb-6 flex flex-wrap justify-between">
     <div class="flex-1">
-      <input type="text" id="current-personnel-search" placeholder="Search by name, PersonnelNo. or Phone..." 
-        class="w-2/3 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500">
+      <input type="text" id="current-personnel-search" placeholder="Search by name or Service No..." 
+        class="w-2/3 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
     </div>
     <div class="flex flex-end gap-2">
+      <button onclick="window.navigation.navigateToSection('personnel-reports', 'Current Personnel Reports')" 
+        class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+        <i class="fas fa-file-alt mr-2"></i>Generate Report
+      </button>     
       <select id="rank-filter" class="px-3 py-2 border border-gray-300 rounded-md">
         <option value="">All Ranks</option>
       </select>
-      <!--<select id="status-filter" class="px-3 py-2 border border-gray-300 rounded-md">
-        <option value="">All Status</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-        <option value="suspended">Suspended</option>
-      </select>-->
     </div>
   </div>
 
@@ -91,7 +89,7 @@
 
 
 <script>
-// Current Personnel Management Script - FIXED VERSION
+// Current Personnel Management Script
 const API_BASE = '/personnel';
 const API_HEADERS = {
   'Content-Type': 'application/json',
@@ -106,12 +104,14 @@ class PersonnelManager {
     this.filteredPersonnel = [];
     this.currentViewId = null;
     this.personnelType = 'current';
-    this.currentView = 'current'; // FIXED: Added explicit view tracking
+    this.currentView = 'current';
     this.lookupMaps = {};
     this.lookupsLoaded = false;
-    this.isInitializing = false; // FIXED: Prevent race conditions
-    this.paginationInfo = {}; // FIXED: Initialize pagination info
-    this.eventListenersAttached = false; // FIXED: Prevent duplicate listeners
+    this.isInitializing = false;
+    this.paginationInfo = {};
+    this.eventListenersAttached = false;
+    this.lastFilterParams = null;
+    this.activeFilterController = null; // AbortController for canceling in-flight requests
   }
 
   async init() {
@@ -152,37 +152,58 @@ class PersonnelManager {
   }
 
   async loadPersonnelData(type = 'current', page = 1) {
-    // FIXED: Set view type immediately to prevent race conditions
     this.currentView = type;
     this.personnelType = type;
     
+    // Priority 1: Check if we should restore filter state
+    const shouldRestoreFilters = this.hasActiveFilterState();
+    
+    if (shouldRestoreFilters) {
+      console.log('⏭️ Skipping pagination load, will restore filters instead');
+      this.currentPage = page;
+      const hasFilters = await this.restoreFilterState();
+      if (hasFilters) {
+        return;
+      }
+    }
+    
+    // Priority 2: Check if we should restore normal pagination state (only if no filters)
+    if (!shouldRestoreFilters) {
+      const shouldRestoreNormalPagination = this.hasNormalPaginationState(page);
+      
+      if (shouldRestoreNormalPagination) {
+        console.log('⏭️ Restoring normal pagination state for page', page);
+        const restored = await this.restoreNormalPaginationState();
+        if (restored) {
+          return;
+        }
+      }
+    }
+    
+    // Priority 3: Normal pagination load (fresh API call)
+    await this.loadPaginatedData(type, page);
+  }
+
+  async loadPaginatedData(type, page) {
     try {
       const result = await this.apiRequest(`${API_BASE}/employees-current-pages?page=${page}&limit=10`);
       const allPersonnel = result.data || [];
       this.paginationInfo = result.pagination || {};
 
-      // Normalize statuses
-      const normalized = allPersonnel.map(p => {
-        if (p.DateLeft || p.exittype) {
-          return { ...p, Status: 'INACTIVE' };
-        }
-        return { ...p, Status: p.Status || 'ACTIVE' };
-      });
+      // Normalize statuses and filter current personnel only
+      const normalized = allPersonnel.map(p => ({
+        ...p,
+        Status: (p.DateLeft || p.exittype) ? 'INACTIVE' : (p.Status || 'ACTIVE')
+      }));
 
-      // Filter based on type - FIXED: Only show current personnel (no exit data)
       this.personnel = normalized.filter(p => !p.DateLeft && !p.exittype);
       this.filteredPersonnel = [...this.personnel];
       this.currentPage = page;
-
-      // FIXED: Only restore filters if we're on page 1
-      if (page === 1) {
-        const hasFilters = await this.restoreFilterState();
-        if (!hasFilters) {
-          this.renderTable();
-        }
-      } else {
-        this.renderTable();
-      }
+      
+      // IMPORTANT: Save pagination state for normal view (no filters)
+      this.saveNormalPaginationState();
+      
+      this.renderTable();
 
       console.log(`Loaded ${this.personnel.length} ${type} personnel on page ${page}`);
 
@@ -191,6 +212,121 @@ class PersonnelManager {
       this.personnel = [];
       this.filteredPersonnel = [];
       this.renderTable();
+    }
+  }
+  
+  saveNormalPaginationState() {
+    const paginationState = {
+      page: this.currentPage,
+      data: this.filteredPersonnel, // Current page data snapshot
+      paginationInfo: this.paginationInfo, // Pagination metadata
+      isNormalView: true, // Flag to indicate this is normal pagination, not filter
+      timestamp: Date.now()
+    };
+    
+    console.log('💾 Saving normal pagination state:', {
+      page: this.currentPage,
+      records: this.filteredPersonnel.length,
+      totalRecords: this.paginationInfo?.totalRecords,
+      hasNextPage: this.paginationInfo?.hasNextPage
+    });
+    
+    localStorage.setItem('personnel_pagination_current', JSON.stringify(paginationState));
+  }
+  
+  hasNormalPaginationState(requestedPage) {
+    const saved = localStorage.getItem('personnel_pagination_current');
+    if (!saved) return false;
+    
+    try {
+      const paginationState = JSON.parse(saved);
+      const oneHour = 60 * 60 * 1000;
+      
+      // Check if valid
+      if (Date.now() - paginationState.timestamp > oneHour) {
+        return false;
+      }
+      
+      // Only restore if it's normal view (not filter)
+      if (paginationState.isNormalView !== true) {
+        return false;
+      }
+      
+      // If requestedPage is 1 (default), restore whatever page was saved
+      // This handles the case when returning from another section
+      if (requestedPage === 1 && paginationState.page > 1) {
+        return true;
+      }
+      
+      // Otherwise match the specific page
+      return paginationState.page === requestedPage;
+    } catch {
+      return false;
+    }
+  }
+
+  async restoreNormalPaginationState() {
+    const saved = localStorage.getItem('personnel_pagination_current');
+    
+    if (!saved) return false;
+    
+    try {
+      const paginationState = JSON.parse(saved);
+      const oneHour = 60 * 60 * 1000;
+      
+      // Check if pagination state is still valid
+      if (Date.now() - paginationState.timestamp > oneHour) {
+        localStorage.removeItem('personnel_pagination_current');
+        return false;
+      }
+
+      console.log('📥 Restoring normal pagination:', paginationState);
+      
+      // Restore page number
+      if (paginationState.page) {
+        this.currentPage = paginationState.page;
+      }
+      
+      // Restore pagination metadata
+      if (paginationState.paginationInfo) {
+        this.paginationInfo = paginationState.paginationInfo;
+        console.log('📊 Restored pagination info:', this.paginationInfo);
+      }
+      
+      // Restore data snapshot (avoids API call)
+      if (paginationState.data && Array.isArray(paginationState.data) && paginationState.data.length > 0) {
+        console.log('📦 Restoring data snapshot:', paginationState.data.length, 'records');
+        this.personnel = paginationState.data;
+        this.filteredPersonnel = [...this.personnel];
+        this.renderTable();
+        return true;
+      }
+      
+      return false;
+      
+    } catch (error) {
+      console.error('Error restoring normal pagination state:', error);
+      localStorage.removeItem('personnel_pagination_current');
+      return false;
+    }
+  }
+  
+  hasActiveFilterState() {
+    const saved = localStorage.getItem('personnel_filter_current');
+    if (!saved) return false;
+    
+    try {
+      const filterState = JSON.parse(saved);
+      const oneHour = 60 * 60 * 1000;
+      
+      // Check if valid and has actual filters
+      if (Date.now() - filterState.timestamp > oneHour) {
+        return false;
+      }
+      
+      return !!(filterState.search || filterState.rank || filterState.status);
+    } catch {
+      return false;
     }
   }
 
@@ -207,6 +343,7 @@ class PersonnelManager {
       const data = await response.json();
       const dropdown = document.getElementById(elementId);
       if (!dropdown) return;
+      
       dropdown.innerHTML = `<option value="">${placeholder}</option>`;
       data.forEach(item => {
         const option = document.createElement("option");
@@ -222,10 +359,7 @@ class PersonnelManager {
   }
 
   async loadAllDropdowns() {
-    const promises = [
-      this.loadDropdown("title", "rank-filter", "Titlecode", "Description", "All Ranks"),
-    ];
-    await Promise.all(promises);
+    await this.loadDropdown("title", "rank-filter", "Description", "Description", "All Ranks");
   }
 
   async loadLookupData() {
@@ -288,11 +422,10 @@ class PersonnelManager {
     const isFiltering = this.isSearchActive() || this.isFilterActive();
     
     if (isFiltering) {
-      const limit = 10;
-      const totalPages = Math.ceil(this.filteredPersonnel.length / limit);
-      if (this.currentPage < totalPages) {
+      // For search results, use API pagination
+      if (this.paginationInfo.hasNextPage) {
         this.currentPage++;
-        this.renderTable();
+        this.filterPersonnel(); // Re-fetch with new page
       }
     } else {
       if (this.paginationInfo.hasNextPage) {
@@ -305,26 +438,25 @@ class PersonnelManager {
     const isFiltering = this.isSearchActive() || this.isFilterActive();
     
     if (isFiltering) {
-      if (this.currentPage > 1) {
+      // For search results, use API pagination
+      if (this.paginationInfo.hasPreviousPage) {
         this.currentPage--;
-        this.renderTable();
+        this.filterPersonnel(); // Re-fetch with new page
       }
     } else {
       if (this.paginationInfo.hasPreviousPage) {
         this.loadPersonnelData(this.personnelType, this.currentPage - 1);
       }
     }
-  }
-    
+  }  
+
   setupEventListeners() {
-    // FIXED: Prevent duplicate event listeners
     if (this.eventListenersAttached) return;
     this.eventListenersAttached = true;
 
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
 
-    // FIXED: Remove old listeners first
     if (prevPageBtn) {
       const newPrevBtn = prevPageBtn.cloneNode(true);
       prevPageBtn.parentNode.replaceChild(newPrevBtn, prevPageBtn);
@@ -349,58 +481,124 @@ class PersonnelManager {
     const rank = document.getElementById('rank-filter')?.value || '';
     const status = document.getElementById('status-filter')?.value || '';
 
-    // FIXED: Use correct localStorage key
-    this.saveFilterState(search, rank, status);
+    // Prevent duplicate calls - BUT allow if page changed (pagination)
+    if (this.lastFilterParams) {
+      const sameFilters = this.lastFilterParams.search === search && 
+                         this.lastFilterParams.rank === rank && 
+                         this.lastFilterParams.status === status;
+      const samePage = this.lastFilterParams.page === this.currentPage;
+      
+      if (sameFilters && samePage) {
+        console.log('⏭️ Skipping duplicate filter call');
+        return;
+      }
+    }
+    
+    this.lastFilterParams = { search, rank, status, page: this.currentPage };
+
+    // Cancel any in-flight request
+    if (this.activeFilterController) {
+      this.activeFilterController.abort();
+      console.log('🚫 Cancelled previous search');
+    }
+
+    // If all filters are cleared, reload normal pagination
+    if (!search && !rank && !status) {
+      this.clearFilterState();
+      this.clearNormalPaginationState(); // Clear before loading fresh
+      await this.loadPaginatedData(this.personnelType, 1);
+      return;
+    }
+
+    // When filters are applied, clear normal pagination state
+    this.clearNormalPaginationState();
+
+    // Create new AbortController for this request
+    this.activeFilterController = new AbortController();
+    const currentController = this.activeFilterController;
 
     try {
       let apiData = [];
 
-      if (search) {
-        // FIXED: Use this.currentView directly
-        const viewType = forceView || this.currentView || 'current';
+      // Use API for search or rank filtering
+      if (search || rank) {
         const endpoint = '/personnel/employees-current/search';
+        let queryParams = [];
+        if (search) queryParams.push(`q=${encodeURIComponent(search)}`);
+        if (rank) queryParams.push(`rank=${encodeURIComponent(rank)}`);
+        
+        // Add pagination parameters - use current page
+        queryParams.push(`page=${this.currentPage}`);
+        queryParams.push(`limit=10`);
+        
+        const queryString = queryParams.join('&');
 
-        console.log('🔍 Searching:', { search, viewType, endpoint });
+        console.log('🔍 Searching/Filtering:', { search, rank, page: this.currentPage, endpoint });
 
         const token = localStorage.getItem('token');
-        const response = await fetch(`${endpoint}?q=${encodeURIComponent(search)}`, {
+        const response = await fetch(`${endpoint}?${queryString}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          }
+          },
+          signal: currentController.signal
         });
 
         if (!response.ok) {
-          throw new Error('Search failed');
+          throw new Error('Search/Filter failed');
         }
 
         const result = await response.json();
         apiData = result.data || [];
         
-        console.log(`✅ Found ${apiData.length} records`);
+        // CRITICAL FIX: Store pagination info from search API
+        if (result.pagination) {
+          this.paginationInfo = result.pagination;
+          console.log('📊 Pagination info:', this.paginationInfo);
+        }
+        
+        console.log(`✅ Found ${apiData.length} of ${this.paginationInfo.totalRecords || 0} total records`);
       } else {
         apiData = [...this.personnel];
       }
 
-      // Apply filters
-      this.filteredPersonnel = apiData.filter(person => {
-        const matchesRank = !rank || person.Title === rank;
-        const matchesStatus = !status || person.Status === status;
-        return matchesRank && matchesStatus;
-      });
+      // Check if this request was cancelled
+      if (currentController.signal.aborted) {
+        console.log('⏭️ Request was cancelled, skipping save');
+        return;
+      }
 
-      // FIXED: Reset to page 1 and render once
-      this.currentPage = 1;
+      // Apply status filter locally if needed
+      this.filteredPersonnel = apiData.filter(person => {
+        return !status || person.Status === status;
+      });
+      
+      // IMPORTANT: Save filter state AFTER filteredPersonnel is set and only if not cancelled
+      if (!currentController.signal.aborted) {
+        this.saveFilterState(search, rank, status);
+      }
+      
       await this.renderTable();
 
     } catch (error) {
+      // Ignore abort errors
+      if (error.name === 'AbortError') {
+        console.log('⏭️ Request aborted');
+        return;
+      }
+      
       console.error('❌ Filter error:', error);
       const tableBody = document.getElementById('personnel-table-body');
       if (tableBody) {
         tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-600">Search failed. Please try again.</td></tr>';
       }
       this.updatePaginationInfo();
+    } finally {
+      // Clear controller if it's still the current one
+      if (this.activeFilterController === currentController) {
+        this.activeFilterController = null;
+      }
     }
   }
 
@@ -414,62 +612,114 @@ class PersonnelManager {
     if (statusFilter) statusFilter.value = '';
     
     this.clearFilterState();
-    this.filterPersonnel();
+    
+    // Reload page 1 with normal pagination instead of filtering
+    this.loadPaginatedData(this.personnelType, 1);
   }
 
   saveFilterState(search, rank, status) {
-    // FIXED: Use unique key for current personnel
     const filterState = {
       search: search || '',
       rank: rank || '',
       status: status || '',
+      page: this.currentPage,
+      data: this.filteredPersonnel, // Current page data snapshot
+      paginationInfo: this.paginationInfo, // IMPORTANT: Save pagination metadata
       timestamp: Date.now()
     };
+    
+    console.log('💾 Saving filter state:', {
+      search,
+      rank, 
+      status,
+      page: this.currentPage,
+      records: this.filteredPersonnel.length,
+      totalRecords: this.paginationInfo?.totalRecords,
+      hasNextPage: this.paginationInfo?.hasNextPage
+    });
+    
     localStorage.setItem('personnel_filter_current', JSON.stringify(filterState));
+  }
+  
+  saveCurrentFilterState() {
+    const search = document.getElementById('current-personnel-search')?.value.trim() || '';
+    const rank = document.getElementById('rank-filter')?.value || '';
+    const status = document.getElementById('status-filter')?.value || '';
+    this.saveFilterState(search, rank, status);
   }
 
   async restoreFilterState() {
     const saved = localStorage.getItem('personnel_filter_current');
     
-    if (saved) {
-      try {
-        const filterState = JSON.parse(saved);
-        
-        const oneHour = 60 * 60 * 1000;
-        if (Date.now() - filterState.timestamp < oneHour) {
-          console.log('📥 Restoring filters:', filterState);
-          
-          const searchInput = document.getElementById('current-personnel-search');
-          if (searchInput && filterState.search) {
-            searchInput.value = filterState.search;
-          }
-          
-          const rankFilter = document.getElementById('rank-filter');
-          if (rankFilter && filterState.rank) {
-            rankFilter.value = filterState.rank;
-          }
-          
-          const statusFilter = document.getElementById('status-filter');
-          if (statusFilter && filterState.status) {
-            statusFilter.value = filterState.status;
-          }
-          
-          // FIXED: Use setTimeout to avoid race condition
-          setTimeout(() => this.filterPersonnel(), 150);
-          return true;
-        } else {
-          localStorage.removeItem('personnel_filter_current');
-        }
-      } catch (error) {
-        console.error('Error restoring filter state:', error);
-      }
-    }
+    if (!saved) return false;
     
-    return false;
+    try {
+      const filterState = JSON.parse(saved);
+      const oneHour = 60 * 60 * 1000;
+      
+      // Check if filter state is still valid
+      if (Date.now() - filterState.timestamp > oneHour) {
+        localStorage.removeItem('personnel_filter_current');
+        return false;
+      }
+
+      console.log('📥 Restoring filters:', filterState);
+      
+      // Reset lastFilterParams to allow restoration
+      this.lastFilterParams = null;
+      
+      // Restore filter inputs
+      const searchInput = document.getElementById('current-personnel-search');
+      if (searchInput && filterState.search) {
+        searchInput.value = filterState.search;
+      }
+      
+      const rankFilter = document.getElementById('rank-filter');
+      if (rankFilter && filterState.rank) {
+        rankFilter.value = filterState.rank;
+      }
+      
+      const statusFilter = document.getElementById('status-filter');
+      if (statusFilter && filterState.status) {
+        statusFilter.value = filterState.status;
+      }
+
+      // Restore page number
+      if (filterState.page) {
+        this.currentPage = filterState.page;
+      }
+      
+      // IMPORTANT: Restore pagination metadata
+      if (filterState.paginationInfo) {
+        this.paginationInfo = filterState.paginationInfo;
+        console.log('📊 Restored pagination info:', this.paginationInfo);
+      }
+      
+      // Restore data snapshot (avoids API call) - only if data exists and is not empty
+      if (filterState.data && Array.isArray(filterState.data) && filterState.data.length > 0) {
+        console.log('📦 Restoring data snapshot:', filterState.data.length, 'records');
+        this.filteredPersonnel = filterState.data;
+        this.renderTable();
+        return true;
+      }
+      
+      // Fallback: reapply filters via API if no data snapshot
+      setTimeout(() => this.filterPersonnel(), 150);
+      return true;
+      
+    } catch (error) {
+      console.error('Error restoring filter state:', error);
+      localStorage.removeItem('personnel_filter_current');
+      return false;
+    }
   }
 
   clearFilterState() {
     localStorage.removeItem('personnel_filter_current');
+  }
+
+  clearNormalPaginationState() {
+    localStorage.removeItem('personnel_pagination_current');
   }
 
   setupSearchDebounce() {
@@ -481,11 +731,13 @@ class PersonnelManager {
         clearTimeout(debounceTimer);
         
         if (!e.target.value.trim()) {
+          this.currentPage = 1; // Reset page
           this.filterPersonnel();
           return;
         }
         
         debounceTimer = setTimeout(() => {
+          this.currentPage = 1; // Reset to page 1 on new search
           this.filterPersonnel();
         }, 500);
       });
@@ -497,13 +749,19 @@ class PersonnelManager {
     const statusFilter = document.getElementById('status-filter');
     
     if (rankFilter) {
-      rankFilter.addEventListener('change', () => this.filterPersonnel());
+      rankFilter.addEventListener('change', () => {
+        this.currentPage = 1; // Reset to page 1 on filter change
+        this.filterPersonnel();
+      });
     }
     
     if (statusFilter) {
-      statusFilter.addEventListener('change', () => this.filterPersonnel());
+      statusFilter.addEventListener('change', () => {
+        this.currentPage = 1; // Reset to page 1 on filter change
+        this.filterPersonnel();
+      });
     }
-  }  
+  }
 
   async renderTable() {
     const tbody = document.getElementById('personnel-table-body');
@@ -513,11 +771,11 @@ class PersonnelManager {
     let pageData;
     
     if (isFiltering) {
-      const limit = 10;
-      const startIndex = (this.currentPage - 1) * limit;
-      const endIndex = startIndex + limit;
-      pageData = this.filteredPersonnel.slice(startIndex, endIndex);
+      // When filtering/searching, filteredPersonnel already contains ONLY the current page from API
+      // Don't slice it again - just use it directly
+      pageData = this.filteredPersonnel;
     } else {
+      // For normal pagination, personnel contains the current page data
       pageData = this.filteredPersonnel;
     }
 
@@ -544,9 +802,9 @@ class PersonnelManager {
         </td>
         <td class="border border-gray-300 px-4 py-2 text-center">
           <button onclick="personnelManager.viewEmployee('${person.Empl_ID}')" 
-                  class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 mr-1">View</button>
+                  class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 mr-1">View</button>
           <button onclick="personnelManager.editEmployee('${person.Empl_ID}')" 
-                  class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 mr-1">Edit</button>
+                  class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 mr-1">Edit</button>
           <button onclick="personnelManager.deleteEmployee('${person.Empl_ID}')" 
                   class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">Delete</button>
         </td>
@@ -555,32 +813,24 @@ class PersonnelManager {
 
     this.updatePaginationInfo();
   }
-  
+
   getStatusClass(status) {
     const s = status?.toUpperCase();
-    if (s === 'ACTIVE' || s === '1') return 'bg-blue-100 text-blue-800';
+    if (s === 'ACTIVE' || s === '1') return 'bg-green-100 text-green-800';
     if (s === 'INACTIVE' || s === '0') return 'bg-red-100 text-red-800';
     return 'bg-yellow-100 text-yellow-800';
   }
 
   updatePaginationInfo() {
     const displayedData = this.filteredPersonnel || this.personnel || [];
-    const totalFiltered = displayedData.length;
     const isFiltering = this.isSearchActive() || this.isFilterActive();
     
     let start, end, total;
     
-    if (isFiltering) {
-      const limit = 10;
-      start = totalFiltered > 0 ? (this.currentPage - 1) * limit + 1 : 0;
-      end = Math.min(this.currentPage * limit, totalFiltered);
-      total = totalFiltered;
-    } else {
-      const pageInfo = this.paginationInfo || {};
-      start = this.personnel.length > 0 ? ((pageInfo.currentPage || 1) - 1) * (pageInfo.limit || 10) + 1 : 0;
-      end = start + this.personnel.length - 1;
-      total = pageInfo.totalRecords || this.personnel.length;
-    }
+    const pageInfo = this.paginationInfo || {};
+    start = displayedData.length > 0 ? ((pageInfo.currentPage || this.currentPage) - 1) * (pageInfo.limit || 10) + 1 : 0;
+    end = start + displayedData.length - 1;
+    total = pageInfo.totalRecords || displayedData.length;
 
     const showingStart = document.getElementById('showing-start');
     const showingEnd = document.getElementById('showing-end');
@@ -593,32 +843,17 @@ class PersonnelManager {
     const prevBtn = document.getElementById('prev-page');
     const nextBtn = document.getElementById('next-page');
 
-    if (isFiltering) {
-      const limit = 10;
-      const totalPages = Math.ceil(totalFiltered / limit);
-      
-      if (prevBtn) {
-        prevBtn.disabled = this.currentPage <= 1;
-        prevBtn.classList.toggle('opacity-50', prevBtn.disabled);
-      }
+    if (prevBtn) {
+      prevBtn.disabled = !pageInfo.hasPreviousPage;
+      prevBtn.classList.toggle('opacity-50', !pageInfo.hasPreviousPage);
+    }
 
-      if (nextBtn) {
-        nextBtn.disabled = this.currentPage >= totalPages;
-        nextBtn.classList.toggle('opacity-50', nextBtn.disabled);
-      }
-    } else {
-      if (prevBtn) {
-        prevBtn.disabled = !this.paginationInfo.hasPreviousPage;
-        prevBtn.classList.toggle('opacity-50', !this.paginationInfo.hasPreviousPage);
-      }
-
-      if (nextBtn) {
-        nextBtn.disabled = !this.paginationInfo.hasNextPage;
-        nextBtn.classList.toggle('opacity-50', !this.paginationInfo.hasNextPage);
-      }
+    if (nextBtn) {
+      nextBtn.disabled = !pageInfo.hasNextPage;
+      nextBtn.classList.toggle('opacity-50', !pageInfo.hasNextPage);
     }
   }
-
+  
   isSearchActive() {
     const searchInput = document.getElementById('current-personnel-search');
     return searchInput && searchInput.value.trim().length > 0;
@@ -637,12 +872,12 @@ class PersonnelManager {
 
     if (!popup || !icon || !text) return;
 
-    icon.className = "mx-auto h-12 w-12 rounded-full border-4 border-green-500 border-t-transparent animate-spin";
+    icon.className = "mx-auto h-12 w-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin";
     text.textContent = message;
     popup.classList.remove('hidden');
 
     setTimeout(() => {
-      icon.className = "mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-500 text-white";
+      icon.className = "mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-green-500 text-white";
       icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                         </svg>`;
@@ -785,12 +1020,13 @@ async function initializePersonnelManager(sectionType = null) {
       personnelManager = window.personnelManager;
     }
 
+    // Check if returning from view/edit page
     const isReturning = localStorage.getItem('navigatedFromCurrentPersonnel');
     const savedPage = localStorage.getItem('currentPersonnelPage');
     const savedType = localStorage.getItem('currentPersonnelType');
     
     if (isReturning === 'true' && savedPage && savedType) {
-      console.log(`🟢 Restoring to page ${savedPage}`);
+      console.log(`🟢 Restoring to page ${savedPage} after view/edit`);
       
       localStorage.removeItem('navigatedFromCurrentPersonnel');
       localStorage.removeItem('currentPersonnelPage');
@@ -800,7 +1036,43 @@ async function initializePersonnelManager(sectionType = null) {
       return;
     }
 
-    // Normal flow
+    // Check for normal pagination state (when returning from other sections like reports)
+    const normalPaginationState = localStorage.getItem('personnel_pagination_current');
+    if (normalPaginationState) {
+      try {
+        const state = JSON.parse(normalPaginationState);
+        const oneHour = 60 * 60 * 1000;
+        
+        // If valid and recent, restore it
+        if (state.isNormalView && (Date.now() - state.timestamp < oneHour)) {
+          console.log(`🟢 Restoring normal pagination to page ${state.page}`);
+          await personnelManager.loadPersonnelData('current', state.page);
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to parse pagination state:', e);
+      }
+    }
+
+    // Check for filter state
+    const filterState = localStorage.getItem('personnel_filter_current');
+    if (filterState) {
+      try {
+        const state = JSON.parse(filterState);
+        const oneHour = 60 * 60 * 1000;
+        
+        // If valid and has actual filters
+        if ((Date.now() - state.timestamp < oneHour) && (state.search || state.rank || state.status)) {
+          console.log('🟢 Restoring filter state');
+          await personnelManager.loadPersonnelData('current', 1);
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to parse filter state:', e);
+      }
+    }
+
+    // Normal flow - load page 1
     const type = sectionType || 'current';
     console.log('🟢 Loading:', type);
     await personnelManager.loadPersonnelData(type, 1);
@@ -818,6 +1090,3 @@ if (document.readyState === 'loading') {
   initializePersonnelManager('current');
 }
 </script>
-
-
-

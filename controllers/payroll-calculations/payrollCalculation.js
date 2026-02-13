@@ -16,7 +16,11 @@ exports.calculatePayroll = async (req, res) => {
 
     await pool.query("UPDATE py_stdrate SET sun = 999, createdby = ? WHERE type = 'BT05'", [user]);
 
-    res.json({ status: 'SUCCESS', stage: 999, progress: 'Payroll calculations completed', nextStage: 'Month-End', result });
+    res.json({ status: 'SUCCESS', stage: 999, 
+               progress: 'Payroll calculations completed',
+               message: 'Payroll calculations have been successfully computed.',
+               nextStage: 'Month-End', 
+               result });
   } catch (err) {
     console.error('Payroll calculation error:', err);
     res.status(500).json({ status: 'FAILED', message: err.message });

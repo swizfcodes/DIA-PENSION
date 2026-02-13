@@ -1,6 +1,6 @@
-<div class="p-6">
+<div class="p-3">
     <!-- Connection Status -->
-    <div class="mb-6">
+    <div class="mb-3">
         <div id="connectionStatus">
             <div class="flex items-center flex-wrap gap-2 justify-between">
                 <div class="flex items-center">
@@ -20,16 +20,16 @@
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-6">
+    <div class="grid lg:grid-cols-2 gap-3">
         <!-- Restore Configuration -->
         <div class="rounded-lg border border-slate-700">
-            <div class="p-6 border-b border-slate-700">
+            <div class="p-3 border-b border-slate-700">
                 <h2 class="text-xl text-green-600 font-semibold flex items-center">
                     <i class="fas fa-cog mr-2 text-black"></i>
                     Restore Configuration
                 </h2>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-3 space-y-2">
                 <!-- Database Selection -->
                 <div>
                 <label class="block text-sm font-medium text-gray-900 mb-2">Database</label>
@@ -56,7 +56,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex space-x-3 pt-4">
+                <div class="flex space-x-3 pt-2">
                     <button id="startRestore" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
                         <i class="fas fa-upload mr-2"></i>Start Restore
                     </button>
@@ -69,13 +69,13 @@
 
         <!-- Restore History -->
         <div class="rounded-lg border border-slate-700">
-            <div class="p-6 border-b border-slate-700">
+            <div class="p-3 border-b border-slate-700">
                 <h2 class="text-xl font-semibold text-green-600 flex items-center">
                     <i class="fas fa-history mr-2 text-yellow-500"></i>
                     Restore History
                 </h2>
             </div>
-            <div class="p-6">
+            <div class="p-3">
                 <div id="restoreHistory" class="space-y-3 max-h-96 overflow-y-auto">
                     <!-- Restore entries will be populated here -->
                 </div>
@@ -247,9 +247,9 @@ class databaseRestore {
             const data = await res.json();
 
             if (data.status === "connected") {
-                indicator.className = "w-3 h-3 rounded-full bg-blue-500 mr-3";
+                indicator.className = "w-3 h-3 rounded-full bg-green-500 mr-3";
                 text.textContent = `Connected (${data.engine})`;
-                text.className = "text-blue-600 font-bold";
+                text.className = "text-green-600 font-bold";
             } else {
                 indicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3";
                 text.textContent = "Disconnected";
@@ -276,50 +276,102 @@ class databaseRestore {
         formData.append("database", database);
         formData.append("mode", mode);
         formData.append("file", fileInput.files[0]);
+        
+        // Skip pre-restore backup if database might be incomplete/in transition
+        // This prevents backup failures when restoring over a partially restored DB
+        formData.append("skipPreBackup", "true");
 
-        this.showProgress();
+        // SHOW PROGRESS IMMEDIATELY (Fix #3)
+        this.progressModal.classList.remove('hidden');
+        this.progressBar.style.width = '0%';
+        this.progressText.textContent = 'Starting restore...';
 
         try {
+            // Clear any existing progress interval
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+                this.progressInterval = null;
+            }
             const token = localStorage.getItem("token");
 
             const res = await fetch("/api/restore-db/restore", {
                 method: "POST",
                 headers: {
-                "Authorization": `Bearer ${token}` 
+                    "Authorization": `Bearer ${token}` 
                 },
                 body: formData
             });
 
             const result = await res.json();
 
-            if (!result.success) {
-                this.showProgress(0, "❌ Restore failed: " + (result.error || "Unknown error"));
-                this.incrementFailedRestores();
-                setTimeout(() => this.hideProgress(), 3000);
+            if (!result.success || !result.sessionId) {
+                this.hideProgress();
+                this.showNotification("Failed to start restore: " + (result.error || "Unknown error"), 'error');
                 return;
             }
 
-            // ✅ only update if success
-            this.showProgress(100, "✅ Restore completed successfully!");
-            this.incrementSuccessfulRestores();
-            this.updateLastRestore(new Date().toISOString());
+            console.log('Restore started with session:', result.sessionId);
             
-            // Refresh history and stats
-            setTimeout(() => {
+            // Update progress to show connection
+            this.progressBar.style.width = '5%';
+            this.progressText.textContent = 'Connecting to progress tracker...';
+            
+            // Get token for SSE connection (EventSource doesn't support headers)
+            //const token = localStorage.getItem("token");
+            
+            // Connect to SSE for real-time progress with token in query parameter
+            const eventSource = new EventSource(
+                `/api/restore-db/progress/${result.sessionId}?token=${encodeURIComponent(token)}`
+            );
+            
+            eventSource.onmessage = (event) => {
+                const progress = JSON.parse(event.data);
+                
+                console.log('Progress update:', progress);
+                
+                // Update UI with real progress
+                this.progressBar.style.width = progress.percent + '%';
+                this.progressText.textContent = progress.message;
+                
+                // Add progress percentage to message if not already there
+                if (!progress.message.includes('%') && progress.percent > 0) {
+                    this.progressText.textContent = `${progress.message} (${progress.percent}%)`;
+                }
+                
+                // If complete or failed, close connection
+                if (progress.stage === 'complete' || progress.stage === 'failed') {
+                    eventSource.close();
+                    
+                    setTimeout(() => {
+                        this.hideProgress();
+                        
+                        // ONLY SHOW NOTIFICATION ON COMPLETION (Fix #4)
+                        if (progress.stage === 'complete') {
+                            this.showNotification('Restore completed successfully!', 'success');
+                            this.loadHistory();
+                            this.loadStats();
+                        } else {
+                            this.showNotification(`Restore failed: ${progress.message}`, 'error');
+                            this.loadHistory(); // Still reload to show failed entry
+                        }
+                    }, 1500);
+                }
+            };
+            
+            eventSource.onerror = (error) => {
+                console.error('SSE Error:', error);
+                eventSource.close();
                 this.hideProgress();
-                this.loadHistory();
-                this.loadStats();
-                this.resetForm();
-            }, 2000);
+                this.showNotification('Connection lost to progress tracker', 'error');
+            };
 
         } catch (err) {
             console.error("Restore error:", err);
-            this.showProgress(0, "❌ Restore failed: " + err.message);
-            this.incrementFailedRestores();
-            setTimeout(() => this.hideProgress(), 3000);
+            this.hideProgress();
+            this.showNotification('Restore failed: ' + err.message, 'error');
         }
     }
-
+        
     async loadHistory() {
         try {
             const token = localStorage.getItem("token");
@@ -342,7 +394,7 @@ class databaseRestore {
                     <div class="flex items-center gap-2 justify-between p-3 bg-gray-50 rounded-lg border">
                         <div class="flex items-center">
                             <div class="p-2 rounded-full mr-3">
-                                <i class="fas fa-database text-blue-600"></i>
+                                <i class="fas fa-database text-green-600"></i>
                             </div>
                             <div>
                                 <p class="font-medium text-sm text-gray-900">${entry.filename}</p>
@@ -445,20 +497,6 @@ class databaseRestore {
         this.progressModal.classList.remove("hidden");
         this.progressBar.style.width = progress + "%";
         this.progressText.textContent = message;
-
-        // Only start animation if not explicitly setting progress
-        if (progress === 0 && message === "Initializing restore...") {
-            let currentProgress = 0;
-            this.progressInterval = setInterval(() => {
-                if (currentProgress < 90) {
-                    currentProgress += 10;
-                    this.progressBar.style.width = currentProgress + "%";
-                    this.progressText.textContent = `Restoring... ${currentProgress}%`;
-                } else {
-                    clearInterval(this.progressInterval);
-                }
-            }, 500);
-        }
     }
 
     hideProgress() {
@@ -501,9 +539,9 @@ class databaseRestore {
 
     showNotification(message, type = 'info') {
         const colors = {
-            success: 'bg-blue-500',
+            success: 'bg-green-500',
             error: 'bg-red-500',
-            info: 'bg-green-500'
+            info: 'bg-blue-500'
         };
         
         const notification = document.createElement('div');
@@ -538,6 +576,3 @@ if (document.readyState === 'loading') {
     window.restoreManager = new databaseRestore();
 }
 </script>
-
-
-

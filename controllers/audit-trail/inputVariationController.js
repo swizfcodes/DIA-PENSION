@@ -71,7 +71,7 @@ class PayPeriodReportController extends BaseReportController {
         { header: 'S/N', key: 'sn', width: 8, align: 'center' },
         { header: 'Pay Period', key: 'pay_period', width: 12, align: 'center' },
         { header: 'Svc No.', key: 'employee_id', width: 15 },
-        { header: 'Rank', key: 'Title', width: 10 },
+        { header: 'Rank', key: 'title_code', width: 10 },
         { header: 'Full Name', key: 'full_name', width: 30 },
         { header: 'Pay Element', key: 'pay_element_type', width: 12 },
         { header: 'Description', key: 'pay_element_description', width: 35 },

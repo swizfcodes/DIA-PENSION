@@ -268,6 +268,7 @@
 
   let currentPayrollStage = STAGE_DATA_ENTRY_OPEN;
   let hasCalculatedOnce = false;
+  let isReturningToPage = false; // Track if user is returning to page
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -314,7 +315,7 @@
     alertTitle.textContent = title;
     alertMessage.textContent = message;
     const iconClass = type === 'success' 
-      ? 'fa-check-circle text-blue-500' 
+      ? 'fa-check-circle text-green-500' 
       : type === 'warning' 
       ? 'fa-exclamation-triangle text-yellow-500' 
       : 'fa-exclamation-circle text-red-500';
@@ -361,13 +362,13 @@
     const varianceDiv = document.getElementById('reconVariance');
     
     if (recon.is_balanced) {
-      statusBanner.className = 'mb-6 p-4 rounded-lg border-2 bg-blue-50 border-blue-500';
-      statusIcon.className = 'fas fa-check-circle text-4xl text-blue-600';
+      statusBanner.className = 'mb-6 p-4 rounded-lg border-2 bg-green-50 border-green-500';
+      statusIcon.className = 'fas fa-check-circle text-4xl text-green-600';
       statusTitle.textContent = 'BALANCED';
-      statusTitle.className = 'text-xl font-bold text-blue-700';
+      statusTitle.className = 'text-xl font-bold text-green-700';
       statusMessage.textContent = 'All totals match. Payroll is ready for approval.';
-      statusMessage.className = 'text-sm text-blue-600';
-      varianceDiv.innerHTML = '<div class="text-blue-600 font-bold">Variance: ₦0.00</div>';
+      statusMessage.className = 'text-sm text-green-600';
+      varianceDiv.innerHTML = '<div class="text-green-600 font-bold">Variance: ₦0.00</div>';
     } else {
       statusBanner.className = 'mb-6 p-4 rounded-lg border-2 bg-red-50 border-red-500';
       statusIcon.className = 'fas fa-exclamation-triangle text-4xl text-red-600';
@@ -417,6 +418,11 @@
 
   async function loadCalculationResults() {
     try {
+      // Show success modal immediately if returning to page (acts as loading screen)
+      if (isReturningToPage) {
+        successModal.classList.remove('hidden');
+      }
+      
       const token = localStorage.getItem('token');
       
       const response = await fetch(`${API_BASE}/results`, {
@@ -429,15 +435,20 @@
       const data = await response.json();
       
       if (data.success && data.data) {
+        // Display reconciliation data
         displayReconciliation(data.data);
         hasCalculatedOnce = true;
         updateUIVisibility();
         
-        // Show success modal when re-entering section
-        successModal.classList.remove('hidden');
+        // Modal stays open until user clicks "View Results"
+        // (closeSuccessModalBtn handler already exists)
       }
     } catch (error) {
       console.error('Error loading calculation results:', error);
+      // Close modal on error
+      if (isReturningToPage) {
+        successModal.classList.add('hidden');
+      }
     }
   }
 
@@ -510,17 +521,28 @@
 
       hasCalculatedOnce = true;
       currentPayrollStage = STAGE_CALC_COMPLETED;
+      isReturningToPage = false; // This is a fresh calculation, not a page return
+
+      // Display reconciliation data IMMEDIATELY (don't wait for setTimeout)
+      // Handle both response structures: data.result (from calculation) and data.data (from results fetch)
+      const reconData = data.result || data.data;
+      if (reconData && reconData.reconciliation) {
+        displayReconciliation(reconData);
+      }
+      
+      // Update UI to show results section immediately
+      updateUIVisibility();
 
       setTimeout(() => {
         progressModal.classList.add('hidden');
         
-        if (data.data && data.data.reconciliation) {
-          displayReconciliation(data.data);
-          successModal.classList.remove('hidden');
-        }
+        // Show success modal AFTER results are already rendered
+        successModal.classList.remove('hidden');
         
-        updateUIVisibility();
+        // Modal will stay until user clicks "View Results" button
+        // (closeSuccessModalBtn handler already exists)
         
+        // Dispatch status change event
         window.dispatchEvent(new CustomEvent('payrollStatusChanged', {
           detail: { stage: STAGE_CALC_COMPLETED }
         }));
@@ -532,10 +554,10 @@
       
       progressMessage.textContent = error.message;
       progressMessage.className = 'text-red-600 mb-4 font-semibold';
-      progressBar.classList.remove('bg-green-600');
+      progressBar.classList.remove('bg-blue-600');
       progressBar.classList.add('bg-red-600');
       
-      const iconDiv = progressModal.querySelector('.bg-green-600.rounded-full');
+      const iconDiv = progressModal.querySelector('.bg-blue-600.rounded-full');
       if (iconDiv) {
         iconDiv.className = 'w-16 h-16 bg-red-600 rounded-full flex items-center justify-center';
         iconDiv.innerHTML = '<i class="fas fa-exclamation-circle text-white text-3xl"></i>';
@@ -553,10 +575,10 @@
           progressMessage.className = 'text-gray-600 mb-6';
           progressBar.style.width = '0%';
           progressBar.classList.remove('bg-red-600');
-          progressBar.classList.add('bg-green-600');
+          progressBar.classList.add('bg-blue-600');
           progressPercent.textContent = '0%';
           if (iconDiv) {
-            iconDiv.className = 'w-16 h-16 bg-green-600 rounded-full flex items-center justify-center';
+            iconDiv.className = 'w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center';
             iconDiv.innerHTML = '<i class="fas fa-calculator text-white text-3xl"></i>';
           }
           cancelBtnError.remove();
@@ -565,7 +587,6 @@
         progressModal.querySelector('.text-center').appendChild(cancelBtnError);
       }
     }
-    console.error('4. A final error occurred:', error);
   });
 
   async function checkPayrollStatus() {
@@ -582,6 +603,7 @@
       
       if (currentPayrollStage >= STAGE_CALC_COMPLETED) {
         hasCalculatedOnce = true;
+        isReturningToPage = true; // User is returning to a completed calculation
         await loadCalculationResults();
       }
       
@@ -597,9 +619,11 @@
       
       if (currentPayrollStage === STAGE_DATA_ENTRY_OPEN) {
         hasCalculatedOnce = false;
+        isReturningToPage = false;
       }
       
       if (currentPayrollStage >= STAGE_CALC_COMPLETED && !hasCalculatedOnce) {
+        isReturningToPage = true;
         await loadCalculationResults();
       }
       
@@ -620,9 +644,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', initialize);
-    if (document.readyState !== 'loading') initialize();
+  if (document.readyState !== 'loading') initialize();
 })();
 </script>
-
-
-
