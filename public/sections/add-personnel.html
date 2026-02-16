@@ -2657,15 +2657,13 @@ async function submitPersonnelForm() {
     if (titleDescField) {
       const titleDesc = titleDescField.getAttribute('data-titledesc');
       if (titleDesc) {
-        personnelData.Titledesc = titleDesc; // Add to payload
+        personnelData.Titledesc = titleDesc;
       }
     }
   }
   
   console.log('Final personnelData keys:', Object.keys(personnelData));
   console.log('Passport included?', !!personnelData.passport);
-
-
   console.log('Final personnelData:', personnelData);
 
   try {
@@ -2676,11 +2674,12 @@ async function submitPersonnelForm() {
         await checkDuplicate(input, field);
         if (input.validationMessage) {
           showAlert(input.validationMessage);
-          return; // stop submit if any duplicate found
+          return;
         }
       }
     }
 
+    // EDIT MODE - UPDATE EXISTING EMPLOYEE
     if (formMode === 'edit' && currentEmployeeId) {
       console.log('Updating employee:', currentEmployeeId);
 
@@ -2691,34 +2690,141 @@ async function submitPersonnelForm() {
         body: JSON.stringify(personnelData)
       });
 
-      // Redirect logic (DateLeft / ExitType)
       const dateLeftVal = personnelData.DateLeft;
       const exitTypeVal = personnelData.exittype;
+      const hasExited = (dateLeftVal && dateLeftVal !== null && dateLeftVal !== '') ||
+                        (exitTypeVal && exitTypeVal !== null && exitTypeVal !== '');
 
-      const hasExited =
-        (dateLeftVal && dateLeftVal !== null && dateLeftVal !== '') ||
-        (exitTypeVal && exitTypeVal !== null && exitTypeVal !== '');
+      const wasInCurrent = localStorage.getItem('navigatedFromCurrentPersonnel') === 'true';
+      const wasInOld = localStorage.getItem('navigatedFromOldPersonnel') === 'true';
+      
+      const statusChanged = (wasInCurrent && hasExited) || (wasInOld && !hasExited);
+      
+      console.log('📊 Edit status check:', {
+        wasInCurrent,
+        wasInOld,
+        hasExited,
+        statusChanged
+      });
 
       const redirectSection = hasExited ? 'old-personnel' : 'current-personnel';
       const redirectTitle = hasExited ? 'Old Personnel' : 'Current Personnel';
 
-      showPopup("Personnel updated successfully", () => {
-        // Clear ALL navigation states to prevent returning to wrong section
-        localStorage.removeItem('editing_employee_id');
-        localStorage.removeItem('navigatedFromCurrentPersonnel');
-        localStorage.removeItem('navigatedFromOldPersonnel');
-        localStorage.removeItem('currentPersonnelPage');
-        localStorage.removeItem('currentPersonnelType');
-        localStorage.removeItem('oldPersonnelPage');
-        localStorage.removeItem('oldPersonnelType');
-        localStorage.removeItem('isEditMode');
+      const updatedEmployeeData = {
+        Empl_ID: currentEmployeeId,
+        Surname: personnelData.Surname,
+        OtherName: personnelData.OtherName,
+        Title: personnelData.Title,
+        DateLeft: personnelData.DateLeft,
+        exittype: personnelData.exittype,
+        email: personnelData.email,
+        gsm_number: personnelData.gsm_number
+      };
 
-        if (window.navigation?.navigateToSection) {
-          window.navigation.navigateToSection(redirectSection, redirectTitle);
+      showPopup("Personnel updated successfully", async () => {
+        localStorage.removeItem('editing_employee_id');
+        localStorage.removeItem('isEditMode');
+        
+        if (statusChanged) {
+          console.log('🔄 Status changed - removing from source section');
+          
+          // Determine which section we're leaving
+          const sourceSection = wasInCurrent ? 'current' : 'old';
+          const sourceManager = wasInCurrent ? window.personnelManager : window.oldPersonnelManager;
+          
+          if (sourceManager) {
+            console.log('🧹 Removing employee from ALL snapshots in', sourceSection, 'section');
+            
+            // ✅ UPDATE BOTH SNAPSHOTS (pagination AND filter)
+            // We don't know which one is active, so update both!
+            
+            const snapshotKeys = [
+              `personnel_pagination_${sourceSection}`,
+              `personnel_filter_${sourceSection}`
+            ];
+            
+            let updatedCount = 0;
+            
+            snapshotKeys.forEach(storageKey => {
+              const snapshot = localStorage.getItem(storageKey);
+              
+              if (snapshot) {
+                try {
+                  const state = JSON.parse(snapshot);
+                  
+                  if (state.data && Array.isArray(state.data)) {
+                    const beforeLength = state.data.length;
+                    state.data = state.data.filter(p => p.Empl_ID !== currentEmployeeId);
+                    const afterLength = state.data.length;
+                    
+                    if (beforeLength !== afterLength) {
+                      console.log(`💾 Updated ${storageKey}: ${beforeLength} → ${afterLength} records`);
+                      
+                      // Update metadata
+                      if (state.paginationInfo && state.paginationInfo.totalRecords) {
+                        state.paginationInfo.totalRecords -= 1;
+                      }
+                      state.timestamp = Date.now();
+                      
+                      // Save
+                      localStorage.setItem(storageKey, JSON.stringify(state));
+                      updatedCount++;
+                    } else {
+                      console.log(`⏭️ Employee not in ${storageKey}`);
+                    }
+                  }
+                } catch (error) {
+                  console.error(`Error updating ${storageKey}:`, error);
+                  localStorage.removeItem(storageKey);
+                }
+              } else {
+                console.log(`⏭️ ${storageKey} doesn't exist`);
+              }
+            });
+            
+            if (updatedCount > 0) {
+              console.log(`✅ Updated ${updatedCount} snapshot(s)`);
+            } else {
+              console.warn('⚠️ No snapshots were updated - employee may still appear in source section');
+            }
+          }
+          
+          // Clear navigation states
+          localStorage.removeItem('navigatedFromCurrentPersonnel');
+          localStorage.removeItem('navigatedFromOldPersonnel');
+          localStorage.removeItem('currentPersonnelPage');
+          localStorage.removeItem('currentPersonnelType');
+          localStorage.removeItem('oldPersonnelPage');
+          localStorage.removeItem('oldPersonnelType');
+          
+          // Navigate to destination
+          if (window.navigation?.navigateToSection) {
+            await window.navigation.navigateToSection(redirectSection, redirectTitle);
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Smart navigation in destination
+          if (hasExited && window.oldPersonnelManager?.handleEmployeeAdded) {
+            console.log('🎯 Smart navigation in Old Personnel');
+            await window.oldPersonnelManager.handleEmployeeAdded(updatedEmployeeData, 'statusChange');
+          } else if (!hasExited && window.personnelManager?.handleEmployeeAdded) {
+            console.log('🎯 Smart navigation in Current Personnel');
+            await window.personnelManager.handleEmployeeAdded(updatedEmployeeData, 'statusChange');
+          }
+        }else {
+          // ✅ No status change - use existing restoration logic (don't clear states)
+          console.log('✅ Status unchanged - using restoration logic');
+          
+          if (window.navigation?.navigateToSection) {
+            window.navigation.navigateToSection(redirectSection, redirectTitle);
+          }
         }
       });
-
-    } else {
+    }
+        
+    // CREATE MODE - NEW EMPLOYEE
+    else {
       const serviceNo = document.getElementById('field-service-number')?.value.trim();
       if (!serviceNo) {
         showAlert('Service Number is required');
@@ -2729,12 +2835,13 @@ async function submitPersonnelForm() {
 
       console.log('Creating new employee with service number:', serviceNo);
 
+      // Create employee
       await apiRequest(`${API_BASE}/employees`, {
         method: 'POST',
         body: JSON.stringify(personnelData)
       });
            
-      // Then create family members
+      // Create family members (NOK, Spouse, Children)
       if (pendingFamilyData.nok.length > 0) {
         for (const nok of pendingFamilyData.nok) {
           delete nok._tempId;
@@ -2768,25 +2875,56 @@ async function submitPersonnelForm() {
         }
       }
 
-      showPopup("Personnel and family records created successfully", () => {
+      // Determine redirect based on exit status
+      const dateLeftVal = personnelData.DateLeft;
+      const exitTypeVal = personnelData.exittype;
+
+      const hasExited =
+        (dateLeftVal && dateLeftVal !== null && dateLeftVal !== '') ||
+        (exitTypeVal && exitTypeVal !== null && exitTypeVal !== '');
+
+      const redirectSection = hasExited ? 'old-personnel' : 'current-personnel';
+      const redirectTitle = hasExited ? 'Old Personnel' : 'Current Personnel';
+
+      // Collect new employee data for smart navigation
+      const newEmployeeData = {
+        Empl_ID: serviceNo,
+        Surname: personnelData.Surname,
+        OtherName: personnelData.OtherName,
+        Title: personnelData.Title,
+        DateLeft: personnelData.DateLeft,
+        exittype: personnelData.exittype,
+        email: personnelData.email,
+        gsm_number: personnelData.gsm_number
+      };
+
+      showPopup("Personnel and family records created successfully", async () => {
+        // Navigate to appropriate section
         if (window.navigation?.navigateToSection) {
-          // Redirect logic (DateLeft / ExitType)
-          const dateLeftVal = personnelData.DateLeft;
-          const exitTypeVal = personnelData.exittype;
-
-          const hasExited =
-            (dateLeftVal && dateLeftVal !== null && dateLeftVal !== '') ||
-            (exitTypeVal && exitTypeVal !== null && exitTypeVal !== '');
-
-          const redirectSection = hasExited ? 'old-personnel' : 'current-personnel';
-          const redirectTitle = hasExited ? 'Old Personnel' : 'Current Personnel';
-          window.navigation.navigateToSection(redirectSection, redirectTitle);
+          await window.navigation.navigateToSection(redirectSection, redirectTitle);
         }
-        setTimeout(() => {
-          if (window.personnelManager?.refresh) window.personnelManager.refresh();
-        }, 100);
+
+        // Wait for navigation to complete
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // ✨ NEW: Smart navigation for current personnel only
+        if (!hasExited && window.personnelManager?.handleEmployeeAdded) {
+          console.log('🎯 Triggering smart navigation after create');
+          await window.personnelManager.handleEmployeeAdded(newEmployeeData, 'create');
+        } else if (hasExited) {
+          // For old personnel, just refresh normally
+          if (window.oldPersonnelManager?.refresh) {
+            window.oldPersonnelManager.refresh();
+          }
+        } else {
+          // Fallback refresh
+          if (window.personnelManager?.refresh) {
+            window.personnelManager.refresh();
+          }
+        }
       });
 
+      // Reset form after successful creation
       document.getElementById('personnelForm')?.reset();
       pendingFamilyData = { nok: [], spouse: [], children: [] };
       clearAllFamilyTables();
@@ -2848,28 +2986,27 @@ document.getElementById("uploadBatchBtn").addEventListener("click", async () => 
     return;
   }
   
-// Validate file input
+  // Validate file input
+  if (!file) {
+    showAlert('Please select a file to upload');
+    return;
+  }
 
-if (!file) {
-  showAlert('Please select a file to upload');
-  return;
-}
+  // Safer validation by extension
+  const allowedExtensions = ['.csv', '.xlsx', '.xls'];
+  const fileName = file.name.toLowerCase();
+  const isExcelOrCsv = allowedExtensions.some(ext => fileName.endsWith(ext));
 
-//  safer validation by extension
-const allowedExtensions = ['.csv', '.xlsx', '.xls'];
-const fileName = file.name.toLowerCase();
-const isExcelOrCsv = allowedExtensions.some(ext => fileName.endsWith(ext));
+  if (!isExcelOrCsv) {
+    showAlert('Please upload only CSV or Excel files');
+    return;
+  }
 
-if (!isExcelOrCsv) {
-  showAlert('Please upload only CSV or Excel files');
-  return;
-}
-
-//  Size validation
-if (file.size > 5 * 1024 * 1024) {
-  showAlert('File size must be less than 5MB');
-  return;
-}
+  // Size validation
+  if (file.size > 5 * 1024 * 1024) {
+    showAlert('File size must be less than 5MB');
+    return;
+  }
 
   try {
     console.log('Starting upload for file:', file.name);
@@ -2903,66 +3040,262 @@ if (file.size > 5 * 1024 * 1024) {
 
     console.log('Upload result:', result);
 
-//  Handle success response
-if (result.summary) {
-  const summary = result.summary;
-  let message = `Batch upload completed!\n\n`;
-  message += `Total Records: ${summary.totalRecords}\n`;
-  message += `Inserted: ${summary.inserted}\n`;
-  message += `Successful Inserts: ${summary.successful}\n`;
-  message += `Failed Inserts: ${summary.failed}\n`;
+    // Handle success response
+    if (result.summary) {
+      const summary = result.summary;
+      let message = `Batch upload completed!\n\n`;
+      message += `Total Records: ${summary.totalRecords}\n`;
+      message += `Inserted: ${summary.inserted}\n`;
+      message += `Successful Inserts: ${summary.successful}\n`;
+      message += `Failed Inserts: ${summary.failed}\n`;
 
-  if (summary.duplicates && summary.duplicates.length > 0) {
-    message += `\n⚠️ Duplicate Service Numbers (already exist):\n`;
-    message += summary.duplicates.slice(0, 10).join(', ');
-    if (summary.duplicates.length > 10) {
-      message += ` ...and ${summary.duplicates.length - 10} more`;
-    }
-  }
-
-  if (summary.errors && summary.errors.length > 0) {
-    message += `\n\n❌ Row Errors:\n`;
-    summary.errors.slice(0, 5).forEach(error => {
-      message += `Row ${error.row} (${error.serviceNumber}): ${error.error}\n`;
-    });
-    if (summary.errors.length > 5) {
-      message += `...and ${summary.errors.length - 5} more errors`;
-    }
-  }
-
-  showAlert(message);
-
-
-      if (summary.successful > 0 || summary.successful === 'Processing') {
-        document.getElementById("batchUploadForm").reset();
-        document.getElementById("batchUploadForm").classList.add("hidden");
-        //await loadScales();
-        resetBatchUploadForm();
-
-        showPopup("Personnel Uploaded successfully", () => {
-          if (window.navigation?.navigateToSection) {
-            window.navigation.navigateToSection('current-personnel', 'Current Personnel');
-            setTimeout(() => {
-              if (window.personnelManager?.refresh) {
-                window.personnelManager.refresh();
-              }
-            }, 100);
-          }
-        });
+      if (summary.duplicates && summary.duplicates.length > 0) {
+        message += `\n⚠️ Duplicate Service Numbers (already exist):\n`;
+        message += summary.duplicates.slice(0, 10).join(', ');
+        if (summary.duplicates.length > 10) {
+          message += ` ...and ${summary.duplicates.length - 10} more`;
+        }
       }
+
+      if (summary.errors && summary.errors.length > 0) {
+        message += `\n\n❌ Row Errors:\n`;
+        summary.errors.slice(0, 5).forEach(error => {
+          message += `Row ${error.row} (${error.serviceNumber}): ${error.error}\n`;
+        });
+        if (summary.errors.length > 5) {
+          message += `...and ${summary.errors.length - 5} more errors`;
+        }
+      }
+
+      showAlert(message);
+
+      if (summary.successful > 0) {
+  document.getElementById("batchUploadForm").reset();
+  document.getElementById("batchUploadForm").classList.add("hidden");
+  resetBatchUploadForm();
+
+  showPopup(`${summary.successful} personnel uploaded successfully`, async () => {
+    try {
+      console.log('🚀 BATCH UPLOAD: Starting complete refresh...');
+      
+      // ============================================================
+      // STEP 1: NUCLEAR OPTION - Clear EVERYTHING
+      // ============================================================
+      console.log('💣 NUCLEAR: Clearing all personnel-related data...');
+      
+      // Clear all snapshots
+      localStorage.removeItem('personnel_filter_current');
+      localStorage.removeItem('personnel_pagination_current');
+      localStorage.removeItem('personnel_filter_old');
+      localStorage.removeItem('personnel_pagination_old');
+      
+      // Clear navigation states
+      localStorage.removeItem('navigatedFromCurrentPersonnel');
+      localStorage.removeItem('navigatedFromOldPersonnel');
+      localStorage.removeItem('currentPersonnelPage');
+      localStorage.removeItem('currentPersonnelType');
+      localStorage.removeItem('oldPersonnelPage');
+      localStorage.removeItem('oldPersonnelType');
+      
+      // If manager exists, destroy it completely
+      if (window.personnelManager) {
+        console.log('💣 NUCLEAR: Destroying personnel manager instance...');
+        window.personnelManager.currentPage = 1;
+        window.personnelManager.personnel = [];
+        window.personnelManager.filteredPersonnel = [];
+        window.personnelManager.paginationInfo = {};
+        window.personnelManager.lastFilterParams = null;
+        
+        // Cancel any in-flight requests
+        if (window.personnelManager.activeFilterController) {
+          window.personnelManager.activeFilterController.abort();
+          window.personnelManager.activeFilterController = null;
+        }
+      }
+      
+      console.log('✅ All data cleared');
+      
+      // ============================================================
+      // STEP 2: Navigate
+      // ============================================================
+      console.log('📍 Navigating to current-personnel...');
+      
+      if (window.navigation?.navigateToSection) {
+        await window.navigation.navigateToSection('current-personnel', 'Current Personnel');
+      }
+
+      // ============================================================
+      // STEP 3: Wait for initialization to complete
+      // ============================================================
+      console.log('⏳ Waiting for complete initialization...');
+      await new Promise(resolve => setTimeout(resolve, 600)); // Even longer wait
+      
+      // ============================================================
+      // STEP 4: Verify manager and force reload if needed
+      // ============================================================
+      if (!window.personnelManager) {
+        console.error('❌ CRITICAL: personnelManager not initialized!');
+        alert('Error initializing personnel manager. Please refresh the page manually.');
+        return;
+      }
+      
+      console.log('✅ Personnel manager exists');
+      
+      // Check what data was loaded
+      const loadedCount = window.personnelManager.personnel?.length || 0;
+      console.log('📊 Currently loaded:', loadedCount, 'records');
+      
+      // ============================================================
+      // STEP 5: Force a fresh reload regardless
+      // ============================================================
+      console.log('🔄 Forcing fresh reload from API...');
+      
+      // Clear UI filters
+      const searchInput = document.getElementById('current-personnel-search');
+      const rankFilter = document.getElementById('rank-filter');
+      const statusFilter = document.getElementById('status-filter');
+      
+      if (searchInput) searchInput.value = '';
+      if (rankFilter) rankFilter.value = '';
+      if (statusFilter) statusFilter.value = '';
+      
+      // Reset manager state
+      window.personnelManager.currentPage = 1;
+      window.personnelManager.personnel = [];
+      window.personnelManager.filteredPersonnel = [];
+      window.personnelManager.paginationInfo = {};
+      
+      // Force fresh load
+      if (window.personnelManager.forceNextLoad !== undefined) {
+        window.personnelManager.forceNextLoad = true;
+      }
+      
+      // Load page 1
+      await window.personnelManager.loadPersonnelData('current', 1);
+      
+      // ============================================================
+      // STEP 6: Verify new data loaded
+      // ============================================================
+      const newCount = window.personnelManager.personnel?.length || 0;
+      const totalRecords = window.personnelManager.paginationInfo?.totalRecords || 0;
+      
+      console.log('📊 After reload:', {
+        page: window.personnelManager.currentPage,
+        loaded: newCount,
+        total: totalRecords,
+        hasNext: window.personnelManager.paginationInfo?.hasNextPage
+      });
+      
+      // ============================================================
+      // STEP 7: Verify table rendered
+      // ============================================================
+      const tbody = document.getElementById('personnel-table-body');
+      
+      if (!tbody) {
+        console.error('❌ Table body not found!');
+        alert('Error: Table not found. Please refresh the page.');
+        return;
+      }
+      
+      const rows = tbody.querySelectorAll('tr');
+      console.log('📊 Table rows:', rows.length);
+      
+      // If no rows or loading message, force render
+      if (rows.length === 0 || rows[0]?.textContent?.includes('Loading')) {
+        console.log('🔧 Force rendering table...');
+        await window.personnelManager.renderTable();
+      }
+      
+      // ============================================================
+      // STEP 8: Show success banner with verification
+      // ============================================================
+      if (newCount > 0) {
+        console.log('✅ SUCCESS: Data loaded and displayed');
+        
+        setTimeout(() => {
+          const container = document.querySelector('#personnel-table-body')?.parentElement?.parentElement;
+          if (container) {
+            const existingBanner = container.querySelector('.batch-upload-banner');
+            if (existingBanner) existingBanner.remove();
+            
+            const banner = document.createElement('div');
+            banner.className = 'batch-upload-banner bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
+            banner.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div>
+                  <strong>✅ Batch Upload Complete!</strong><br>
+                  <span class="text-sm">
+                    ${summary.successful} employees uploaded successfully | 
+                    Showing ${newCount} of ${totalRecords} total records on page 1
+                  </span>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="text-green-700 hover:text-green-900 font-bold text-xl px-2">×</button>
+              </div>
+            `;
+            container.insertBefore(banner, container.firstChild);
+            
+            setTimeout(() => banner.remove(), 8000);
+          }
+        }, 300);
+      } else {
+        // ============================================================
+        // STEP 9: Nuclear fallback - suggest manual refresh
+        // ============================================================
+        console.error('❌ CRITICAL: No data loaded after all attempts!');
+        
+        const shouldRefresh = confirm(
+          `Upload successful! However, the table is not refreshing automatically.\n\n` +
+          `${summary.successful} employees were uploaded to the database.\n\n` +
+          `Click OK to refresh the entire page, or Cancel to manually navigate to Current Personnel.`
+        );
+        
+        if (shouldRefresh) {
+          console.log('🔄 User chose to refresh page');
+          window.location.reload();
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ CRITICAL ERROR in batch upload:', error);
+      
+      const shouldRefresh = confirm(
+        `Upload was successful, but an error occurred while displaying the data.\n\n` +
+        `Error: ${error.message}\n\n` +
+        `Click OK to refresh the page.`
+      );
+      
+      if (shouldRefresh) {
+        window.location.reload();
+      }
+    }
+  });
+}
     } else {
+      // No summary object (fallback for older backend responses)
       showPopup('Upload completed successfully!');
       document.getElementById("batchUploadForm").reset();
       document.getElementById("batchUploadForm").classList.add("hidden");
 
-      showPopup("Personnel Uploaded successfully", () => {
+      showPopup("Personnel Uploaded successfully", async () => {
         if (window.navigation?.navigateToSection) {
-          window.navigation.navigateToSection('current-personnel', 'Current Personnel');
-          setTimeout(() => {
-            if (window.personnelManager?.refresh) {
-              window.personnelManager.refresh();
-            }
-          }, 100);
+          await window.navigation.navigateToSection('current-personnel', 'Current Personnel');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        if (window.personnelManager) {
+          window.personnelManager.clearNormalPaginationState();
+          window.personnelManager.clearFilterState();
+          
+          const searchInput = document.getElementById('current-personnel-search');
+          const rankFilter = document.getElementById('rank-filter');
+          const statusFilter = document.getElementById('status-filter');
+          
+          if (searchInput) searchInput.value = '';
+          if (rankFilter) rankFilter.value = '';
+          if (statusFilter) statusFilter.value = '';
+          
+          await window.personnelManager.loadPersonnelData('current', 1);
         }
       });
     }

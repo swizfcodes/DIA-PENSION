@@ -78,6 +78,34 @@
     </div>
   </div>
 
+  <!-- Employee Filtered Out Modal -->
+  <div id="employeeFilteredModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div class="p-6">
+        <div class="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full mb-4">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-center text-gray-900 mb-2">Employee Added Successfully!</h3>
+        <p class="text-center text-gray-600 mb-1">
+          <span class="font-medium" id="filteredEmployeeName"></span> has been added.
+        </p>
+        <p class="text-center text-sm text-gray-500 mb-6">
+          This employee doesn't match your current filters and won't appear in the list.
+        </p>
+        <div class="flex gap-3">
+          <button id="closeFilteredModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+            Stay Here
+          </button>
+          <button id="clearFiltersAndNavigate" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Clear Filters & View
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Success Popup -->
   <div id="actionPopup" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
     <div class="bg-white p-6 rounded-2xl shadow-xl text-center w-64">
@@ -111,6 +139,7 @@ class PersonnelManager {
     this.paginationInfo = {};
     this.eventListenersAttached = false;
     this.lastFilterParams = null;
+    this.forceNextLoad = false;
     this.activeFilterController = null; // AbortController for canceling in-flight requests
   }
 
@@ -154,6 +183,14 @@ class PersonnelManager {
   async loadPersonnelData(type = 'current', page = 1) {
     this.currentView = type;
     this.personnelType = type;
+
+    // ✨ NEW: Check force flag FIRST
+    if (this.forceNextLoad) {
+      console.log('⚡ Forcing fresh load (skipping snapshot restoration)');
+      this.forceNextLoad = false; // Reset flag
+      await this.loadPaginatedData(type, page);
+      return;
+    }
     
     // Priority 1: Check if we should restore filter state
     const shouldRestoreFilters = this.hasActiveFilterState();
@@ -184,6 +221,294 @@ class PersonnelManager {
     await this.loadPaginatedData(type, page);
   }
 
+  getCurrentFilters() {
+    const searchInput = document.getElementById('current-personnel-search');
+    const rankFilter = document.getElementById('rank-filter');
+    const statusFilter = document.getElementById('status-filter');
+    
+    return {
+      search: searchInput?.value.trim() || '',
+      rank: rankFilter?.value || '',
+      status: statusFilter?.value || ''
+    };
+  }
+
+  /**
+   * Check if an employee matches current filters
+   * @param {Object} employee - Employee data from add/edit
+   * @param {Object} filters - Current filter state
+   * @returns {boolean}
+   */
+  employeeMatchesFilters(employee, filters) {
+    // Status filter check
+    if (filters.status) {
+      const employeeStatus = (employee.DateLeft || employee.exittype) ? 'INACTIVE' : 'ACTIVE';
+      if (employeeStatus !== filters.status) {
+        console.log('❌ Status mismatch:', employeeStatus, '!==', filters.status);
+        return false;
+      }
+    }
+
+    // Rank filter check
+    if (filters.rank) {
+      if (employee.Title !== filters.rank) {
+        console.log('❌ Rank mismatch:', employee.Title, '!==', filters.rank);
+        return false;
+      }
+    }
+
+    // Search term check (if present)
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      const searchableFields = [
+        employee.Empl_ID,
+        employee.Surname,
+        employee.OtherName,
+        employee.Title,
+        employee.email,
+        employee.gsm_number,
+        `${employee.Surname} ${employee.OtherName}`
+      ].filter(Boolean).map(f => f.toLowerCase());
+
+      const matches = searchableFields.some(field => field.includes(searchTerm));
+      
+      if (!matches) {
+        console.log('❌ Search mismatch: No field contains', searchTerm);
+        return false;
+      }
+    }
+
+    console.log('✅ Employee matches all filters');
+    return true;
+  }
+
+  /**
+   * Find which page an employee is on and navigate to it
+   * @param {string} employeeId - Employee ID to find
+   * @param {Object} filters - Current filter state
+   */
+  async findEmployeePage(employeeId, filters) {
+    try {
+      console.log('🔍 Finding page for employee:', employeeId);
+      
+      // Build query params
+      const params = new URLSearchParams({
+        findEmployee: employeeId,
+        limit: '10'
+      });
+
+      if (filters.search) params.append('q', filters.search);
+      if (filters.rank) params.append('rank', filters.rank);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/personnel/employees-current/search?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to find employee page');
+      }
+
+      const result = await response.json();
+      
+      console.log('📍 Employee found on page:', result.employeePage);
+      
+      return result.employeePage;
+
+    } catch (error) {
+      console.error('❌ Error finding employee page:', error);
+      return 1; // Fallback to page 1
+    }
+  }
+
+  /**
+   * Navigate to an employee after add/edit
+   * Clears all filters and navigates to the employee's page
+   * @param {string} employeeId - Employee ID
+   */
+  async navigateToEmployee(employeeId) {
+    try {
+      console.log('🎯 Navigating to employee:', employeeId);
+      
+      // Clear all filters
+      const searchInput = document.getElementById('current-personnel-search');
+      const rankFilter = document.getElementById('rank-filter');
+      const statusFilter = document.getElementById('status-filter');
+      
+      if (searchInput) searchInput.value = '';
+      if (rankFilter) rankFilter.value = '';
+      if (statusFilter) statusFilter.value = '';
+      
+      this.clearFilterState();
+      this.clearNormalPaginationState();
+
+      // Find employee's page in unfiltered view
+      const employeePage = await this.findEmployeePage(employeeId, {});
+      
+      console.log('📄 Loading page:', employeePage);
+      
+      // Load that page
+      await this.loadPersonnelData('current', employeePage);
+      
+      // Highlight the employee row briefly
+      setTimeout(() => {
+        this.highlightEmployeeRow(employeeId);
+      }, 300);
+
+    } catch (error) {
+      console.error('❌ Error navigating to employee:', error);
+      // Fallback: just reload page 1
+      await this.loadPersonnelData('current', 1);
+    }
+  }
+
+  /**
+   * Highlight an employee row temporarily
+   * @param {string} employeeId 
+   */
+  highlightEmployeeRow(employeeId) {
+    const tbody = document.getElementById('personnel-table-body');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const firstCell = row.querySelector('td');
+      if (firstCell && firstCell.textContent.trim() === employeeId) {
+        row.classList.add('bg-blue-100');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        setTimeout(() => {
+          row.classList.remove('bg-blue-100');
+          row.classList.add('transition-colors', 'duration-1000');
+        }, 2000);
+      }
+    });
+  }
+
+  /**
+   * Show modal when employee doesn't match filters OR status changed
+   * @param {Object} employeeData - The employee data
+   * @param {string} messageType - 'added', 'statusChanged', or 'filtered'
+   */
+  showFilteredOutMessage(employeeData, messageType = 'filtered') {
+    const modal = document.getElementById('employeeFilteredModal');
+    const titleElement = modal?.querySelector('h3');
+    const messageElement = modal?.querySelector('p:first-of-type');
+    const detailElement = modal?.querySelector('p:last-of-type');
+    const nameDisplay = document.getElementById('filteredEmployeeName');
+    const closeBtn = document.getElementById('closeFilteredModal');
+    const clearBtn = document.getElementById('clearFiltersAndNavigate');
+
+    if (!modal || !nameDisplay || !closeBtn || !clearBtn) {
+      console.error('❌ Filtered modal elements not found');
+      return;
+    }
+
+    const fullName = `${employeeData.Surname || ''} ${employeeData.OtherName || ''}`.trim();
+    nameDisplay.textContent = fullName || employeeData.Empl_ID;
+
+    // ✨ FIX: Different messages based on type
+    if (messageType === 'statusChanged') {
+      const newStatus = (employeeData.DateLeft || employeeData.exittype) ? 'INACTIVE' : 'ACTIVE';
+      
+      if (titleElement) {
+        titleElement.textContent = 'Employee Status Changed!';
+      }
+      
+      if (messageElement) {
+        messageElement.innerHTML = `
+          <span class="font-medium" id="filteredEmployeeName">${fullName || employeeData.Empl_ID}</span> 
+          status changed to <span class="font-bold text-${newStatus === 'ACTIVE' ? 'green' : 'red'}-600">${newStatus}</span>.
+        `;
+      }
+      
+      if (detailElement) {
+        detailElement.textContent = "This employee doesn't match your current filters and won't appear in the list.";
+      }
+    } else {
+      // Default "added" or "filtered" message
+      if (titleElement) {
+        titleElement.textContent = 'Employee Added Successfully!';
+      }
+      
+      if (messageElement) {
+        messageElement.innerHTML = `
+          <span class="font-medium" id="filteredEmployeeName">${fullName || employeeData.Empl_ID}</span> has been added.
+        `;
+      }
+      
+      if (detailElement) {
+        detailElement.textContent = "This employee doesn't match your current filters and won't appear in the list.";
+      }
+    }
+
+    this.pendingNavigationId = employeeData.Empl_ID;
+    modal.classList.remove('hidden');
+
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      this.pendingNavigationId = null;
+    };
+
+    clearBtn.onclick = async () => {
+      modal.classList.add('hidden');
+      await this.navigateToEmployee(this.pendingNavigationId);
+      this.pendingNavigationId = null;
+    };
+
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+        this.pendingNavigationId = null;
+      }
+    };
+  }
+
+  /**
+   * Handle employee added/edited
+   * @param {Object} employeeData 
+   * @param {string} source - 'create', 'edit', 'statusChange'
+   */
+  async handleEmployeeAdded(employeeData, source = 'create') {
+    console.log('🎉 Employee added/edited:', employeeData.Empl_ID, 'Source:', source);
+    
+    const currentFilters = this.getCurrentFilters();
+    const hasActiveFilters = currentFilters.search || currentFilters.rank || currentFilters.status;
+    
+    if (!hasActiveFilters) {
+      console.log('✅ No filters active - navigating directly');
+      await this.navigateToEmployee(employeeData.Empl_ID);
+      return;
+    }
+    
+    console.log('🔍 Checking if employee matches filters:', currentFilters);
+    
+    if (this.employeeMatchesFilters(employeeData, currentFilters)) {
+      console.log('✅ Employee matches filters - finding page');
+      
+      const employeePage = await this.findEmployeePage(employeeData.Empl_ID, currentFilters);
+      
+      this.clearFilterState();
+      this.currentPage = employeePage;
+      await this.filterPersonnel();
+      
+      setTimeout(() => {
+        this.highlightEmployeeRow(employeeData.Empl_ID);
+      }, 300);
+      
+    } else {
+      console.log('❌ Employee does not match filters - showing modal');
+      
+      // ✨ FIX: Pass message type
+      const messageType = source === 'statusChange' ? 'statusChanged' : 'filtered';
+      this.showFilteredOutMessage(employeeData, messageType);
+    }
+  }
+  
   async loadPaginatedData(type, page) {
     try {
       const result = await this.apiRequest(`${API_BASE}/employees-current-pages?page=${page}&limit=10`);
@@ -963,16 +1288,124 @@ class PersonnelManager {
       
       newBtn.addEventListener("click", async () => {
         try {
+          const currentPage = this.currentPage;
+          const currentFilters = this.getCurrentFilters();
+          const isFiltering = this.isSearchActive() || this.isFilterActive();
+          
+          console.log('💾 State before delete:', { page: currentPage, filters: currentFilters });
+          
+          // Delete from API
           const safeId = this.deleteId.replace(/\//g, '_SLASH_');
           await this.apiRequest(`${API_BASE}/employees/${safeId}`, { method: 'DELETE' });
+          
+          // ✅ FIX: Remove from local arrays (in-memory update)
           this.personnel = this.personnel.filter(p => p.Empl_ID !== this.deleteId);
-          this.filterPersonnel();
+          this.filteredPersonnel = this.filteredPersonnel.filter(p => p.Empl_ID !== this.deleteId);
+          
+          // ✅ FIX: Update snapshots intelligently
+          this.updateSnapshotsAfterDelete(this.deleteId, currentPage, isFiltering);
+          
           this.showSuccess("Personnel deleted successfully");
           this.closeDeleteEmployee();
+          
+          // ✅ FIX: Check if current page is now empty
+          if (this.filteredPersonnel.length === 0) {
+            console.log('📄 Current page now empty, loading previous page');
+            
+            // Calculate new page
+            const newTotalRecords = (this.paginationInfo.totalRecords || 0) - 1;
+            const newTotalPages = Math.ceil(newTotalRecords / 10);
+            const targetPage = currentPage > newTotalPages ? newTotalPages : currentPage;
+            
+            console.log('📊 Navigating to page:', targetPage || 1);
+            
+            if (isFiltering) {
+              this.currentPage = targetPage || 1;
+              await this.filterPersonnel();
+            } else {
+              await this.loadPersonnelData(this.personnelType, targetPage || 1);
+            }
+          } else {
+            // Current page still has data, just re-render
+            console.log('✅ Page still has data, re-rendering');
+            
+            // Update pagination info
+            if (this.paginationInfo.totalRecords) {
+              this.paginationInfo.totalRecords -= 1;
+            }
+            
+            await this.renderTable();
+          }
+          
         } catch (error) {
           this.showError('Failed to delete personnel: ' + error.message);
         }
       });
+    }
+  }
+
+  /**
+   * Update snapshots after delete or status change
+   * @param {string} employeeId - ID of employee to remove
+   * @param {number} currentPage - Current page number
+   * @param {boolean} isFiltering - Whether filters are active
+   */
+  updateSnapshotsAfterDelete(employeeId, currentPage, isFiltering) {
+    console.log('🔄 Removing employee from snapshots:', employeeId);
+    
+    // Determine section type
+    const sectionType = this.personnelType || 'current';
+    
+    // ✅ Check BOTH snapshot types (we update whichever exists)
+    const snapshotKeys = [
+      `personnel_pagination_${sectionType}`,
+      `personnel_filter_${sectionType}`
+    ];
+    
+    let updatedCount = 0;
+    
+    snapshotKeys.forEach(storageKey => {
+      const snapshot = localStorage.getItem(storageKey);
+      
+      if (!snapshot) {
+        console.log(`⏭️ ${storageKey} doesn't exist`);
+        return;
+      }
+      
+      try {
+        const state = JSON.parse(snapshot);
+        
+        if (state.data && Array.isArray(state.data)) {
+          const beforeLength = state.data.length;
+          state.data = state.data.filter(p => p.Empl_ID !== employeeId);
+          const afterLength = state.data.length;
+          
+          if (beforeLength !== afterLength) {
+            console.log(`💾 Updated ${storageKey}: ${beforeLength} → ${afterLength} records`);
+            
+            // Update metadata
+            if (state.paginationInfo && state.paginationInfo.totalRecords) {
+              state.paginationInfo.totalRecords -= 1;
+            }
+            state.timestamp = Date.now();
+            
+            // Save
+            localStorage.setItem(storageKey, JSON.stringify(state));
+            updatedCount++;
+          } else {
+            console.log(`⏭️ Employee not found in ${storageKey}`);
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Error updating ${storageKey}:`, error);
+        localStorage.removeItem(storageKey);
+      }
+    });
+    
+    if (updatedCount > 0) {
+      console.log(`✅ Successfully updated ${updatedCount} snapshot(s)`);
+    } else {
+      console.warn('⚠️ No snapshots contained this employee');
     }
   }
 
@@ -1089,4 +1522,22 @@ if (document.readyState === 'loading') {
 } else {
   initializePersonnelManager('current');
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Setup filtered modal close handlers
+  const modal = document.getElementById('employeeFilteredModal');
+  const closeBtn = document.getElementById('closeFilteredModal');
+  
+  if (modal && closeBtn) {
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        modal.classList.add('hidden');
+        if (window.personnelManager) {
+          window.personnelManager.pendingNavigationId = null;
+        }
+      }
+    });
+  }
+});
 </script>

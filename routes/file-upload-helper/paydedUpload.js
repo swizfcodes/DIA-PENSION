@@ -42,7 +42,7 @@ const upload = multer({
 
 // Field mapping from Excel/CSV headers to database columns
 const FIELD_MAPPING = {
-  'Service Number': 'Empl_id',
+  'Svc. No.': 'Empl_id',
   'Payment Type': 'type',
   'Amount Payable': 'amtp',
   'Payment Indicator': 'payind',
@@ -54,7 +54,59 @@ function parseExcelFile(filePath) {
   const workbook = XLSX.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
-  const data = XLSX.utils.sheet_to_json(worksheet);
+  
+  // Convert entire sheet to JSON with row arrays
+  const allData = XLSX.utils.sheet_to_json(worksheet, { 
+    header: 1,  // Return arrays instead of objects
+    defval: ''  // Default value for empty cells
+  });
+  
+  // Row 4 (index 3) contains the actual column headers
+  const headers = allData[3];
+  
+  if (!headers || headers.length === 0) {
+    throw new Error('No headers found in row 4');
+  }
+  
+  console.log('📋 Detected headers:', headers);
+  
+  // Rows 5+ (index 4+) contain the actual data
+  const dataRows = allData.slice(4);
+  
+  // Convert to objects using headers
+  const data = dataRows
+    .filter(row => {
+      // Skip completely empty rows
+      if (!row || row.length === 0) return false;
+      
+      // Skip rows where all cells are empty
+      const hasData = row.some(cell => {
+        return cell !== null && 
+               cell !== undefined && 
+               cell !== '' && 
+               cell.toString().trim() !== '';
+      });
+      
+      return hasData;
+    })
+    .map((row, rowIndex) => {
+      const obj = {};
+      headers.forEach((header, colIndex) => {
+        if (header && header.toString().trim() !== '') {
+          const cellValue = row[colIndex];
+          // Convert cell value to string and trim, or use empty string
+          obj[header.toString().trim()] = cellValue !== null && cellValue !== undefined 
+            ? cellValue.toString().trim() 
+            : '';
+        }
+      });
+      
+      console.log(`📊 Row ${rowIndex + 5}:`, obj);
+      return obj;
+    });
+  
+  console.log('✅ Parsed data rows:', data.length);
+  
   return data;
 }
 
@@ -189,6 +241,10 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
     const fileExt = path.extname(req.file.originalname).toLowerCase();
     const createdBy = req.user_fullname || 'SYSTEM';
 
+    // SET DATABASE CONTEXT
+    const currentDb = pool.getCurrentDatabase(req.user_id.toString());
+    console.log('📊 Using database:', currentDb);
+
     console.log('📤 Uploaded by:', createdBy);
 
     // Parse file
@@ -202,6 +258,9 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
     if (!rawData || rawData.length === 0) {
       return res.status(400).json({ error: 'File is empty or invalid' });
     }
+
+    console.log('📄 First row of parsed data:', rawData[0]);
+    console.log('📊 Total rows parsed:', rawData.length);
 
     // Validate rows
     const validationErrors = [];
@@ -245,7 +304,7 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
       } catch (error) {
         results.failed++;
         results.errors.push({
-          row: i + 2,
+          row: i + 5, // +5 because data starts at row 5 in Excel
           serviceNumber: uniqueData[i].Empl_id,
           deductionType: uniqueData[i].type,
           error: error.message

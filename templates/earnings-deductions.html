@@ -256,7 +256,7 @@
                     <tr>
                         <th>Payment Type</th>
                         <th>Description</th>
-                        <th>Total Personnel(s)</th>
+                        <th>Total Personnel</th>
                         <th class="amount">Total Amount</th>
                     </tr>
                 </thead>
@@ -289,7 +289,7 @@
             {{#each paymentTypes}}
             <div class="payment-group{{#unless @first}} page-break{{/unless}}">
                 <div class="payment-header">
-                    {{payment_code}} - {{payment_description}} | {{employee_count}} Personnel(s) | Total: ₦{{formatCurrency subtotal}}
+                    {{payment_code}} - {{payment_description}} | {{employee_count}} Personnel | Total: ₦{{formatCurrency subtotal}}
                 </div>
                 <table class="details">
                     <thead>

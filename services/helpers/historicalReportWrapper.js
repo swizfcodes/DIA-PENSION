@@ -20,8 +20,8 @@ class SeamlessHistoricalWrapper {
     this.originalQuery = pool.query.bind(pool);
     
     // Replace with interceptor
-    pool.query = async (sql, params) => {
-      return await this.interceptQuery(sql, params);
+    pool.query = async (sql, params, sessionId) => {
+      return await this.interceptQuery(sql, params, sessionId);
     };
     
     console.log('✅ [WRAPPER] Seamless Historical Wrapper initialized');
@@ -30,12 +30,12 @@ class SeamlessHistoricalWrapper {
   /**
    * Main query interceptor
    */
-  async interceptQuery(sql, params) {
+  async interceptQuery(sql, params, sessionId) {
     this.queryCount++;
-    
+
     // Skip if wrapper not active
     if (!this.isActive) {
-      return await this.originalQuery(sql, params);
+      return await this.originalQuery(sql, params, sessionId);
     }
 
     console.log(`\n   🔍 [QUERY ${this.queryCount}] Intercepted`);
@@ -75,7 +75,7 @@ class SeamlessHistoricalWrapper {
     console.log(`   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
     console.log(`   Params:`, params);
     
-    return await this.originalQuery(transformedSql, params);
+    return await this.originalQuery(transformedSql, params, sessionId);
   }
 
   /**
@@ -480,5 +480,3 @@ class SeamlessHistoricalWrapper {
 }
 
 module.exports = new SeamlessHistoricalWrapper();
-
-

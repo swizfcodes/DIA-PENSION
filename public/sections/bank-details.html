@@ -92,8 +92,8 @@
           <tr>
             <th class="border px-2 py-3 text-left">Bank Code</th>
             <th class="border px-6 py-3 text-left">Bank Name</th>
-            <th class="border px-6 py-3 text-left">Branch</th>
-            <th class="border px-6 py-3 text-left">Account No</th>
+            <th class="border px-6 py-3 text-left">Branch Code</th>
+            <th class="border px-6 py-3 text-left">Branch Name</th>
             <th class="border px-6 py-3 text-left">Actions</th>
           </tr>
         </thead>
@@ -367,8 +367,8 @@
       <tr class="hover:bg-gray-50">
         <td class="border px-2 py-2 text-sm text-gray-900">${item.bankcode}</td>
         <td class="border px-2 py-2 text-sm text-gray-900">${item.bankname}</td>
+        <td class="border px-2 py-2 text-sm text-gray-900">${item.branchcode}</td>
         <td class="border px-2 py-2 text-sm text-gray-900">${item.branchname}</td>
-        <td class="border px-2 py-2 text-sm text-gray-900">${item.CompanyAcctNo}</td>
         <td class="border px-2 py-2 text-sm font-medium">
           <button onclick="viewBankRecord(${index})" class="text-green-600 hover:text-green-900 px-2 py-1 rounded hover:bg-green-50 mr-2">View</button>
           <button onclick="editBankRecord(${index})" class="text-blue-600 hover:text-blue-900 px-2 py-1 rounded hover:bg-blue-50 mr-2">Edit</button>

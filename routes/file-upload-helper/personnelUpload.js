@@ -39,9 +39,32 @@ const upload = multer({
   }
 });
 
+// =============================================================================
+// HELPER FUNCTION: Get Payroll Class from Current Database
+// =============================================================================
+/**
+ * Maps database name to payroll class number
+ * @param {string} dbName - Current database name
+ * @returns {string} Payroll class (1-6)
+ */
+function getPayrollClassFromDb(dbName) {
+  const classMapping = {
+    [process.env.DB_OFFICERS]: '1',
+    [process.env.DB_WOFFICERS]: '2',
+    [process.env.DB_RATINGS]: '3',
+    [process.env.DB_RATINGS_A]: '4',
+    [process.env.DB_RATINGS_B]: '5',
+    [process.env.DB_JUNIOR_TRAINEE]: '6'
+  };
+  
+  const result = classMapping[dbName] || '1';
+  console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
+  return result;
+}
+
 // Field mapping from Excel/CSV headers to database columns
 const FIELD_MAPPING = {
-  'Service Number': 'Empl_ID',
+  'Svc. No.': 'Empl_ID',
   'Rank': 'Title',
   'Surname': 'Surname',
   'Other Name': 'OtherName',
@@ -84,19 +107,116 @@ const FIELD_MAPPING = {
   'Country': 'Country',
   'Accommodation Type': 'accomm_type',
   'Rent Subsidy': 'rent_subsidy',
-  'Emolument Form': 'emolumentform',
+  'Emol. Form': 'emolumentform',
 };
 
-// Helper function to parse Excel file
+// Helper: Convert Excel serial date to YYYYMMDD
+function excelDateToYYYYMMDD(serial) {
+  if (!serial || isNaN(serial)) return null;
+  
+  const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+  const date = new Date(excelEpoch.getTime() + serial * 86400000);
+  
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  
+  return `${year}${month}${day}`;
+}
+
+// Helper: Format date to YYYYMMDD
+function formatDateToYYYYMMDD(dateValue) {
+  if (!dateValue) return null;
+  
+  try {
+    // Handle Excel serial number
+    if (typeof dateValue === 'number') {
+      return excelDateToYYYYMMDD(dateValue);
+    }
+    
+    // Handle string dates
+    if (typeof dateValue === 'string') {
+      const trimmed = dateValue.trim();
+      
+      // Already in YYYYMMDD format
+      if (/^\d{8}$/.test(trimmed)) {
+        return trimmed;
+      }
+      
+      // DD/MM/YYYY format
+      const ddmmyyyy = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (ddmmyyyy) {
+        const day = ddmmyyyy[1].padStart(2, '0');
+        const month = ddmmyyyy[2].padStart(2, '0');
+        const year = ddmmyyyy[3];
+        return `${year}${month}${day}`;
+      }
+      
+      // YYYY-MM-DD format
+      const yyyymmdd = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (yyyymmdd) {
+        const year = yyyymmdd[1];
+        const month = yyyymmdd[2].padStart(2, '0');
+        const day = yyyymmdd[3].padStart(2, '0');
+        return `${year}${month}${day}`;
+      }
+    }
+    
+    console.warn('⚠️ Could not parse date:', dateValue);
+    return null;
+    
+  } catch (error) {
+    console.error('❌ Date formatting error:', error);
+    return null;
+  }
+}
+
+// Parse Excel file
 function parseExcelFile(filePath) {
-  const workbook = XLSX.readFile(filePath);
+  const workbook = XLSX.readFile(filePath, { cellDates: false });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
-  const data = XLSX.utils.sheet_to_json(worksheet);
+  
+  const allData = XLSX.utils.sheet_to_json(worksheet, { 
+    header: 1,
+    raw: true, // Keep numbers as numbers
+    defval: ''
+  });
+  
+  const headers = allData[3];
+  
+  if (!headers || headers.length === 0) {
+    throw new Error('No headers found in row 4');
+  }
+  
+  console.log('📋 Detected headers:', headers);
+  
+  const dataRows = allData.slice(4);
+  
+  const data = dataRows
+    .filter(row => {
+      if (!row || row.length === 0) return false;
+      return row.some(cell => cell !== null && cell !== undefined && cell !== '');
+    })
+    .map((row) => {
+      const obj = {};
+      headers.forEach((header, colIndex) => {
+        if (header && header.toString().trim() !== '') {
+          const cellValue = row[colIndex];
+          // Keep the raw value (number or string)
+          obj[header.toString().trim()] = cellValue !== null && cellValue !== undefined 
+            ? cellValue 
+            : '';
+        }
+      });
+      return obj;
+    });
+  
+  console.log('✅ Parsed data rows:', data.length);
   return data;
 }
 
-// Helper function to parse CSV file
+// Parse CSV file
 function parseCSVFile(filePath) {
   return new Promise((resolve, reject) => {
     const results = [];
@@ -108,8 +228,8 @@ function parseCSVFile(filePath) {
   });
 }
 
-// Helper function to map fields
-function mapFields(row) {
+// Map fields
+function mapFields(row, createdBy, payrollClass) {
   const mappedRow = {};
   
   Object.keys(row).forEach(key => {
@@ -119,100 +239,75 @@ function mapFields(row) {
     if (dbField) {
       let value = row[key];
       
-      // Handle date formatting (convert to ddmmyyyy)
-      if (['Birthdate', 'DateEmpl', 'dateconfirmed', 'DateLeft', 'datepmted'].includes(dbField)) {
-        value = formatDate(value);
-      }
-      
       // Trim string values
       if (typeof value === 'string') {
         value = value.trim();
+      }
+      
+      // Format dates
+      if (['Birthdate', 'DateEmpl', 'datepmted'].includes(dbField)) {
+        value = formatDateToYYYYMMDD(value);
       }
       
       mappedRow[dbField] = value || null;
     }
   });
   
+  // Set system fields
+  mappedRow.createdby = createdBy;
+  mappedRow.payrollclass = payrollClass;
+  mappedRow.datecreated = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  
   return mappedRow;
 }
 
-// Helper function to format dates to ddmmyyyy
-function formatDate(dateValue) {
-  if (!dateValue) return null;
-  
-  let date;
-  
-  // Handle Excel serial date
-  if (typeof dateValue === 'number') {
-    date = XLSX.SSF.parse_date_code(dateValue);
-    return `${String(date.d).padStart(2, '0')}${String(date.m).padStart(2, '0')}${date.y}`;
-  }
-  
-  // Handle string dates
-  if (typeof dateValue === 'string') {
-    // Try parsing various formats
-    const formats = [
-      /^(\d{2})[-\/](\d{2})[-\/](\d{4})$/, // DD-MM-YYYY or DD/MM/YYYY
-      /^(\d{4})[-\/](\d{2})[-\/](\d{2})$/, // YYYY-MM-DD or YYYY/MM/DD
-      /^(\d{2})(\d{2})(\d{4})$/             // DDMMYYYY
-    ];
-    
-    for (let format of formats) {
-      const match = dateValue.match(format);
-      if (match) {
-        if (format === formats[0]) {
-          return `${match[1]}${match[2]}${match[3]}`;
-        } else if (format === formats[1]) {
-          return `${match[3]}${match[2]}${match[1]}`;
-        } else if (format === formats[2]) {
-          return dateValue;
-        }
-      }
-    }
-  }
-  
-  return null;
-}
-
-// Validate required fields
+// Validate row
 function validateRow(row, rowIndex) {
   const errors = [];
   const requiredFields = ['Empl_ID', 'Surname', 'OtherName'];
   
   requiredFields.forEach(field => {
     if (!row[field] || row[field].toString().trim() === '') {
-      errors.push(`Row ${rowIndex + 2}: Missing required field "${field}"`);
+      errors.push(`Row ${rowIndex + 5}: Missing required field "${field}"`);
     }
   });
-  
-  // Validate Service Number uniqueness will be done at DB level
   
   return errors;
 }
 
-// Check for duplicate service numbers in DB
-async function checkDuplicates(serviceNumbers) {
+// Check duplicates
+async function checkDuplicates(personnelList) {
+  if (personnelList.length === 0) return [];
+  
+  const emplIds = personnelList.map(p => p.Empl_ID);
+  const placeholders = emplIds.map(() => '?').join(',');
+  
   const query = `
     SELECT Empl_ID 
     FROM hr_employees 
-    WHERE Empl_ID IN (?)
+    WHERE Empl_ID IN (${placeholders})
   `;
   
-  const [results] = await pool.query(query, [serviceNumbers]);
+  const [results] = await pool.query(query, emplIds);
   return results.map(row => row.Empl_ID);
 }
 
-// Insert personnel record
+// Insert personnel
 async function insertPersonnel(data) {
+  const fields = Object.keys(data);
+  const values = Object.values(data);
+  const placeholders = fields.map(() => '?').join(', ');
+  
   const query = `
-    INSERT INTO hr_employees SET ?
+    INSERT INTO hr_employees (${fields.join(', ')}) 
+    VALUES (${placeholders})
   `;
   
-  const [result] = await pool.query(query, data);
+  const [result] = await pool.query(query, values);
   return result;
 }
 
-// POST: Batch upload endpoint
+// POST: Batch upload
 router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res) => {
   let filePath = null;
 
@@ -223,6 +318,15 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
 
     filePath = req.file.path;
     const fileExt = path.extname(req.file.originalname).toLowerCase();
+    const createdBy = req.user_fullname || 'SYSTEM';
+    const userId = req.user_id;
+
+    // ✅ SET DATABASE ONCE at the beginning - it persists for the entire request
+    const currentDb = pool.getCurrentDatabase(userId.toString());
+    const payrollClass = getPayrollClassFromDb(currentDb);
+    
+    console.log('📊 Using database:', currentDb);
+    console.log('📊 Payroll class:', payrollClass);
 
     // Parse file
     let rawData;
@@ -236,10 +340,17 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
       return res.status(400).json({ error: 'File is empty or invalid' });
     }
 
-    // Validate rows
+    console.log('📊 Total rows parsed:', rawData.length);
+
+    // Map and validate
     const validationErrors = [];
     const mappedData = rawData.map((row, index) => {
-      const mapped = mapFields(row);
+      const mapped = mapFields(row, createdBy, payrollClass);
+      
+      if (index === 0) {
+        console.log('🔍 First mapped row:', mapped);
+      }
+      
       const errors = validateRow(mapped, index);
       validationErrors.push(...errors);
       return mapped;
@@ -252,57 +363,60 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
       });
     }
 
-    // Check existing service numbers
-    const serviceNumbers = mappedData.map(row => row.Empl_ID);
-    const duplicates = await checkDuplicates(serviceNumbers);
+    // Check duplicates
+    const duplicateKeys = await checkDuplicates(mappedData);
 
-    // Filter out duplicates so only new ones are inserted
-    const uniqueData = mappedData.filter(row => !duplicates.includes(row.Empl_ID));
+    // Filter out duplicates
+    const uniqueData = mappedData.filter(row => !duplicateKeys.includes(row.Empl_ID));
 
     const results = {
-    totalRecords: mappedData.length,
-    duplicates: duplicates,
-    inserted: uniqueData.length,
-    successful: 0,
-    failed: 0,
-    errors: []
+      totalRecords: mappedData.length,
+      duplicates: duplicateKeys,
+      inserted: uniqueData.length,
+      successful: 0,
+      failed: 0,
+      errors: [],
+      payrollClass: payrollClass,
+      database: currentDb
     };
 
-    // Insert only unique personnel
+    // Insert personnel
     for (let i = 0; i < uniqueData.length; i++) {
-    try {
+      try {
         await insertPersonnel(uniqueData[i]);
         results.successful++;
-    } catch (error) {
+      } catch (error) {
         results.failed++;
         results.errors.push({
-        row: i + 2,
-        serviceNumber: uniqueData[i].Empl_ID,
-        error: error.message
+          row: i + 5,
+          serviceNumber: uniqueData[i].Empl_ID,
+          error: error.message
         });
-    }
+        console.error(`❌ Failed to insert ${uniqueData[i].Empl_ID}:`, error.message);
+      }
     }
 
-    // Add duplicates to failed count after insertion loop
+    // Add duplicates to failed count
     results.failed += results.duplicates.length;
 
-    // If any duplicates, push them as “soft errors” for frontend visibility
     if (results.duplicates.length > 0) {
-    results.errors.push(
-        ...results.duplicates.map(sn => ({
-        row: null,
-        serviceNumber: sn,
-        error: 'Already exists in database (duplicate)'
+      results.errors.push(
+        ...results.duplicates.map(emplId => ({
+          row: null,
+          serviceNumber: emplId,
+          error: 'Already exists (duplicate)'
         }))
-    );
+      );
     }
 
-    // Clean up file
+    // Clean up
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
+    console.log('✅ Batch upload complete:', results);
+
     return res.status(200).json({
-    message: 'Personnel batch upload completed',
-    summary: results
+      message: 'Batch personnel upload completed',
+      summary: results
     });
 
   } catch (error) {
@@ -316,7 +430,6 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
   }
 });
 
-// GET: Download sample template
 // GET: Download sample template
 router.get('/batch-template', verifyToken, async (req, res) => {
   const ExcelJS = require('exceljs');

@@ -262,7 +262,7 @@ router.get('/database', verifyToken, (req, res) => {
   });
 });
 
-// RESTORE endpoint - SIMPLIFIED
+// RESTORE endpoint
 router.post("/restore", verifyToken, async (req, res) => {
     upload.single("file")(req, res, async (uploadErr) => {
         if (uploadErr) {
@@ -422,15 +422,28 @@ router.post("/restore", verifyToken, async (req, res) => {
                     });
                 }
             });
-
-            res.json({ 
-                success: true, 
-                message: `Payroll Class restore completed successfully (${mode} mode)`, 
-                entry: historyEntry 
-            });
             
         } catch (error) {
+            clearInterval(progressInterval); // Make sure to clear interval on error
             console.error('Restore error:', error);
+            
+            // Create history entry for catch block errors
+            const errorHistoryEntry = {
+                filename: originalFilename,
+                storedFilename: path.basename(restoreFile),
+                database,
+                engine,
+                mode,
+                status: "Failed",
+                error: error.message,
+                output: null,
+                preRestoreBackup: null,
+                userId: req.user_id,
+                userName: req.user_fullname
+            };
+            
+            addToHistory(errorHistoryEntry);
+            
             broadcastProgress(sessionId, { 
                 stage: 'failed', 
                 percent: 100, 
