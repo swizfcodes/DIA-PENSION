@@ -20,15 +20,11 @@ router.get("/roles", verifyToken, async (req, res) => {
 });
 
 //classes for user login
-router.get("/classes", (req, res) => {
-  const classes = [
-    { id: process.env.DB_OFFICERS, name: "MILITARY STAFF" },
-    { id: process.env.DB_WOFFICERS, name: "CIVILIAN STAFF" },
-    { id: process.env.DB_RATINGS, name: "PENSION STAFF" },
-    { id: process.env.DB_RATINGS_A, name: "NYSC ATTACHE" },
-    { id: process.env.DB_RATINGS_B, name: "RUNNING COST" },
-    // { id: process.env.DB_JUNIOR_TRAINEE, name: "TRAINEE" }
-  ];
+router.get("/classes", async (req, res) => {
+  pool.useDatabase(process.env.DB_OFFICERS);
+  const [classes] = await pool.query(
+    'SELECT db_name as id, classname as name FROM py_payrollclass'
+  );
   res.json(classes);
 });
 

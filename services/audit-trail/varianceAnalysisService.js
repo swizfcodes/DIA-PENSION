@@ -48,15 +48,17 @@ class VarianceAnalysisService {
       const isCurrentPeriod = period === currentPeriod;
       const year = parseInt(period.substring(0, 4));
       const month = parseInt(period.substring(4, 6));
-      
-      // If current period, check if calculation is complete (sun = 999)
-      if (isCurrentPeriod && currentPeriodInfo.sun !== 999) {
+
+      // ── Calculation check (current period only) ───────────────────────────
+      if (isCurrentPeriod && currentPeriodInfo.sun != 999) {
+        const monthName = this.getMonthName(String(month));
         return {
           success: false,
-          message: 'Current period calculation not computed. Please try again later.',
+          message: `Calculation not completed for ${monthName}, ${year}. Please complete payroll calculation before generating reports for ${monthName}, ${year}.`,
           data: []
         };
       }
+      // ─────────────────────────────────────────────────────────────────────
       
       let payTypeArray = [];
       if (payTypes) {
@@ -209,6 +211,7 @@ class VarianceAnalysisService {
       // Get current period info
       const currentPeriodInfo = await this.getCurrentPeriod();
       const currentMonth = currentPeriodInfo.month;
+      const currentYear = currentPeriodInfo.year;
       
       // Validate month input
       if (!month) {
@@ -233,6 +236,17 @@ class VarianceAnalysisService {
           data: []
         };
       }
+
+      // ── Calculation check (current month only) ────────────────────────────
+      if (monthNum === currentMonth && currentPeriodInfo.sun != 999) {
+        const monthName = this.getMonthName(String(monthNum));
+        return {
+          success: false,
+          message: `Calculation not completed for ${monthName}, ${currentYear}. Please complete payroll calculation before generating reports for ${monthName}, ${currentYear}.`,
+          data: []
+        };
+      }
+      // ─────────────────────────────────────────────────────────────────────
       
       // Calculate previous month
       const prevMonthNum = monthNum === 1 ? 12 : monthNum - 1;
@@ -336,7 +350,7 @@ class VarianceAnalysisService {
     }
   }
 
-// ========================================================================
+  // ========================================================================
   // GET AVAILABLE PERIODS
   // ========================================================================
   async getAvailablePeriods() {
@@ -419,5 +433,3 @@ class VarianceAnalysisService {
 }
 
 module.exports = new VarianceAnalysisService();
-
-

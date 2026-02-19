@@ -30,7 +30,7 @@ router.post("/bankcreate", verifyToken, async (req, res) => {
   }
 });
 
-// Get all banks
+// Get all banks paginated
 router.get("/bank", verifyToken, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -57,6 +57,34 @@ router.get("/bank", verifyToken, async (req, res) => {
         limit,
         hasPreviousPage: page > 1,
         hasNextPage: page < totalPages,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Error fetching banks:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching banks",
+      error: err.message,
+    });
+  }
+});
+
+// Get all banks for reports
+router.get("/bank-report-all", verifyToken, async (req, res) => {
+  try {
+    // Get total count
+    const [countResult] = await pool.query("SELECT COUNT(*) AS total FROM py_bank");
+    const totalRecords = countResult[0].total;
+
+    const [rows] = await pool.query(
+      "SELECT * FROM py_bank ORDER BY bankname ASC"
+    );
+
+    res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        totalRecords: totalRecords,
       },
     });
   } catch (err) {

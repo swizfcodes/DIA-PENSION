@@ -594,7 +594,40 @@
   });
 
   //generate reports functionality
-  function generateReport() {
+  async function generateReport() {
+    const REPORT_API_URL = `/api/bank-report-all`; 
+
+    let fullData;
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(REPORT_API_URL, {   
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+            }
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            showError('Failed to load report data: ' + result.message);
+            return;
+        }
+        
+        fullData = result.data; 
+
+    } catch (error) {
+        console.error('Error fetching report data:', error);
+        showError('An error occurred while fetching report data.');
+        return;
+    }
+    
+    if (!fullData || fullData.length === 0) {
+        showError('No records found for the report.');
+        return;
+    }
+
+    const data = fullData;
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-GB', {
       weekday: 'long',
@@ -770,7 +803,7 @@
             <strong>${timeStr}</strong>
           </div>
           <div>
-            <strong>${bankData.length}</strong>
+            <strong>${data.length}</strong>
             <span>RECORDS</span>
           </div>
         </div>
@@ -795,7 +828,7 @@
             </tr>
           </thead>
           <tbody>
-            ${bankData.map((item, index) => `
+            ${data.map((item, index) => `
               <tr>
                 <td class="text-center"><strong>${index + 1}</strong></td>
                 <td>${item.address || '-'}</td>

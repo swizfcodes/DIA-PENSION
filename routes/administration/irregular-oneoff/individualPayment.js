@@ -7,7 +7,7 @@ const verifyToken = require('../../../middware/authentication.js');
 router.get('/:his_empno', verifyToken, async (req, res) => {
     const his_empno = req.params.his_empno.replace(/_SLASH_/g, '/');
     try {
-        const [rows] = await pool.query('SELECT * FROM py_calculation WHERE his_empno = ?', [his_empno]);
+        const [rows] = await pool.query('SELECT his_empno, his_type, amtthismth FROM py_calculation WHERE his_empno = ?', [his_empno]);
         res.json({ success: true, data: rows });
     } catch (error) {
         console.error('Error fetching individual payments:', error);
@@ -18,7 +18,7 @@ router.get('/:his_empno', verifyToken, async (req, res) => {
 //get all
 router.get('/', verifyToken, async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM py_calculation');
+        const [rows] = await pool.query('SELECT his_empno, his_type, amtthismth FROM py_calculation');
         res.json({ success: true, data: rows });
     } catch (error) {
         console.error('Error fetching all individual payments:', error);
@@ -93,5 +93,3 @@ router.delete('/:his_empno/:his_type', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
-
-

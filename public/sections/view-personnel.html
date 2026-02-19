@@ -1,4 +1,3 @@
-
 <div class="p-6">
   <!-- Header -->
   <div class="flex justify-between items-center mb-6">
@@ -186,42 +185,56 @@ class ViewPersonnelManager {
     return age;
   }
 
-  calculateYearsOfService(dateInput) {
-    if (!dateInput) return null;
-    
-    let serviceDate;
-    const trimmedDate = dateInput.toString().trim();
-    
-    if (trimmedDate.includes('T') || trimmedDate.includes('-')) {
-      serviceDate = new Date(dateInput);
-    } else if (trimmedDate.includes('/')) {
-      const parts = trimmedDate.split('/');
-      serviceDate = new Date(parts[2], parts[1] - 1, parts[0]);
-    } else if (trimmedDate.length === 8 && /^(19|20)\d{6}$/.test(trimmedDate)) {
-      serviceDate = new Date(
-        trimmedDate.substring(0, 4),
-        trimmedDate.substring(4, 6) - 1,
-        trimmedDate.substring(6, 8)
-      );
-    } else if (trimmedDate.length === 8) {
-      serviceDate = new Date(
-        trimmedDate.substring(4, 8),
-        trimmedDate.substring(2, 4) - 1,
-        trimmedDate.substring(0, 2)
-      );
-    }
-    
-    if (!serviceDate || isNaN(serviceDate.getTime())) return null;
-    
-    const today = new Date();
-    let years = today.getFullYear() - serviceDate.getFullYear();
-    const monthDiff = today.getMonth() - serviceDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < serviceDate.getDate())) {
+  // Calculates duration between two dates; endDate defaults to today if not provided.
+  // Returns a display string: "X years", "X months", or "X days".
+  // Returns null for invalid, negative, or zero results.
+  calculateServiceDuration(startDateInput, endDateInput = null) {
+    const parse = (dateInput) => {
+      if (!dateInput) return null;
+      const t = dateInput.toString().trim();
+      let d;
+      if (t.includes('T') || t.includes('-')) {
+        d = new Date(t);
+        if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      } else if (t.includes('/')) {
+        const p = t.split('/');
+        if (p.length === 3) d = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+      } else if (t.length === 8 && /^(19|20)\d{6}$/.test(t)) {
+        d = new Date(parseInt(t.substring(0,4)), parseInt(t.substring(4,6)) - 1, parseInt(t.substring(6,8)));
+      } else if (t.length === 8) {
+        d = new Date(parseInt(t.substring(4,8)), parseInt(t.substring(2,4)) - 1, parseInt(t.substring(0,2)));
+      }
+      return d && !isNaN(d.getTime()) ? d : null;
+    };
+    const startDate = parse(startDateInput);
+    const endDate = endDateInput ? parse(endDateInput) : new Date();
+
+    if (!startDate || !endDate) return null;
+
+    const diffMs = endDate - startDate;
+    if (diffMs <= 0) return null; // negative or zero — weird date
+
+    // Years
+    let years = endDate.getFullYear() - startDate.getFullYear();
+    const monthDiff = endDate.getMonth() - startDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && endDate.getDate() < startDate.getDate())) {
       years--;
     }
-    
-    return years;
+
+    if (years >= 1) return `${years} year${years !== 1 ? 's' : ''}`;
+
+    // Months
+    let months = (endDate.getFullYear() - startDate.getFullYear()) * 12
+                 + (endDate.getMonth() - startDate.getMonth());
+    if (endDate.getDate() < startDate.getDate()) months--;
+
+    if (months >= 1) return `${months} month${months !== 1 ? 's' : ''}`;
+
+    // Days
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (days >= 1) return `${days} day${days !== 1 ? 's' : ''}`;
+
+    return null; // less than a day — treat as weird
   }
 
   getFirstTwo(str) {
@@ -442,9 +455,22 @@ class ViewPersonnelManager {
     const emp = this.employeeData.employee;
     
     const age = this.calculateEmpAge(emp.Birthdate);
-    const yearsEmployed = this.calculateYearsOfService(emp.DateEmpl);
-    const yearsOfService = this.calculateYearsOfService(emp.dateconfirmed);
-    const yearsSinceSeniority = this.calculateYearsOfService(emp.datepmted);
+
+    // Must be declared first — used by multiple calculations below
+    const hasDateLeft = emp.DateLeft && emp.DateLeft.toString().trim() !== '';
+
+    // Date Employed: if exited use DateLeft as end, else today; result is a duration string
+    const yearsEmployed = hasDateLeft
+      ? this.calculateServiceDuration(emp.DateEmpl, emp.DateLeft)
+      : this.calculateServiceDuration(emp.DateEmpl);
+
+    // Date Left: time since exit (DateLeft to today)
+    const yearsSinceExit = hasDateLeft ? this.calculateServiceDuration(emp.DateLeft) : null;
+
+    // Confirmation & Seniority: only calculate/show for active employees (no DateLeft)
+    const yearsOfService = !hasDateLeft ? this.calculateServiceDuration(emp.dateconfirmed) : null;
+    const yearsSinceSeniority = !hasDateLeft ? this.calculateServiceDuration(emp.datepmted) : null;
+
     const gradeStepDisplay = this.getGradeStepDisplay();
     const gradeStepTooltip = this.getGradeStepTooltip();
     
@@ -458,6 +484,19 @@ class ViewPersonnelManager {
     const highlightDDClass = "text-sm font-semibold text-green-600 text-right ml-4";
     const sectionTitleClass = "text-xl font-bold text-green-700 mb-4 pb-2 border-b border-green-200";
     const cardClass = "p-6 rounded-lg shadow-sm hover:shadow-lg transition duration-300";
+
+    // Helper: only render the green annotation span when the date is not N/A and value is valid
+    const dateSpan = (label) =>
+      label !== null && label !== undefined
+        ? `<span class="text-md font-semibold text-green-500">(${label})</span>`
+        : '';
+
+    // Formatted dates
+    const fmtBirthdate    = this.formatDateWithOrdinal(emp.Birthdate);
+    const fmtDateEmpl     = this.formatDateWithOrdinal(emp.DateEmpl);
+    const fmtDateConfirmed= this.formatDateWithOrdinal(emp.dateconfirmed);
+    const fmtDatePmted    = this.formatDateWithOrdinal(emp.datepmted);
+    const fmtDateLeft     = hasDateLeft ? this.formatDateWithOrdinal(emp.DateLeft) : 'N/A';
 
     return `
         <div class="grid grid-cols-1 border-2 border-green-200 rounded-lg shadow-md lg:grid-cols-4 gap-2">
@@ -512,7 +551,10 @@ class ViewPersonnelManager {
                         <div class="${detailItemClass}"><dt class="${dtClass}">Sex:</dt><dd class="${ddClass}">${this.escape(this.resolveName(emp.Sex, 'sex') || 'N/A')}</dd></div>
                         <div class="${detailItemClass}">
                           <dt class="${dtClass}">Date of Birth:</dt>
-                          <dd class="${ddClass}">${this.formatDateWithOrdinal(emp.Birthdate)} <span class="text-md font-semibold text-green-500">(${age !== null ? age + ' years old' : 'Age unknown'})</span></dd>
+                          <dd class="${ddClass}">
+                            ${fmtBirthdate !== 'N/A' ? fmtBirthdate : 'N/A'}
+                            ${fmtBirthdate !== 'N/A' ? dateSpan(age !== null ? age + ' years old' : null) : ''}
+                          </dd>
                         </div>
                         <div class="${detailItemClass}"><dt class="${dtClass}">Marital Status:</dt><dd class="${ddClass}">${this.escape(this.resolveName(emp.MaritalStatus, 'marital'))}</dd></div>
                         <div class="${detailItemClass}"><dt class="${dtClass}">Religion:</dt><dd class="${ddClass}">${this.escape(this.resolveName(emp.religion, 'religion'))}</dd></div>
@@ -539,18 +581,33 @@ class ViewPersonnelManager {
                     <dl>
                         <div class="${detailItemClass}">
                           <dt class="${dtClass}">Date Employed:</dt>
-                          <dd class="${ddClass}">${this.formatDateWithOrdinal(emp.DateEmpl)} <span class="text-md font-semibold text-green-500">(${yearsEmployed !== null ? yearsEmployed + ' years of service' : ''})</span></dd>
+                          <dd class="${ddClass}">
+                            ${fmtDateEmpl !== 'N/A' ? fmtDateEmpl : 'N/A'}
+                            ${fmtDateEmpl !== 'N/A' ? dateSpan(yearsEmployed !== null ? yearsEmployed + (hasDateLeft ? ' served' : ' of service') : null) : ''}
+                          </dd>
                         </div>
                         <div class="${detailItemClass}">
                           <dt class="${dtClass}">Date Confirmed:</dt>
-                          <dd class="${ddClass}">${this.formatDateWithOrdinal(emp.dateconfirmed)} <span class="text-md font-semibold text-green-500">(${yearsOfService !== null ? yearsOfService + ' years ago' : ''})</span></dd>
+                          <dd class="${ddClass}">
+                            ${fmtDateConfirmed}
+                            ${!hasDateLeft && fmtDateConfirmed !== 'N/A' ? dateSpan(yearsOfService !== null ? yearsOfService + ' ago' : null) : ''}
+                          </dd>
                         </div>
                         <div class="${detailItemClass}"><dt class="${dtClass}">Entry Mode:</dt><dd class="${ddClass}">${this.escape(this.resolveName(emp.entry_mode, 'entrymode'))}</dd></div>
-                        <div class="${detailItemClass}"><dt class="${dtClass}">Date Left:</dt><dd class="${ddClass}">${this.formatDateWithOrdinal(emp.DateLeft)}</dd></div>
+                        <div class="${detailItemClass}">
+                          <dt class="${dtClass}">Date Left:</dt>
+                          <dd class="${ddClass}">
+                            ${fmtDateLeft}
+                            ${hasDateLeft && fmtDateLeft !== 'N/A' ? dateSpan(yearsSinceExit !== null ? yearsSinceExit + ' since exit' : null) : ''}
+                          </dd>
+                        </div>
                         <div class="${detailItemClass}"><dt class="${dtClass}">Exit Type:</dt><dd class="${ddClass}">${this.escape(this.resolveName(emp.exittype, 'exittype'))}</dd></div>
                         <div class="${detailItemClass}">
                           <dt class="${dtClass}">Seniority Date:</dt>
-                          <dd class="${ddClass}">${this.formatDateWithOrdinal(emp.datepmted)} <span class="text-md font-semibold text-green-500">(${yearsSinceSeniority !== null ? yearsSinceSeniority + ' years since promotion' : ''})</span></dd>
+                          <dd class="${ddClass}">
+                            ${fmtDatePmted}
+                            ${!hasDateLeft && fmtDatePmted !== 'N/A' ? dateSpan(yearsSinceSeniority !== null ? yearsSinceSeniority + ' since promotion' : null) : ''}
+                          </dd>
                         </div>
                         <div class="${detailItemClass}"><dt class="${dtClass}">Location:</dt><dd class="${ddClass}">${this.escape(this.resolveName(emp.Location, 'location'))}</dd></div>
                         <div class="${detailItemClass}"><dt class="${dtClass}">Command:</dt><dd class="${ddClass}">${this.escape(this.resolveName(emp.command, 'command'))}</dd></div>
@@ -579,7 +636,7 @@ class ViewPersonnelManager {
         </div>
         </div>
     `;
-}
+  }
 
   renderNOKDetails() {
     let nokList = this.employeeData.nextOfKin || [];
@@ -925,6 +982,3 @@ document.getElementById('backBtn').addEventListener('click', () => {
   }
 })();
 </script>
-
-
-

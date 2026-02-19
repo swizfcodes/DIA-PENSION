@@ -204,13 +204,16 @@ function getDefaultMigrationTables() {
   return [
     // INPUT TABLES
     { table: 'py_payded', emplIdCol: 'Empl_ID' },
-    { table: 'py_inputhistory', emplIdCol: 'Empl_ID' },
     { table: 'py_cumulated', emplIdCol: 'Empl_ID' },
     { table: 'py_header', emplIdCol: 'Empl_ID' },
     { table: 'py_operative', emplIdCol: 'Empl_ID' },
     { table: 'py_overtime', emplIdCol: 'Empl_ID' },
     { table: 'py_documentation', emplIdCol: 'doc_numb' },
+
+    // ARCHIVE TABLES
     { table: 'py_ipis_payhistory', emplIdCol: 'numb' },
+    { table: 'py_payhistory', emplIdCol: 'his_empno' },    
+    { table: 'py_inputhistory', emplIdCol: 'Empl_ID' },
     
     // MASTER TABLES
     { table: 'py_masterpayded', emplIdCol: 'his_Empno' },
