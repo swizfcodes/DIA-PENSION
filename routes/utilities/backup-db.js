@@ -5,7 +5,8 @@ const { spawn } = require('child_process');
 const express = require('express');
 const cron = require('node-cron');
 const mysql = require('mysql2/promise');
-const verifyToken = require('../../middware/authentication'); 
+const verifyToken = require('../../middware/authentication');
+const pool = require('../../config/db');
 
 const router = express.Router();
 
@@ -145,22 +146,28 @@ function runBackup({ dbName, friendlyName, backupType = 'full', compression = fa
   });
 }
 
-//Routes
+//Helpers
+async function getDbToClassMap() {
+  const masterDb = pool.getMasterDb();
+  pool.useDatabase(masterDb);
+  const [dbClasses] = await pool.query('SELECT db_name, classname FROM py_payrollclass');
+  
+  const dbToClassMap = {};
+  dbClasses.forEach(row => {
+    dbToClassMap[row.db_name] = row.classname;
+  });
+  
+  return dbToClassMap;
+}
 
+//Routes
 // GET current database name from JWT token
-router.get('/database', verifyToken, (req, res) => {
+router.get('/database', verifyToken, async (req, res) => {
   try {
     const currentClass = req.current_class;
     
     // Get friendly name for the database
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
+    const dbToClassMap = await getDbToClassMap();
 
     const friendlyName = dbToClassMap[currentClass] || 'Unknown Class';
 
@@ -194,14 +201,7 @@ router.post('/backup/mysql', verifyToken, async (req, res) => {
     const dbName = req.current_class;
 
     // Get friendly name for the database
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
+    const dbToClassMap = await getDbToClassMap();
 
     const friendlyName = dbToClassMap[dbName] || dbName;
 
@@ -230,20 +230,13 @@ router.post('/backup/mysql', verifyToken, async (req, res) => {
   POST /backup/schedule
   Body: { schedule: 'hourly'|'daily'|'weekly', backupType, compression, storage }
 */
-router.post('/backup/schedule', verifyToken, (req, res) => {
+router.post('/backup/schedule', verifyToken, async (req, res) => {
   try {
     const { schedule, backupType = 'full', compression = false, storage = 'local' } = req.body || {};
     const dbName = req.current_class;
 
     // Get friendly name for the database
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
+    const dbToClassMap = await getDbToClassMap();
 
     const friendlyName = dbToClassMap[dbName] || dbName;
 
@@ -285,18 +278,11 @@ router.post('/backup/schedule', verifyToken, (req, res) => {
 });
 
 // Get list of backups for current database only
-router.get('/backups', verifyToken, (req, res) => {
+router.get('/backups', verifyToken, async (req, res) => {
   const dbName = req.current_class;
   
   // Get friendly name for the database
-  const dbToClassMap = {
-    [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-    [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-    [process.env.DB_RATINGS]: 'PENSION STAFF',
-    [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-    [process.env.DB_RATINGS_B]: 'RUNNING COST',
-    // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-  };
+  const dbToClassMap = await getDbToClassMap();
 
   const friendlyName = dbToClassMap[dbName] || dbName;
 
@@ -340,18 +326,11 @@ router.get('/backups', verifyToken, (req, res) => {
 
 
 // Get backup statistics for current database only
-router.get('/backup/stats', verifyToken, (req, res) => {
+router.get('/backup/stats', verifyToken, async (req, res) => {
   const dbName = req.current_class;
   
   // Get friendly name for the database
-  const dbToClassMap = {
-    [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-    [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-    [process.env.DB_RATINGS]: 'PENSION STAFF',
-    [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-    [process.env.DB_RATINGS_B]: 'RUNNING COST',
-    // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-  };
+  const dbToClassMap = await getDbToClassMap();
 
   const friendlyName = dbToClassMap[dbName] || dbName;
 
@@ -450,5 +429,3 @@ router.get('/health', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
-
-

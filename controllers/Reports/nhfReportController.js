@@ -2,6 +2,7 @@ const BaseReportController = require('../Reports/reportsFallbackController');
 const nhfReportService = require('../../services/Reports/nhfReportService');
 const companySettings = require('../helpers/companySettings');
 const { GenericExcelExporter } = require('../helpers/excel');
+const pool = require('../../config/db');
 //const ExcelJS = require('exceljs');
 //const jsreport = require('jsreport-core')();
 const fs = require('fs');
@@ -106,7 +107,7 @@ class NHFReportController extends BaseReportController {
         month: data[0].month
       } : { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
 
-      const className = this.getDatabaseNameFromRequest(req);
+      const className = await this.getDatabaseNameFromRequest(req);
 
       if (isSummary) {
         // ==========================================================================
@@ -246,7 +247,7 @@ class NHFReportController extends BaseReportController {
             `${this.getMonthName(data[0].month)} ${data[0].year}` : 
             'N/A',
           isSummary: isSummary,
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           ...image
         },
         {
@@ -303,18 +304,16 @@ class NHFReportController extends BaseReportController {
     return months[month - 1] || '';
   }
 
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 

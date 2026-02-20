@@ -74,7 +74,7 @@ class PersonnelReportController extends BaseReportController {
       }
       
       const exporter = new GenericExcelExporter();
-      const className = this.getDatabaseNameFromRequest(req);
+      const className = await this.getDatabaseNameFromRequest(req);
 
       // Columns for current employees
       const columns = [
@@ -122,7 +122,7 @@ class PersonnelReportController extends BaseReportController {
       const fullSubtitle = `${filterDescription}\n${statsInfo}`;
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA PAYROLL - PERSONNEL REPORT',
+        title: 'DIA - PERSONNEL REPORT (CURRENT EMPLOYEES)',
         subtitle: fullSubtitle,
         className: className,
         columns: columns,
@@ -212,7 +212,7 @@ class PersonnelReportController extends BaseReportController {
         statistics: statistics,
         reportDate: new Date(),
         filters: filterDescription,
-        className: this.getDatabaseNameFromRequest(req),
+        className: await this.getDatabaseNameFromRequest(req),
         ...image
       };
 
@@ -247,8 +247,8 @@ class PersonnelReportController extends BaseReportController {
     }
   }
 
-
-  // GET FILTER OPTIONS
+  // ==========================================================================
+  // GET FILTER OPTIONS (CURRENT EMPLOYEES)
   // ==========================================================================
   async getPersonnelFilterOptions(req, res) {
     try {
@@ -269,7 +269,7 @@ class PersonnelReportController extends BaseReportController {
         personnelReportService.getAvailableEmolumentForms(currentDb)
       ]);
 
-      console.log('✅ Filter options loaded:', {
+      console.log('✅ Filter options loaded (Current Employees):', {
         titles: titles.length,
         pfas: pfas.length,
         locations: locations.length,
@@ -311,11 +311,7 @@ class PersonnelReportController extends BaseReportController {
           states,
           rentSubsidy,
           taxedStatus,
-          emolumentForms,
-          oldEmployeesOptions: [
-            { code: 'yes', description: 'Separated/Left Employees' },
-            { code: 'no', description: 'Active Employees Only' }
-          ]
+          emolumentForms
         },
         warnings: warnings.length > 0 ? `No data available for: ${warnings.join(', ')}` : null
       });
@@ -335,21 +331,17 @@ class PersonnelReportController extends BaseReportController {
   // HELPER FUNCTIONS
   // ==========================================================================
   
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 
 module.exports = new PersonnelReportController();
-
-

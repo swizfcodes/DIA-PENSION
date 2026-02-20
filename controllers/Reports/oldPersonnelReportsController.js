@@ -69,8 +69,12 @@ class OldPersonnelReportController extends BaseReportController {
   // ==========================================================================
   async generateOldPersonnelReportExcel(data, req, res, filters, statistics) {
     try {
+      if (!data || data.length === 0) {
+        throw new Error('No Old Personnel data available for the selected filters');
+      }
+
       const exporter = new GenericExcelExporter();
-      const className = this.getDatabaseNameFromRequest(req);
+      const className = await this.getDatabaseNameFromRequest(req);
 
       // Columns for old employees
       const columns = [
@@ -149,7 +153,7 @@ class OldPersonnelReportController extends BaseReportController {
       const fullSubtitle = `${filterDescription}\n${statsInfo}`;
 
       const workbook = await exporter.createWorkbook({
-        title: 'NIGERIAN NAVY - PERSONNEL REPORT (SEPARATED EMPLOYEES)',
+        title: 'DIA - PERSONNEL REPORT (EXITED MEMBERS)',
         subtitle: fullSubtitle,
         className: className,
         columns: columns,
@@ -211,7 +215,7 @@ class OldPersonnelReportController extends BaseReportController {
   async generateOldPersonnelReportPDF(data, req, res, filters, statistics) {
     try {
       if (!data || data.length === 0) {
-        throw new Error('No data available for the selected filters');
+        throw new Error('No Old Personnel data available for the selected filters');
       }
 
       console.log('📄 Generating PDF with', data.length, 'records');
@@ -281,7 +285,7 @@ class OldPersonnelReportController extends BaseReportController {
         statistics: statistics,
         reportDate: new Date(),
         filters: filterDescription,
-        className: this.getDatabaseNameFromRequest(req),
+        className: await this.getDatabaseNameFromRequest(req),
         ...image
       };
 
@@ -400,18 +404,16 @@ class OldPersonnelReportController extends BaseReportController {
   // HELPER FUNCTIONS
   // ==========================================================================
   
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 

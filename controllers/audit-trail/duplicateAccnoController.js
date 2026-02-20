@@ -97,7 +97,7 @@ class DuplicateAccountController extends BaseReportController {
     // Title
     worksheet.mergeCells('A1:H1');
     const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'DIA PAYROLL - DUPLICATE ACCOUNT NUMBER REPORT';
+    titleCell.value = 'DIA - DUPLICATE ACCOUNT NUMBER REPORT';
     titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     titleCell.fill = {
@@ -275,7 +275,7 @@ class DuplicateAccountController extends BaseReportController {
           statistics: statistics,
           reportDate: new Date(),
           filters: filterDescription,
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           ...image
         },
         {
@@ -382,21 +382,17 @@ class DuplicateAccountController extends BaseReportController {
   // HELPER FUNCTIONS
   // ==========================================================================
   
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 
 module.exports = new DuplicateAccountController();
-
-

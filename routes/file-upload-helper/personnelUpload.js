@@ -276,7 +276,7 @@ function validateRow(row, rowIndex) {
 }
 
 // Check duplicates
-async function checkDuplicates(personnelList) {
+async function checkDuplicates(personnelList, sessionId) {
   if (personnelList.length === 0) return [];
   
   const emplIds = personnelList.map(p => p.Empl_ID);
@@ -288,12 +288,12 @@ async function checkDuplicates(personnelList) {
     WHERE Empl_ID IN (${placeholders})
   `;
   
-  const [results] = await pool.query(query, emplIds);
+  const [results] = await pool.query(query, emplIds, sessionId);
   return results.map(row => row.Empl_ID);
 }
 
 // Insert personnel
-async function insertPersonnel(data) {
+async function insertPersonnel(data, sessionId) {
   const fields = Object.keys(data);
   const values = Object.values(data);
   const placeholders = fields.map(() => '?').join(', ');
@@ -303,7 +303,7 @@ async function insertPersonnel(data) {
     VALUES (${placeholders})
   `;
   
-  const [result] = await pool.query(query, values);
+  const [result] = await pool.query(query, values, sessionId);
   return result;
 }
 
@@ -323,7 +323,7 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
 
     // ✅ SET DATABASE ONCE at the beginning - it persists for the entire request
     const currentDb = pool.getCurrentDatabase(userId.toString());
-    const payrollClass = getPayrollClassFromDb(currentDb);
+    const payrollClass = await getPayrollClassFromDb(currentDb);
     
     console.log('📊 Using database:', currentDb);
     console.log('📊 Payroll class:', payrollClass);
@@ -364,7 +364,7 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
     }
 
     // Check duplicates
-    const duplicateKeys = await checkDuplicates(mappedData);
+    const duplicateKeys = await checkDuplicates(mappedData, userId.toString());
 
     // Filter out duplicates
     const uniqueData = mappedData.filter(row => !duplicateKeys.includes(row.Empl_ID));
@@ -383,7 +383,7 @@ router.post('/batch-upload', verifyToken, upload.single('file'), async (req, res
     // Insert personnel
     for (let i = 0; i < uniqueData.length; i++) {
       try {
-        await insertPersonnel(uniqueData[i]);
+        await insertPersonnel(uniqueData[i], userId.toString());
         results.successful++;
       } catch (error) {
         results.failed++;

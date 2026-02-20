@@ -3,6 +3,7 @@ const nsitfReportService = require('../../services/Reports/nsitfReportService');
 const ExcelJS = require('exceljs');
 const companySettings = require('../helpers/companySettings');
 const { GenericExcelExporter } = require('../helpers/excel');
+const pool = require('../../config/db');
 //const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
@@ -119,7 +120,7 @@ class NSITFReportController extends BaseReportController {
       const period = data.length > 0 ? { year: data[0].year, month: data[0].month } : 
                     { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
 
-      const className = this.getDatabaseNameFromRequest(req);
+      const className = await this.getDatabaseNameFromRequest(req);
 
       if (isSummary) {
         // SUMMARY REPORT - existing code unchanged
@@ -144,7 +145,7 @@ class NSITFReportController extends BaseReportController {
         }
 
         const workbook = await exporter.createWorkbook({
-          title: 'DIA PAYROLL - NSITF REPORT',
+          title: 'NIGERIAN NAVY - NSITF REPORT',
           subtitle: subtitle,
           className: className,
           columns: columns,
@@ -219,7 +220,7 @@ class NSITFReportController extends BaseReportController {
 
           // Report Title
           worksheet.mergeCells(row, 1, row, columns.length);
-          worksheet.getCell(row, 1).value = 'DIA PAYROLL - NSITF REPORT';
+          worksheet.getCell(row, 1).value = 'NIGERIAN NAVY - NSITF REPORT';
           worksheet.getCell(row, 1).font = { size: 12, bold: true };
           worksheet.getCell(row, 1).alignment = { horizontal: 'center', vertical: 'middle' };
           row++;
@@ -364,7 +365,7 @@ class NSITFReportController extends BaseReportController {
           period: data.length > 0 ? 
             `${this.getMonthName(data[0].month)} ${data[0].year}` : 
             'N/A',
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           isSummary: isSummary,
           ...image
         },
@@ -424,21 +425,17 @@ class NSITFReportController extends BaseReportController {
     return months[month - 1] || '';
   }
 
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 
 module.exports = new NSITFReportController();
-
-

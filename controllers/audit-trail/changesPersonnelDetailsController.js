@@ -105,7 +105,7 @@ class EmployeeChangeHistoryController extends BaseReportController {
     const worksheet = workbook.addWorksheet('Employee Changes');
 
     // Title
-    worksheet.mergeCells('A1:E1');
+    worksheet.mergeCells('A1:C1');
     const titleCell = worksheet.getCell('A1');
     titleCell.value = 'DIA - EMPLOYEE CHANGE HISTORY REPORT';
     titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
@@ -117,7 +117,7 @@ class EmployeeChangeHistoryController extends BaseReportController {
     };
 
     // Period info
-    worksheet.mergeCells('A2:E2');
+    worksheet.mergeCells('A2:C2');
     const periodCell = worksheet.getCell('A2');
     const periodDesc = `Period: ${filters.fromYear}/${filters.fromMonth.toString().padStart(2, '0')} to ${filters.toYear}/${filters.toMonth.toString().padStart(2, '0')}`;
     periodCell.value = filters.emplId ? `${periodDesc} | Employee: ${filters.emplId}` : periodDesc;
@@ -130,7 +130,7 @@ class EmployeeChangeHistoryController extends BaseReportController {
     };
 
     // Statistics row
-    worksheet.mergeCells('A3:E3');
+    worksheet.mergeCells('A3:C3');
     const statsCell = worksheet.getCell('A3');
     statsCell.value = `Employees with Changes: ${data.length} | Total Changes: ${statistics.total_changes}`;
     statsCell.font = { size: 10, bold: true };
@@ -148,7 +148,7 @@ class EmployeeChangeHistoryController extends BaseReportController {
     
     data.forEach((employee, index) => {
       // Employee header
-      worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
+      worksheet.mergeCells(`A${currentRow}:C${currentRow}`);
       const empHeaderCell = worksheet.getCell(`A${currentRow}`);
       empHeaderCell.value = `${employee.employee_id} - ${employee.full_name} (${employee.total_changes} changes as of ${employee.history_date_formatted})`;
       empHeaderCell.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
@@ -266,7 +266,7 @@ class EmployeeChangeHistoryController extends BaseReportController {
           statistics: statistics,
           reportDate: new Date(),
           filters: filterDescription,
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           ...image
         },
         {
@@ -374,21 +374,17 @@ class EmployeeChangeHistoryController extends BaseReportController {
     return months;
   }
 
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 
 module.exports = new EmployeeChangeHistoryController();
-
-

@@ -70,7 +70,7 @@ class staffListingReportController extends BaseReportController {
   async generatePersonnelReportExcel(data, req, res, filters, statistics) {
     try {
       const exporter = new GenericExcelExporter();
-      const className = this.getDatabaseNameFromRequest(req);
+      const className = await this.getDatabaseNameFromRequest(req);
 
       // Columns for current employees
       const columns = [
@@ -118,7 +118,7 @@ class staffListingReportController extends BaseReportController {
       const fullSubtitle = `${filterDescription}\n${statsInfo}`;
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA PAYROLL - PERSONNEL REPORT',
+        title: 'DIA - PERSONNEL REPORT (CURRENT EMPLOYEES)',
         subtitle: fullSubtitle,
         className: className,
         columns: columns,
@@ -208,7 +208,7 @@ class staffListingReportController extends BaseReportController {
         statistics: statistics,
         reportDate: new Date(),
         filters: filterDescription,
-        className: this.getDatabaseNameFromRequest(req),
+        className: await this.getDatabaseNameFromRequest(req),
         ...image
       };
 
@@ -327,18 +327,16 @@ class staffListingReportController extends BaseReportController {
   // HELPER FUNCTIONS
   // ==========================================================================
   
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 

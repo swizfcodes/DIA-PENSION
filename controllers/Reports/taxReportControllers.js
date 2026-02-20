@@ -5,6 +5,7 @@ const ExcelJS = require('exceljs');
 //const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
+const pool = require('../../config/db');
 
 class TaxReportController extends BaseReportController {
 
@@ -392,7 +393,7 @@ class TaxReportController extends BaseReportController {
         period: data.length > 0 ? 
           `${this.getMonthName(data[0].month)} ${data[0].year}` : 
           'N/A',
-        className: this.getDatabaseNameFromRequest(req),  
+        className: await this.getDatabaseNameFromRequest(req),  
         isSummary: isSummary,
         ...image
       }
@@ -453,21 +454,17 @@ class TaxReportController extends BaseReportController {
     return months[month - 1] || '';
   }
 
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 
 module.exports = new TaxReportController();
-
-

@@ -4,6 +4,7 @@ const companySettings = require('../helpers/companySettings');
 //const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
+const pool = require('../../config/db');
 
 class ReconciliationController extends BaseReportController {
 
@@ -340,7 +341,7 @@ class ReconciliationController extends BaseReportController {
           period: period,
           year: filters.year,
           month: filters.month,
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           showErrorsOnly: showErrorsOnly,
           ...image
         },
@@ -370,18 +371,16 @@ class ReconciliationController extends BaseReportController {
     }
   }
 
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 

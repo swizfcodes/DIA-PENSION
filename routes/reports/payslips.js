@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const pool = require('../../config/db');
 const verifyToken = require('../../middware/authentication');
 const historicalReportMiddleware = require('../../middware/historicalReportsmiddleware');
 
@@ -17,20 +18,27 @@ router.post('/export/excel', verifyToken, historicalReportMiddleware, reportsCon
 // PAYSLIP REPORT - FILTER OPTIONS (Returns JSON data for filters)
 router.get('/filter-options', verifyToken, reportsController.getFilterOptions.bind(reportsController));
 
+// Helper function to get mapping of db_name to classname
+async function getDbToClassMap() {
+  const masterDb = pool.getMasterDb();
+  pool.useDatabase(masterDb);
+  const [dbClasses] = await pool.query('SELECT db_name, classname FROM py_payrollclass');
+  
+  const dbToClassMap = {};
+  dbClasses.forEach(row => {
+    dbToClassMap[row.db_name] = row.classname;
+  });
+  
+  return dbToClassMap;
+}
+
 // GET current database name from JWT token
-router.get('/database', verifyToken, (req, res) => {
+router.get('/database', verifyToken, async (req, res) => {
   try {
     const currentClass = req.current_class;
     
     // Get friendly name for the database
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
+    const dbToClassMap = await getDbToClassMap();
 
     const dbToNumberMap = {
       [process.env.DB_OFFICERS]: 1,
@@ -69,5 +77,3 @@ router.get('/database', verifyToken, (req, res) => {
 
 
 module.exports = router;
-
-

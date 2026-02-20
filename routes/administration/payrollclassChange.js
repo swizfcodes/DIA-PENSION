@@ -5,67 +5,67 @@ const verifyToken = require('../../middware/authentication');
 const pool  = require('../../config/db'); // mysql2 pool
 
 // ==================== DATABASE CONFIGURATION ====================
-const DATABASE_MAP = {
-  [process.env.DB_OFFICERS || 'hicaddata']: { name: 'OFFICERS', code: '1' },
-  [process.env.DB_WOFFICERS || 'hicaddata1']: { name: 'W/OFFICERS', code: '2' },
-  [process.env.DB_RATINGS || 'hicaddata2']: { name: 'RATE A', code: '3' },
-  [process.env.DB_RATINGS_A || 'hicaddata3']: { name: 'RATE B', code: '4' },
-  [process.env.DB_RATINGS_B || 'hicaddata4']: { name: 'RATE C', code: '5' },
-  [process.env.DB_JUNIOR_TRAINEE || 'hicaddata5']: { name: 'TRAINEE', code: '6' }
+// ==================== DATABASE CONFIGURATION ====================
+let DATABASE_MAP = {};
+let PAYROLL_CLASS_TO_DB_MAP = {};
+
+const initDatabaseMaps = async () => {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT db_name, classname, classcode FROM py_payrollclass'
+    );
+
+    DATABASE_MAP = {};
+    PAYROLL_CLASS_TO_DB_MAP = {};
+
+    rows.forEach(({ db_name, classname, classcode }) => {
+      DATABASE_MAP[db_name] = { name: classname, code: classcode };
+
+      PAYROLL_CLASS_TO_DB_MAP[classcode] = db_name;          // '1' → db
+      PAYROLL_CLASS_TO_DB_MAP[classname] = db_name;          // 'OFFICERS' → db
+      PAYROLL_CLASS_TO_DB_MAP[db_name] = db_name;            // 'hicaddata' → db
+      // Normalized variant (no spaces/slashes)
+      PAYROLL_CLASS_TO_DB_MAP[classname.replace(/[\s/\.]/g, '')] = db_name;
+    });
+
+    console.log('✅ Database maps initialized from py_payrollclass');
+  } finally {
+    connection.release();
+  }
 };
 
 /**
- * Maps database name to payroll class number
+ * Maps database name to payroll class code
  * @param {string} dbName - Current database name
- * @returns {string} Payroll class (1-6)
+ * @returns {string} Payroll class code
  */
 function getPayrollClassFromDb(dbName) {
-  // Use environment variables for dynamic mapping
-  const classMapping = {
-    [process.env.DB_OFFICERS]: '1',
-    [process.env.DB_WOFFICERS]: '2',
-    [process.env.DB_RATINGS]: '3',
-    [process.env.DB_RATINGS_A]: '4',
-    [process.env.DB_RATINGS_B]: '5',
-    [process.env.DB_JUNIOR_TRAINEE]: '6'
-  };
-  
-  const result = classMapping[dbName] || '1';
+  const entry = DATABASE_MAP[dbName];
+  const result = entry ? entry.code : null;
   console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
   return result;
 }
 
-const PAYROLL_CLASS_TO_DB_MAP = {
-  '1': process.env.DB_OFFICERS || 'hicaddata',
-  '2': process.env.DB_WOFFICERS || 'hicaddata1',
-  '3': process.env.DB_RATINGS || 'hicaddata2',
-  '4': process.env.DB_RATINGS_A || 'hicaddata3',
-  '5': process.env.DB_RATINGS_B || 'hicaddata4',
-  '6': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  'OFFICERS': process.env.DB_OFFICERS || 'hicaddata',
-  'W/OFFICERS': process.env.DB_WOFFICERS || 'hicaddata1',
-  'W.OFFICERS': process.env.DB_WOFFICERS || 'hicaddata1',
-  'RATE A': process.env.DB_RATINGS || 'hicaddata2',
-  'RATEA': process.env.DB_RATINGS || 'hicaddata2',
-  'RATE B': process.env.DB_RATINGS_A || 'hicaddata3',
-  'RATEB': process.env.DB_RATINGS_A || 'hicaddata3',
-  'RATE C': process.env.DB_RATINGS_B || 'hicaddata4',
-  'RATEC': process.env.DB_RATINGS_B || 'hicaddata4',
-  'JUNIOR/TRAINEE': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  'JUNIORTRAINEE': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  'hicaddata': process.env.DB_OFFICERS || 'hicaddata',
-  'hicaddata1': process.env.DB_WOFFICERS || 'hicaddata1',
-  'hicaddata2': process.env.DB_RATINGS || 'hicaddata2',
-  'hicaddata3': process.env.DB_RATINGS_A || 'hicaddata3',
-  'hicaddata4': process.env.DB_RATINGS_B || 'hicaddata4',
-  'hicaddata5': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  [process.env.DB_OFFICERS || 'hicaddata']: process.env.DB_OFFICERS || 'hicaddata',
-  [process.env.DB_WOFFICERS || 'hicaddata1']: process.env.DB_WOFFICERS || 'hicaddata1',
-  [process.env.DB_RATINGS || 'hicaddata2']: process.env.DB_RATINGS || 'hicaddata2',
-  [process.env.DB_RATINGS_A || 'hicaddata3']: process.env.DB_RATINGS_A || 'hicaddata3',
-  [process.env.DB_RATINGS_B || 'hicaddata4']: process.env.DB_RATINGS_B || 'hicaddata4',
-  [process.env.DB_JUNIOR_TRAINEE || 'hicaddata5']: process.env.DB_JUNIOR_TRAINEE || 'hicaddata5'
+// Ensure maps are loaded before routes are used
+const ensureMapsLoaded = async () => {
+  if (Object.keys(DATABASE_MAP).length === 0) {
+    await initDatabaseMaps();
+  }
 };
+
+router.use(async (req, res, next) => {
+  try {
+    await ensureMapsLoaded();
+    next();
+  } catch (err) {
+    console.error('Failed to load database maps:', err);
+    res.status(500).json({ error: 'Database configuration unavailable' });
+  }
+});
 
 // ==================== COLUMN NAME STANDARDIZATION ====================
 async function standardizeEmployeeIdColumns(connection, database, tables) {
@@ -338,7 +338,7 @@ async function checkDatabaseExists(dbName) {
 router.get('/active-employees', verifyToken, async (req, res) => {
   try {
     const currentDb = pool.getCurrentDatabase(req.user_id.toString());
-    const payrollClass = getPayrollClassFromDb(currentDb);
+    const payrollClass = await getPayrollClassFromDb(currentDb);
 
     const limit = parseInt(req.query.limit) || 1000;
     const offset = parseInt(req.query.offset) || 0;
@@ -950,10 +950,10 @@ router.post('/payroll-class/bulk', verifyToken, async (req, res) => {
     // Discover migration tables dynamically
     console.log(`Discovering migration tables...`);
     await connection.query(`USE \`${sourceDb}\``);
-    const sourceMigrationTables = await discoverOrGetDefaultMigrationTables(targetConnection, targetDb);
+    const sourceMigrationTables = await discoverOrGetDefaultMigrationTables(connection, sourceDb);
 
     await connection.query(`USE \`${targetDb}\``);
-    const targetMigrationTables = await discoverOrGetDefaultMigrationTables(targetConnection, targetDb);
+    const targetMigrationTables = await discoverOrGetDefaultMigrationTables(connection, targetDb);
 
     const migrationTables = sourceMigrationTables.filter(sourceTable => 
       targetMigrationTables.some(targetTable => targetTable.table === sourceTable.table)
@@ -1287,10 +1287,10 @@ router.post('/payroll-class/range', verifyToken, async (req, res) => {
     // Discover migration tables dynamically
     console.log(`🔍 Discovering migration tables...`);
     await connection.query(`USE \`${sourceDb}\``);
-    const sourceMigrationTables =  await discoverOrGetDefaultMigrationTables(targetConnection, targetDb);
+    const sourceMigrationTables =  await discoverOrGetDefaultMigrationTables(connection, sourceDb);
 
     await connection.query(`USE \`${targetDb}\``);
-    const targetMigrationTables =  await discoverOrGetDefaultMigrationTables(targetConnection, targetDb);
+    const targetMigrationTables =  await discoverOrGetDefaultMigrationTables(connection, targetDb);
 
     const migrationTables = sourceMigrationTables.filter(sourceTable => 
       targetMigrationTables.some(targetTable => targetTable.table === sourceTable.table)
@@ -1626,5 +1626,3 @@ router.get('/payroll-class/preview/:Empl_ID', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
-
-

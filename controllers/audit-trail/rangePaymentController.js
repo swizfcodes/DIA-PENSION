@@ -3,6 +3,7 @@ const BaseReportController = require('../Reports/reportsFallbackController')
 const companySettings = require('../helpers/companySettings');
 const { GenericExcelExporter } = require('../helpers/excel');
 const ExcelJS = require('exceljs');
+const pool = require('../../config/db');
 //const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
@@ -106,7 +107,7 @@ class RangePaymentController extends BaseReportController {
       if (!data || data.length === 0) {
         throw new Error('No data available for the selected filters');
       }
-      
+
       const exporter = new GenericExcelExporter();
       const isMultiClass = filters.allClasses === 'true' || filters.allClasses === true;
       const isSummary = filters.summaryOnly === 'true' || filters.summaryOnly === true;
@@ -173,7 +174,7 @@ class RangePaymentController extends BaseReportController {
           `${data[0].month_name || filters.month}, ${data[0].year || filters.year}` : 
           `${filters.month}, ${filters.year}`;
 
-        const className = this.getDatabaseNameFromRequest(req) || 'All Classes';
+        const className = await this.getDatabaseNameFromRequest(req) || 'All Classes';
 
         if (isSummary) {
           const workbook = new ExcelJS.Workbook();
@@ -562,7 +563,7 @@ class RangePaymentController extends BaseReportController {
       if (!data || data.length === 0) {
         throw new Error('No data available for the selected filters');
       }
-
+      
       const templatePath = path.join(__dirname, '../../templates/range-payments.html');
       const templateContent = fs.readFileSync(templatePath, 'utf8');
 
@@ -580,7 +581,7 @@ class RangePaymentController extends BaseReportController {
         isMultiClass: isMultiClass,
         isInRange: true,
         reportTitle: isSummary ? 'Summary Report (In-Range)' : 'Detailed Report (In-Range)',
-        className: this.getDatabaseNameFromRequest(req),
+        className: await this.getDatabaseNameFromRequest(req),
         amountRange: amountRange,
         ...image,
         summary: summary,
@@ -737,18 +738,16 @@ class RangePaymentController extends BaseReportController {
     return months[month - 1] || '';
   }
 
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 

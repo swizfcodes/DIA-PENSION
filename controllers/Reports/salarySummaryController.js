@@ -2,6 +2,7 @@ const BaseReportController = require('../Reports/reportsFallbackController');
 const salarySummaryService = require('../../services/Reports/salarySummaryService');
 const companySettings = require('../helpers/companySettings');
 const ExcelJS = require('exceljs');
+const pool = require('../../config/db');
 //const jsreport = require('jsreport-core')();
 const fs = require('fs');
 const path = require('path');
@@ -98,7 +99,7 @@ class SalarySummaryController extends BaseReportController {
       if (!result.details || result.details.length === 0) {
         throw new Error('No data available for the selected filters');
       }
-      
+
       const rawData = result.details;
       const grandTotals = result.grandTotals;
 
@@ -135,7 +136,7 @@ class SalarySummaryController extends BaseReportController {
           period: period,
           year: filters.year,
           month: filters.month,
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           ...image
         },
         {
@@ -170,7 +171,7 @@ class SalarySummaryController extends BaseReportController {
     if (!result.details || result.details.length === 0) {
       throw new Error('No data available for the selected filters');
     }
-    
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Salary Summary');
     const data = result.details;
@@ -179,7 +180,7 @@ class SalarySummaryController extends BaseReportController {
     // Title
     worksheet.mergeCells('A1:K1');
     const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'DIA PAYROLL - SALARY SUMMARY REPORT';
+    titleCell.value = 'DIA - SALARY SUMMARY REPORT';
     titleCell.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     titleCell.fill = {
@@ -295,21 +296,17 @@ class SalarySummaryController extends BaseReportController {
     }).format(amount || 0);
   }
 
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 
 module.exports = new SalarySummaryController();
-
-

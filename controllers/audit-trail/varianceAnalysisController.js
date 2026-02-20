@@ -105,7 +105,7 @@ class VarianceAnalysisController extends BaseReportController {
       
       const exporter = new GenericExcelExporter();
       const data = result.data;
-      const className = this.getDatabaseNameFromRequest(req);
+      const className = await this.getDatabaseNameFromRequest(req);
       const workbook = new ExcelJS.Workbook();
       workbook.creator = 'Payroll System';
       workbook.created = new Date();
@@ -314,7 +314,7 @@ class VarianceAnalysisController extends BaseReportController {
       const exporter = new GenericExcelExporter();
       const data = result.data;
 
-      const className = this.getDatabaseNameFromRequest(req);
+      const className = await this.getDatabaseNameFromRequest(req);
 
       const columns = [
         { header: 'S/N', key: 'sn', width: 8, align: 'center' },
@@ -337,7 +337,7 @@ class VarianceAnalysisController extends BaseReportController {
       const subtitle = `Period: ${varianceAnalysisService.formatPeriod(result.monthName)} | Threshold: ${result.threshold_percentage}% | Pay Element: ${result.pay_element}`;
 
       const workbook = await exporter.createWorkbook({
-        title: 'DIA PAYROLL - OVERPAYMENT ANALYSIS',
+        title: 'DIA - OVERPAYMENT ANALYSIS',
         subtitle: subtitle,
         className: className,
         columns: columns,
@@ -419,7 +419,7 @@ class VarianceAnalysisController extends BaseReportController {
           reportDate: new Date(),
           period: varianceAnalysisService.formatPeriod(result.period),
           comparisonInfo: result.comparisonInfo,
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           ...image
         },
         {
@@ -450,7 +450,7 @@ class VarianceAnalysisController extends BaseReportController {
       if (!result.data || result.data.length === 0) {
         throw new Error('No overpayments exceeding 0.5% threshold found for the selected period.');
       }
-
+      
       const templatePath = path.join(__dirname, '../../templates/overpayment-analysis.html');
       const templateContent = fs.readFileSync(templatePath, 'utf8');
 
@@ -465,7 +465,7 @@ class VarianceAnalysisController extends BaseReportController {
           period: result.monthName,
           threshold: result.threshold_percentage,
           payElement: result.pay_element,
-          className: this.getDatabaseNameFromRequest(req),
+          className: await this.getDatabaseNameFromRequest(req),
           ...image
         },
         {
@@ -516,21 +516,17 @@ class VarianceAnalysisController extends BaseReportController {
   // ==========================================================================
   // HELPER FUNCTION
   // ==========================================================================
-  getDatabaseNameFromRequest(req) {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-
+  async getDatabaseNameFromRequest(req) {
     const currentDb = req.current_class;
-    return dbToClassMap[currentDb] || currentDb || 'MILITARY STAFF';
+    if (!currentDb) return 'MILITARY';
+
+    const [classInfo] = await pool.query(
+      'SELECT classname FROM py_payrollclass WHERE db_name = ?',
+      [currentDb]
+    );
+
+    return classInfo.length > 0 ? classInfo[0].classname : currentDb;
   }
 }
 
 module.exports = new VarianceAnalysisController();
-
-

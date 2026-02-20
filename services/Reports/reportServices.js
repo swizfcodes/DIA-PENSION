@@ -16,9 +16,9 @@ class ReportService {
     const masterDb = pool.getMasterDb();
     
     if (allClasses === 'true' || allClasses === true) {
-      // Only allow all classes if current database is the master/officers database
+      // Only allow all classes if current database is the master/MILITARY database
       if (currentDb !== masterDb) {
-        throw new Error('All classes report can only be generated from the Officers database');
+        throw new Error('All classes report can only be generated from the MILITARY database');
       }
       
       // If specific class is selected, use only that class
@@ -30,14 +30,7 @@ class ReportService {
         databasesToQuery = [{ name: specificClass, db: targetDb }];
       } else {
         // Database to class name mapping
-        const dbToClassMap = {
-          [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-          [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-          [process.env.DB_RATINGS]: 'PENSION STAFF',
-          [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-          [process.env.DB_RATINGS_B]: 'RUNNING COST',
-          // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-        };
+        const dbToClassMap = await this.getDbToClassMap();
 
         // Get all available databases including the current one
         const dbConfig = require('../../config/db-config').getConfigSync();
@@ -524,8 +517,19 @@ class ReportService {
     const [rows] = await pool.query(query);
     return rows;
   }
+
+  async getDbToClassMap() {
+    const masterDb = pool.getMasterDb();
+    pool.useDatabase(masterDb);
+    const [dbClasses] = await pool.query('SELECT db_name, classname FROM py_payrollclass');
+    
+    const dbToClassMap = {};
+    dbClasses.forEach(row => {
+      dbToClassMap[row.db_name] = row.classname;
+    });
+    
+    return dbToClassMap;
+  }
 }
 
 module.exports = new ReportService();
-
-

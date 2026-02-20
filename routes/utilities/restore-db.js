@@ -6,7 +6,8 @@ const { exec } = require("child_process");
 const dbConfig = require("../../config/db-config");
 const mysql = require('mysql2/promise');
 const router = express.Router();
-const verifyToken = require('../../middware/authentication'); 
+const verifyToken = require('../../middware/authentication');
+const pool = require('../../config/db');
 
 const RESTORE_DIR = path.join(process.cwd(), 'restores');
 const HISTORY_FILE = path.join(RESTORE_DIR, 'restore-history.json');
@@ -48,38 +49,48 @@ const upload = multer({
     }
 });
 
+// Helper function to get mapping of db_name to classname
+async function getDbToClassMap() {
+  const masterDb = pool.getMasterDb();
+  pool.useDatabase(masterDb);
+  const [dbClasses] = await pool.query('SELECT db_name, classname FROM py_payrollclass');
+  
+  const dbToClassMap = {};
+  dbClasses.forEach(row => {
+    dbToClassMap[row.db_name] = row.classname;
+  });
+  
+  return dbToClassMap;
+}
+
+
 // Helper function to get friendly name
-const getFriendlyName = (dbName) => {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
+const getFriendlyName = async (dbName) => {
+    const dbToClassMap = await getDbToClassMap();
     
     return dbToClassMap[dbName] || dbName;
 };
 
 // Helper functions for managing restore history
-const loadHistory = (dbName = null) => {
+const loadHistory = async (dbName = null) => {
     try {
         if (!fs.existsSync(HISTORY_FILE)) {
             return [];
         }
         const data = fs.readFileSync(HISTORY_FILE, 'utf8');
         const allHistory = JSON.parse(data);
-        
-        const historyWithNames = allHistory.map(entry => ({
-            ...entry,
-            class_name: entry.class_name || getFriendlyName(entry.database)
-        }));
-        
+
+        const historyWithNames = await Promise.all(
+            allHistory.map(async (entry) => ({
+                ...entry,
+                class_name: entry.class_name || await getFriendlyName(entry.database)
+            }))
+        );
+
         if (dbName) {
             return historyWithNames.filter(entry => entry.database === dbName);
         }
-        
+
         return historyWithNames;
     } catch (err) {
         console.error('Error loading history:', err);
@@ -95,14 +106,14 @@ const saveHistory = (history) => {
     }
 };
 
-const addToHistory = (entry) => {
-    const allHistory = loadHistory();
+const addToHistory = async (entry) => {
+    const allHistory = await loadHistory();
     
     const newEntry = {
         ...entry,
         id: Date.now(),
         date: new Date().toISOString(),
-        class_name: getFriendlyName(entry.database)
+        class_name: await getFriendlyName(entry.database)
     };
     
     allHistory.push(newEntry);
@@ -240,15 +251,8 @@ router.get("/status", verifyToken, async (req, res) => {
 });
 
 // Get database name
-router.get('/database', verifyToken, (req, res) => {
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
+router.get('/database', verifyToken, async (req, res) => {
+  const dbToClassMap = await getDbToClassMap();
 
   res.json({ 
     database: req.current_class,
@@ -378,7 +382,7 @@ router.post("/restore", verifyToken, async (req, res) => {
             }, 2000); // Update every 2 seconds
 
             // Execute restore
-            runCommand(command, (err, output) => {
+            runCommand(command, async (err, output) => {
                 clearInterval(progressInterval); // Stop progress simulation
                 
                 const historyEntry = {
@@ -395,7 +399,7 @@ router.post("/restore", verifyToken, async (req, res) => {
                     userName: req.user_fullname
                 };
 
-                addToHistory(historyEntry);
+                await addToHistory(historyEntry);
 
                 // Cleanup file
                 setTimeout(() => {
@@ -442,7 +446,7 @@ router.post("/restore", verifyToken, async (req, res) => {
                 userName: req.user_fullname
             };
             
-            addToHistory(errorHistoryEntry);
+             await addToHistory(errorHistoryEntry);
             
             broadcastProgress(sessionId, { 
                 stage: 'failed', 
@@ -454,27 +458,20 @@ router.post("/restore", verifyToken, async (req, res) => {
 });
 
 // Get history
-router.get("/history", verifyToken, (req, res) => {
+router.get("/history", verifyToken, async (req, res) => {
     const database = req.current_class;
-    const dbToClassMap = {
-      [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-      [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-      [process.env.DB_RATINGS]: 'PENSION STAFF',
-      [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-      [process.env.DB_RATINGS_B]: 'RUNNING COST',
-      // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
+    const dbToClassMap = await getDbToClassMap();
 
     res.json({ 
-      history: loadHistory(database),
+      history: await loadHistory(database),
       database,
       class_name: dbToClassMap[database] || database
     });
 });
 
 // Get stats
-router.get("/stats", verifyToken, (req, res) => {
-    const history = loadHistory(req.current_class);
+router.get("/stats", verifyToken, async (req, res) => {
+    const history = await loadHistory(req.current_class);
     res.json({ 
         successful: history.filter(h => h.status === "Success").length,
         failed: history.filter(h => h.status === "Failed").length,
@@ -484,10 +481,10 @@ router.get("/stats", verifyToken, (req, res) => {
 });
 
 // Delete history entry
-router.delete('/restore/:filename', verifyToken, (req, res) => {
+router.delete('/restore/:filename', verifyToken, async (req, res) => {
     try {
         const filename = decodeURIComponent(req.params.filename);
-        const allHistory = loadHistory();
+        const allHistory = await loadHistory();
         const entryIndex = allHistory.findIndex(entry => 
             entry.filename === filename && entry.database === req.current_class
         );
@@ -498,7 +495,7 @@ router.delete('/restore/:filename', verifyToken, (req, res) => {
 
         allHistory.splice(entryIndex, 1);
         saveHistory(allHistory);
-        res.json({ success: true, message: 'Restore entry deleted successfully' });
+        res.json({ success: true, message: 'Deleted successfully' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
