@@ -294,6 +294,10 @@
       // Update JWT token
       updateAuthToken(response.token);
       localStorage.setItem("token", response.token);
+
+      // ✅ Sync standalone keys to match new token
+      localStorage.setItem("current_class", response.newClass.id);     // db_name e.g. hicaddata2
+      localStorage.setItem("class", response.newClass.display);         // display name e.g. RATE A
       
       // Update UI to show success
       setTimeout(() => {

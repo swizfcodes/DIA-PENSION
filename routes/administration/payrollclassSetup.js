@@ -7,18 +7,19 @@ const pool  = require('../../config/db'); // mysql2 pool
 
 
 // ==================== DATABASE MAPPING ====================
-const DB_MAPPING = {
-  '1': process.env.DB_OFFICERS,
-  '2': process.env.DB_WOFFICERS,
-  '3': process.env.DB_RATINGS,
-  '4': process.env.DB_RATINGS_A,
-  '5': process.env.DB_RATINGS_B,
-  '6': process.env.DB_JUNIOR_TRAINEE
-};
-
-// Helper function to get database name for a class code
-function getDatabaseForClass(classcode) {
-  return DB_MAPPING[classcode] || null;
+async function getDatabaseForClass(classcode) {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT db_name FROM py_payrollclass WHERE classcode = ?',
+      [classcode]
+    );
+    return rows.length > 0 ? rows[0].db_name : null;
+  } finally {
+    connection.release();
+  }
 }
 
 // ==================== CREATE ====================
@@ -40,7 +41,7 @@ router.post('/create', verifyToken, async (req, res) => {
 
   try {
     // Get the database for this specific class code
-    const classDatabase = getDatabaseForClass(classcode);
+    const classDatabase = await getDatabaseForClass(classcode);
     
     if (!classDatabase) {
       return res.status(400).json({ 
@@ -115,7 +116,7 @@ router.get('/', verifyToken, async (req, res) => {
       classes.map(async (cls) => {
         try {
           // Get database for this class
-          const dbName = cls.db_name || getDatabaseForClass(cls.classcode);
+          const dbName = cls.db_name || await getDatabaseForClass(cls.classcode);
           
           if (!dbName) {
             console.warn(`No database found for class ${cls.classcode}`);
@@ -195,7 +196,7 @@ router.put('/:classcode', verifyToken, async (req, res) => {
       }
 
       // If changing classcode, update the db_name mapping too
-      const newDbName = getDatabaseForClass(newClasscode);
+      const newDbName = await getDatabaseForClass(newClasscode);
       if (newDbName) {
         const [updateDb] = await pool.query(
           `UPDATE py_payrollclass SET db_name = ? WHERE classcode = ?`,
@@ -290,5 +291,3 @@ router.delete('/:classcode', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
-
-

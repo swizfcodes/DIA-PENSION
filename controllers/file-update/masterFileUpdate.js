@@ -1,6 +1,27 @@
 const pool = require('../../config/db');
 const masterFileUpdate = require('../../services/file-update/masterFileUpdate');
 
+async function getDbMaps(dbName) {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT classcode, classname FROM py_payrollclass WHERE db_name = ?',
+      [dbName]
+    );
+
+    const row = rows[0];
+    return {
+      indicator: row ? row.classcode : null,
+      className: row ? row.classname : 'Unknown'
+    };
+  } finally {
+    connection.release();
+  }
+}
+
 exports.masterFileUpdate = async (req, res) => {
   try {
     const userId = req.user_id || req.userId;
@@ -23,27 +44,7 @@ exports.masterFileUpdate = async (req, res) => {
 
     console.log(`✅ Using session database: ${databaseName} for user: ${sessionId}`);
 
-    // ✅ Reverse-map database name to get the indicator
-    const dbToIndicator = {
-      [process.env.DB_OFFICERS]: '1',
-      [process.env.DB_WOFFICERS]: '2',
-      [process.env.DB_RATINGS]: '3',
-      [process.env.DB_RATINGS_A]: '4',
-      [process.env.DB_RATINGS_B]: '5',
-      [process.env.DB_JUNIOR_TRAINEE]: '6'
-    };
-
-    const dbToClass = {
-      [process.env.DB_OFFICERS]: 'OFFICERS',
-      [process.env.DB_WOFFICERS]: 'W/OFFICERS',
-      [process.env.DB_RATINGS]: 'RATE A',
-      [process.env.DB_RATINGS_A]: 'RATE B',
-      [process.env.DB_RATINGS_B]: 'RATE C',
-      [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
-    };
-    
-    const indicator = dbToIndicator[databaseName];
-    const className = dbToClass[databaseName] || 'Unknown';
+    const { indicator, className } = await getDbMaps(databaseName);
     
     if (!indicator) {
       return res.status(400).json({ 
@@ -107,14 +108,9 @@ exports.masterFileUpdate = async (req, res) => {
     
   } catch (err) {
     console.error('❌ Error running master file update:', err);
-    
-    const errorMessage = err.message || 'An unexpected error occurred during master file update';
-    
     res.status(500).json({ 
       status: 'FAILED', 
-      error: errorMessage
+      error: err.message || 'An unexpected error occurred during master file update'
     });
   }
 };
-
-

@@ -5,19 +5,23 @@ class OldPersonnelReportService {
   // ========================================================================
   // HELPER: Get Payroll Class from Current Database
   // ========================================================================
-  getPayrollClassFromDb(dbName) {
-    const classMapping = {
-      [process.env.DB_OFFICERS]: '1',
-      [process.env.DB_WOFFICERS]: '2',
-      [process.env.DB_RATINGS]: '3',
-      [process.env.DB_RATINGS_A]: '4',
-      [process.env.DB_RATINGS_B]: '5',
-      [process.env.DB_JUNIOR_TRAINEE]: '6'
-    };
-
-    const result = classMapping[dbName] || '1';
-    console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
-    return result;
+  async getPayrollClassFromDb(dbName) {
+    const masterDb = pool.getMasterDb();
+    const connection = await pool.getConnection();
+    
+    try {
+      await connection.query(`USE \`${masterDb}\``);
+      const [rows] = await connection.query(
+        'SELECT classcode FROM py_payrollclass WHERE db_name = ?',
+        [dbName]
+      );
+      
+      const result = rows.length > 0 ? rows[0].classcode : null;
+      console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
+      return result;
+    } finally {
+      connection.release();
+    }
   }
 
   // ========================================================================
@@ -37,7 +41,7 @@ class OldPersonnelReportService {
       taxed
     } = filters;
     
-    const payrollClass = this.getPayrollClassFromDb(currentDb);
+    const payrollClass = await this.getPayrollClassFromDb(currentDb);
     
     console.log('📊 Personnel Report Request (Old Employees):');
     console.log('   └─ Database:', currentDb);
@@ -242,7 +246,7 @@ class OldPersonnelReportService {
       taxed
     } = filters;
     
-    const payrollClass = this.getPayrollClassFromDb(currentDb);
+    const payrollClass = await this.getPayrollClassFromDb(currentDb);
     
     console.log('📊 Generating statistics for personnel report (Old Employees)...');
     
@@ -359,7 +363,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableTitles(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -388,7 +392,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailablePFAs(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -416,7 +420,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableLocations(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -445,7 +449,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableGradeTypes(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -474,7 +478,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableGradeLevels(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -502,7 +506,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableBankBranches(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -531,7 +535,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableStates(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -560,7 +564,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableRentSubsidy(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -592,7 +596,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableTaxedStatus(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 
@@ -624,7 +628,7 @@ class OldPersonnelReportService {
   // ========================================================================
   async getAvailableExitTypes(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
       
       const query = `
         SELECT DISTINCT 

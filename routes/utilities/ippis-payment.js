@@ -10,24 +10,27 @@ const verifyToken = require('../../middware/authentication');
 const router = express.Router();
 
 /**
- * Maps database name to payroll class number
+ * Maps database name to payroll class code from py_payrollclass
  * @param {string} dbName - Current database name
- * @returns {string} Payroll class (1-6)
+ * @returns {string} Payroll class code
  */
-function getPayrollClassFromDb(dbName) {
-  // Use environment variables for dynamic mapping
-  const classMapping = {
-    [process.env.DB_OFFICERS]: '1',
-    [process.env.DB_WOFFICERS]: '2',
-    [process.env.DB_RATINGS]: '3',
-    [process.env.DB_RATINGS_A]: '4',
-    [process.env.DB_RATINGS_B]: '5',
-    [process.env.DB_JUNIOR_TRAINEE]: '6'
-  };
+async function getPayrollClassFromDb(dbName) {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
   
-  const result = classMapping[dbName] || '1';
-  console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
-  return result;
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT classcode FROM py_payrollclass WHERE db_name = ?',
+      [dbName]
+    );
+    
+    const result = rows.length > 0 ? rows[0].classcode : null;
+    console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
+    return result;
+  } finally {
+    connection.release();
+  }
 }
 
 // Configure multer for file upload
@@ -106,7 +109,7 @@ router.post('/validate', verifyToken, upload.single('file'), async (req, res) =>
 
     // Get database and payroll class once at the start
     const currentDb = pool.getCurrentDatabase(req.user_id.toString());
-    const payrollClass = getPayrollClassFromDb(currentDb);
+    const payrollClass = await getPayrollClassFromDb(currentDb);
     const { year, month } = req.body;
     
     // Validate required inputs

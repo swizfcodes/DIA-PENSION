@@ -2738,39 +2738,45 @@ async function submitPersonnelForm() {
             // ✅ UPDATE BOTH SNAPSHOTS (pagination AND filter)
             // We don't know which one is active, so update both!
             
-            const snapshotKeys = [
+            // Keys are stored as: <baseKey>__sid_<userId>:<currentClass>
+            const _resolveSnapshotKey = (baseKey) => {
+              const userId   = localStorage.getItem('user_id')         || 'anon';
+              const dbName   = localStorage.getItem('current_class')   ||
+                              localStorage.getItem('currentDatabase') || null;
+              const explicit = localStorage.getItem('currentSessionId') || null;
+              if (explicit) return `${baseKey}__sid_${explicit}`;
+              if (dbName)   return `${baseKey}__sid_${userId}:${dbName}`;
+              return `${baseKey}__sid_${userId}`;
+            };
+
+            const baseKeys = [
               `personnel_pagination_${sourceSection}`,
               `personnel_filter_${sourceSection}`
             ];
-            
+
             let updatedCount = 0;
-            
-            snapshotKeys.forEach(storageKey => {
+
+            baseKeys.forEach(baseKey => {
+              const storageKey = _resolveSnapshotKey(baseKey);
+              console.log(`[SNAPSHOT] Looking for key: "${storageKey}"`);
               const snapshot = localStorage.getItem(storageKey);
-              
+
               if (snapshot) {
                 try {
                   const state = JSON.parse(snapshot);
-                  
                   if (state.data && Array.isArray(state.data)) {
                     const beforeLength = state.data.length;
                     state.data = state.data.filter(p => p.Empl_ID !== currentEmployeeId);
                     const afterLength = state.data.length;
-                    
+
                     if (beforeLength !== afterLength) {
                       console.log(`💾 Updated ${storageKey}: ${beforeLength} → ${afterLength} records`);
-                      
-                      // Update metadata
-                      if (state.paginationInfo && state.paginationInfo.totalRecords) {
-                        state.paginationInfo.totalRecords -= 1;
-                      }
+                      if (state.paginationInfo?.totalRecords) state.paginationInfo.totalRecords -= 1;
                       state.timestamp = Date.now();
-                      
-                      // Save
                       localStorage.setItem(storageKey, JSON.stringify(state));
                       updatedCount++;
                     } else {
-                      console.log(`⏭️ Employee not in ${storageKey}`);
+                      console.log(`⏭️ Employee not found in ${storageKey}`);
                     }
                   }
                 } catch (error) {

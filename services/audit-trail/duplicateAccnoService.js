@@ -5,19 +5,28 @@ class DuplicateAccountService {
   // ========================================================================
   // HELPER: Get Payroll Class from Current Database
   // ========================================================================
-  getPayrollClassFromDb(dbName) {
-    const classMapping = {
-      [process.env.DB_OFFICERS]: '1',
-      [process.env.DB_WOFFICERS]: '2',
-      [process.env.DB_RATINGS]: '3',
-      [process.env.DB_RATINGS_A]: '4',
-      [process.env.DB_RATINGS_B]: '5',
-      [process.env.DB_JUNIOR_TRAINEE]: '6'
-    };
-
-    const result = classMapping[dbName] || '1';
-    console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
-    return result;
+  /**
+   * Maps database name to payroll class code from py_payrollclass
+   * @param {string} dbName - Current database name
+   * @returns {string} Payroll class code
+   */
+  async getPayrollClassFromDb(dbName) {
+    const masterDb = pool.getMasterDb();
+    const connection = await pool.getConnection();
+    
+    try {
+      await connection.query(`USE \`${masterDb}\``);
+      const [rows] = await connection.query(
+        'SELECT classcode FROM py_payrollclass WHERE db_name = ?',
+        [dbName]
+      );
+      
+      const result = rows.length > 0 ? rows[0].classcode : null;
+      console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
+      return result;
+    } finally {
+      connection.release();
+    }
   }
 
   // ========================================================================
@@ -26,7 +35,7 @@ class DuplicateAccountService {
   async getDuplicateAccounts(filters = {}, currentDb) {
     const { bankCode, includeInactive } = filters;
     
-    const payrollClass = this.getPayrollClassFromDb(currentDb);
+    const payrollClass =  await this.getPayrollClassFromDb(currentDb);
     
     console.log('📊 Duplicate Account Numbers Request:');
     console.log('   └─ Database:', currentDb);
@@ -204,7 +213,7 @@ class DuplicateAccountService {
   // ========================================================================
   async getAvailableBanks(currentDb) {
     try {
-      const payrollClass = this.getPayrollClassFromDb(currentDb);
+      const payrollClass = await this.getPayrollClassFromDb(currentDb);
 
       const query = `
         SELECT DISTINCT 
@@ -233,7 +242,7 @@ class DuplicateAccountService {
   // CHECK SPECIFIC ACCOUNT NUMBER
   // ========================================================================
   async checkAccountNumber(accountNumber, currentDb) {
-    const payrollClass = this.getPayrollClassFromDb(currentDb);
+    const payrollClass = await this.getPayrollClassFromDb(currentDb);
 
     console.log('🔍 Checking account number:', accountNumber);
 
@@ -283,5 +292,3 @@ class DuplicateAccountService {
 }
 
 module.exports = new DuplicateAccountService();
-
-

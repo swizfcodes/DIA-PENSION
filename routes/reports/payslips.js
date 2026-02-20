@@ -18,60 +18,39 @@ router.post('/export/excel', verifyToken, historicalReportMiddleware, reportsCon
 // PAYSLIP REPORT - FILTER OPTIONS (Returns JSON data for filters)
 router.get('/filter-options', verifyToken, reportsController.getFilterOptions.bind(reportsController));
 
-// Helper function to get mapping of db_name to classname
-async function getDbToClassMap() {
-  const masterDb = pool.getMasterDb();
-  pool.useDatabase(masterDb);
-  const [dbClasses] = await pool.query('SELECT db_name, classname FROM py_payrollclass');
-  
-  const dbToClassMap = {};
-  dbClasses.forEach(row => {
-    dbToClassMap[row.db_name] = row.classname;
-  });
-  
-  return dbToClassMap;
-}
-
-// GET current database name from JWT token
 router.get('/database', verifyToken, async (req, res) => {
   try {
     const currentClass = req.current_class;
-    
-    // Get friendly name for the database
-    const dbToClassMap = await getDbToClassMap();
+    const masterDb = pool.getMasterDb();
+    const connection = await pool.getConnection();
 
-    const dbToNumberMap = {
-      [process.env.DB_OFFICERS]: 1,
-      [process.env.DB_WOFFICERS]: 2,
-      [process.env.DB_RATINGS]: 3,
-      [process.env.DB_RATINGS_A]: 4,
-      [process.env.DB_RATINGS_B]: 5,
-      [process.env.DB_JUNIOR_TRAINEE]: 6
-    };
+    try {
+      await connection.query(`USE \`${masterDb}\``);
+      const [rows] = await connection.query(
+        'SELECT classcode, classname FROM py_payrollclass WHERE db_name = ?',
+        [currentClass]
+      );
 
-    const friendlyName = dbToClassMap[currentClass] || 'Unknown Class';
-    const classNumber = dbToNumberMap[currentClass] || 0;
+      const row = rows[0];
+      const friendlyName = row ? row.classname : 'Unknown Class';
+      const classCode = row ? row.classcode : 0;
 
-    // Use a NEW variable
-    const classCode = classNumber;
-
-    res.json({ 
-      database: classCode,
-      class_name: friendlyName,
-      primary_class: req.primary_class,
-      user_info: {
-        user_id: req.user_id,
-        full_name: req.user_fullname,
-        role: req.user_role
-      }
-    });
+      res.json({
+        database: classCode,
+        class_name: friendlyName,
+        primary_class: req.primary_class,
+        user_info: {
+          user_id: req.user_id,
+          full_name: req.user_fullname,
+          role: req.user_role
+        }
+      });
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error('Error getting database info:', error);
-    res.json({ 
-      database: 'Error',
-      class_name: 'Error',
-      error: error.message 
-    });
+    res.json({ database: 'Error', class_name: 'Error', error: error.message });
   }
 });
 

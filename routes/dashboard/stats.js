@@ -6,19 +6,28 @@ const verifyToken = require('../../middware/authentication');
 // ========================================================================
 // HELPER: Get Payroll Class from Current Database
 // ========================================================================
-function getPayrollClassFromDb(dbName) {
-  const classMapping = {
-    [process.env.DB_OFFICERS]: '1',
-    [process.env.DB_WOFFICERS]: '2',
-    [process.env.DB_RATINGS]: '3',
-    [process.env.DB_RATINGS_A]: '4',
-    [process.env.DB_RATINGS_B]: '5',
-    [process.env.DB_JUNIOR_TRAINEE]: '6'
-  };
-
-  const result = classMapping[dbName] || '1';
-  console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
-  return result;
+/**
+ * Maps database name to payroll class code from py_payrollclass
+ * @param {string} dbName - Current database name
+ * @returns {string} Payroll class code
+ */
+async function getPayrollClassFromDb(dbName) {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT classcode FROM py_payrollclass WHERE db_name = ?',
+      [dbName]
+    );
+    
+    const result = rows.length > 0 ? rows[0].classcode : null;
+    console.log('🔍 Database:', dbName, '→ Payroll Class:', result);
+    return result;
+  } finally {
+    connection.release();
+  }
 }
 
 
@@ -26,7 +35,7 @@ router.get('/total-personnels', verifyToken, async (req, res) => {
   try {
     // Get database from pool using user_id as session
     const currentDb = pool.getCurrentDatabase(req.user_id.toString());
-    const payrollClass = getPayrollClassFromDb(currentDb);
+    const payrollClass = await getPayrollClassFromDb(currentDb);
 
     const query = `
       SELECT COUNT(*) AS totalPersonnels FROM hr_employees

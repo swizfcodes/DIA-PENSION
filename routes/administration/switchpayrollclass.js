@@ -6,15 +6,28 @@ const pool  = require('../../config/db'); // mysql2 pool
 
 const SECRET = process.env.JWT_SECRET;
 
-// Reverse mapping for display
-const DISPLAY_MAPPING = {
-  [process.env.DB_OFFICERS]: 'MILITARY STAFF',
-  [process.env.DB_WOFFICERS]: 'CIVILIAN STAFF', 
-  [process.env.DB_RATINGS]: 'PENSION STAFF',
-  [process.env.DB_RATINGS_A]: 'NYSC ATTACHE',
-  [process.env.DB_RATINGS_B]: 'RUNNING COST',
-  // [process.env.DB_JUNIOR_TRAINEE]: 'TRAINEE'
+const getDISPLAY_MAPPING = async () => {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT db_name, classname FROM py_payrollclass'
+    );
+
+    const DISPLAY_MAPPING = {};
+    rows.forEach(({ db_name, classname }) => {
+      DISPLAY_MAPPING[db_name] = classname;
+    });
+
+    return DISPLAY_MAPPING;
+  } finally {
+    connection.release();
+  }
 };
+
+//const DISPLAY_MAPPING = await getDISPLAY_MAPPING();
 
 // Get all available database classes (for populating the table)
 router.get('/dbclasses', verifyToken, async (req, res) => {
@@ -128,26 +141,35 @@ router.post('/switch-class', verifyToken, async (req, res) => {
 });
 
 // Get current session info
-router.get('/session-info', verifyToken, (req, res) => {
-  res.json({
-    userId: req.user_id,
-    fullName: req.user_fullname,
-    role: req.user_role,
-    primaryClass: {
-      id: req.primary_class,
-      display: DISPLAY_MAPPING[req.primary_class] || req.primary_class.toUpperCase()
-    },
-    currentClass: {
-      id: req.current_class,
-      display: DISPLAY_MAPPING[req.current_class] || req.current_class.toUpperCase()
-    },
-    isWorkingOnPrimary: req.primary_class === req.current_class
-  });
+router.get('/session-info', verifyToken, async (req, res) => {
+  try {
+    const DISPLAY_MAPPING = await getDISPLAY_MAPPING();
+    
+    res.json({
+      userId: req.user_id,
+      fullName: req.user_fullname,
+      role: req.user_role,
+      primaryClass: {
+        id: req.primary_class,
+        display: DISPLAY_MAPPING[req.primary_class] || req.primary_class.toUpperCase()
+      },
+      currentClass: {
+        id: req.current_class,
+        display: DISPLAY_MAPPING[req.current_class] || req.current_class.toUpperCase()
+      },
+      isWorkingOnPrimary: req.primary_class === req.current_class
+    });
+  } catch (error) {
+    console.error('❌ Session info error:', error);
+    res.status(500).json({ error: 'Failed to get session info' });
+  }
 });
 
 // Reset to primary class
-router.post('/reset-to-primary', verifyToken, (req, res) => {
+router.post('/reset-to-primary', verifyToken, async (req, res) => {
   try {
+    const DISPLAY_MAPPING = await getDISPLAY_MAPPING();
+    
     // Create new JWT with current_class reset to primary_class
     const newPayload = {
       user_id: req.user_id,
@@ -178,5 +200,3 @@ router.post('/reset-to-primary', verifyToken, (req, res) => {
 });
 
 module.exports = router;
-
-

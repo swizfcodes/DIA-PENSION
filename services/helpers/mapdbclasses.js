@@ -1,15 +1,23 @@
 // dbMapper.js
-module.exports = function getDatabaseForIndicator(indicator) {
-  switch (String(indicator)) {
-    case '1': return process.env.DB_OFFICERS;
-    case '2': return process.env.DB_WOFFICERS;
-    case '3': return process.env.DB_RATINGS;
-    case '4': return process.env.DB_RATINGS_A;
-    case '5': return process.env.DB_RATINGS_B;
-    case '6': return process.env.DB_JUNIOR_TRAINEE;
-    default: throw new Error(`Unknown payroll indicator: ${indicator}`);
+const pool = require('../../config/db'); // adjust path as needed
+
+module.exports = async function getDatabaseForIndicator(indicator) {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT db_name FROM py_payrollclass WHERE classcode = ?',
+      [String(indicator)]
+    );
+
+    if (rows.length === 0) {
+      throw new Error(`Unknown payroll indicator: ${indicator}`);
+    }
+
+    return rows[0].db_name;
+  } finally {
+    connection.release();
   }
 };
-
-
-

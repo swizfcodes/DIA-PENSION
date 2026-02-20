@@ -3,45 +3,43 @@ const pool = require('../../config/db'); // mysql2 pool
 const router = express.Router();
 
 // ==================== DATABASE CONFIGURATION ====================
-const DATABASE_MAP = {
-  [process.env.DB_OFFICERS || 'hicaddata']: { name: 'OFFICERS', code: '1' },
-  [process.env.DB_WOFFICERS || 'hicaddata1']: { name: 'W/OFFICERS', code: '2' },
-  [process.env.DB_RATINGS || 'hicaddata2']: { name: 'RATE A', code: '3' },
-  [process.env.DB_RATINGS_A || 'hicaddata3']: { name: 'RATE B', code: '4' },
-  [process.env.DB_RATINGS_B || 'hicaddata4']: { name: 'RATE C', code: '5' },
-  [process.env.DB_JUNIOR_TRAINEE || 'hicaddata5']: { name: 'TRAINEE', code: '6' }
+let DATABASE_MAP = {};
+let PAYROLL_CLASS_TO_DB_MAP = {};
+
+const initDatabaseMaps = async () => {
+  const masterDb = pool.getMasterDb();
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.query(`USE \`${masterDb}\``);
+    const [rows] = await connection.query(
+      'SELECT db_name, classname, classcode FROM py_payrollclass'
+    );
+
+    DATABASE_MAP = {};
+    PAYROLL_CLASS_TO_DB_MAP = {};
+
+    rows.forEach(({ db_name, classname, classcode }) => {
+      // DATABASE_MAP: db_name → { name, code }
+      DATABASE_MAP[db_name] = { name: classname, code: classcode };
+
+      // PAYROLL_CLASS_TO_DB_MAP: all lookup variants → db_name
+      PAYROLL_CLASS_TO_DB_MAP[classcode] = db_name;
+      PAYROLL_CLASS_TO_DB_MAP[classname] = db_name;
+      PAYROLL_CLASS_TO_DB_MAP[db_name] = db_name;
+      PAYROLL_CLASS_TO_DB_MAP[classname.replace(/[\s/\.]/g, '')] = db_name;
+    });
+
+    console.log('✅ Database maps initialized from py_payrollclass');
+  } finally {
+    connection.release();
+  }
 };
 
-const PAYROLL_CLASS_TO_DB_MAP = {
-  '1': process.env.DB_OFFICERS || 'hicaddata',
-  '2': process.env.DB_WOFFICERS || 'hicaddata1',
-  '3': process.env.DB_RATINGS || 'hicaddata2',
-  '4': process.env.DB_RATINGS_A || 'hicaddata3',
-  '5': process.env.DB_RATINGS_B || 'hicaddata4',
-  '6': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  'OFFICERS': process.env.DB_OFFICERS || 'hicaddata',
-  'W/OFFICERS': process.env.DB_WOFFICERS || 'hicaddata1',
-  'W.OFFICERS': process.env.DB_WOFFICERS || 'hicaddata1',
-  'RATE A': process.env.DB_RATINGS || 'hicaddata2',
-  'RATEA': process.env.DB_RATINGS || 'hicaddata2',
-  'RATE B': process.env.DB_RATINGS_A || 'hicaddata3',
-  'RATEB': process.env.DB_RATINGS_A || 'hicaddata3',
-  'RATE C': process.env.DB_RATINGS_B || 'hicaddata4',
-  'RATEC': process.env.DB_RATINGS_B || 'hicaddata4',
-  'JUNIOR/TRAINEE': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  'JUNIORTRAINEE': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  'hicaddata': process.env.DB_OFFICERS || 'hicaddata',
-  'hicaddata1': process.env.DB_WOFFICERS || 'hicaddata1',
-  'hicaddata2': process.env.DB_RATINGS || 'hicaddata2',
-  'hicaddata3': process.env.DB_RATINGS_A || 'hicaddata3',
-  'hicaddata4': process.env.DB_RATINGS_B || 'hicaddata4',
-  'hicaddata5': process.env.DB_JUNIOR_TRAINEE || 'hicaddata5',
-  [process.env.DB_OFFICERS || 'hicaddata']: process.env.DB_OFFICERS || 'hicaddata',
-  [process.env.DB_WOFFICERS || 'hicaddata1']: process.env.DB_WOFFICERS || 'hicaddata1',
-  [process.env.DB_RATINGS || 'hicaddata2']: process.env.DB_RATINGS || 'hicaddata2',
-  [process.env.DB_RATINGS_A || 'hicaddata3']: process.env.DB_RATINGS_A || 'hicaddata3',
-  [process.env.DB_RATINGS_B || 'hicaddata4']: process.env.DB_RATINGS_B || 'hicaddata4',
-  [process.env.DB_JUNIOR_TRAINEE || 'hicaddata5']: process.env.DB_JUNIOR_TRAINEE || 'hicaddata5'
+const ensureMapsLoaded = async () => {
+  if (Object.keys(DATABASE_MAP).length === 0) {
+    await initDatabaseMaps();
+  }
 };
 
 // ==================== HELPER FUNCTIONS ====================
@@ -198,6 +196,8 @@ async function autoAssignPayrollClass(dbName) {
 }
 
 module.exports = { 
+  initDatabaseMaps,
+  ensureMapsLoaded,
   autoAssignPayrollClass,
   getPayrollClassFromDb,
   getDbNameFromPayrollClass,
@@ -207,5 +207,3 @@ module.exports = {
   DATABASE_MAP,
   PAYROLL_CLASS_TO_DB_MAP
 };
-
-
